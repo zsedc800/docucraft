@@ -9,6 +9,30 @@ import { ToolBar } from './components/toolBar';
 import { createCodeBlockCmd } from './components/codeBlock';
 import { CodeBlockViewConstructor } from './components/codeBlock/codeBlockView';
 import { highlightCodePlugin } from './components/codeBlock/highlightCodePlugin';
+import {
+  inputRules,
+  textblockTypeInputRule,
+  wrappingInputRule,
+} from 'prosemirror-inputrules';
+import './style.css';
+// 定义输入规则
+const headingRules = [
+  textblockTypeInputRule(/^#\s$/, schema.nodes.heading, { level: 1 }),
+  textblockTypeInputRule(/^##\s$/, schema.nodes.heading, { level: 2 }),
+  textblockTypeInputRule(/^###\s$/, schema.nodes.heading, { level: 3 }),
+];
+
+const listRules = [
+  wrappingInputRule(/^\s*([-+*])\s$/, schema.nodes.bullet_list),
+  wrappingInputRule(/^(\d+)\.\s$/, schema.nodes.ordered_list, (match) => ({
+    order: +match[1],
+  })),
+];
+
+function buildInputRules() {
+  let rules = inputRules({ rules: [...headingRules, ...listRules] });
+  return rules;
+}
 
 export const setupEditor = (el: HTMLElement | null) => {
   if (!el) return;
@@ -40,6 +64,7 @@ export const setupEditor = (el: HTMLElement | null) => {
   const editorState = EditorState.create({
     schema,
     plugins: [
+      buildInputRules(),
       keymap(baseKeymap),
       history(),
       keymap({ 'Mod-z': undo, 'Mod-y': redo }),

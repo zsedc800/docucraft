@@ -1,11 +1,18 @@
 interface Spec {
   [key: string]: string | boolean | string | ((e: Event) => void);
 }
+type DOMNode = HTMLElement | string;
+
 function createElement(
   tag: string,
   options: Spec,
-  ...children: (HTMLElement | string)[]
-): HTMLElement {
+  arg?: DOMNode | DOMNode[],
+  ...rest: DOMNode[]
+) {
+  let children: DOMNode[] = [];
+  if (Array.isArray(arg)) children = arg;
+  else children = arg ? [arg, ...rest] : [];
+
   const dom = document.createElement(tag);
   for (const key of Object.keys(options)) {
     const val = options[key];

@@ -1,5 +1,6 @@
 import { Node } from 'prosemirror-model';
 import { Decoration, DecorationSource, NodeView, NodeViewConstructor } from 'prosemirror-view';
+import './style.scss';
 export declare class CodeBlockView implements NodeView {
     name: string;
     private view;

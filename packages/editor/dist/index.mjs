@@ -1,15 +1,11 @@
-'use strict';
-
-Object.defineProperty(exports, '__esModule', { value: true });
-
-var prosemirrorView = require('prosemirror-view');
-var prosemirrorState = require('prosemirror-state');
-var prosemirrorModel = require('prosemirror-model');
-var prosemirrorKeymap = require('prosemirror-keymap');
-var prosemirrorCommands = require('prosemirror-commands');
-var prosemirrorHistory = require('prosemirror-history');
-var hljs = require('highlight.js');
-var prosemirrorInputrules = require('prosemirror-inputrules');
+import { DecorationSet, Decoration, EditorView } from 'prosemirror-view';
+import { PluginKey, Plugin, EditorState } from 'prosemirror-state';
+import { Schema } from 'prosemirror-model';
+import { keymap } from 'prosemirror-keymap';
+import { baseKeymap } from 'prosemirror-commands';
+import { history, undo, redo } from 'prosemirror-history';
+import hljs from 'highlight.js';
+import { textblockTypeInputRule, wrappingInputRule, inputRules } from 'prosemirror-inputrules';
 
 var codeBlock = {
   content: 'text*',
@@ -68,7 +64,7 @@ var createCodeBlockCmd = function createCodeBlockCmd(state, dispatch, view) {
 };
 
 // model.ts 文件命名暂时还是以 mvc 模式命名，方便理解，实际中 命名为 schema.ts 更好
-var schema = new prosemirrorModel.Schema({
+var schema = new Schema({
   nodes: {
     // 整个文档
     doc: {
@@ -706,7 +702,7 @@ var HighlightRenderer = /*#__PURE__*/function () {
   }]);
 }();
 
-var highlightCodePluginKey = new prosemirrorState.PluginKey('highlight-code');
+var highlightCodePluginKey = new PluginKey('highlight-code');
 function findNodesByType(doc, type) {
   var nodes = [];
   var schema = doc.type.schema;
@@ -733,7 +729,7 @@ function createLineNumberDecorations(block) {
       "class": 'line-number',
       line: "".concat(index + 1)
     }, "\u200B");
-    var decoration = prosemirrorView.Decoration.widget(currentPos, function (view) {
+    var decoration = Decoration.widget(currentPos, function (view) {
       return span;
     }, {
       side: -1,
@@ -765,7 +761,7 @@ function highlightCodePlugin() {
       console.log(renderer.value, 'val');
       if (renderer.value.length) {
         var blockDecorations = renderer.value.map(function (renderInfo) {
-          return prosemirrorView.Decoration.inline(renderInfo.from, renderInfo.to, {
+          return Decoration.inline(renderInfo.from, renderInfo.to, {
             "class": renderInfo.classNames.join(' ')
           });
         });
@@ -778,20 +774,20 @@ function highlightCodePlugin() {
     });
     return decorations;
   }
-  return new prosemirrorState.Plugin({
+  return new Plugin({
     key: highlightCodePluginKey,
     state: {
       init: function init(config, instance) {
         var decorations = getDecs(instance.doc);
         return {
-          decorations: prosemirrorView.DecorationSet.create(instance.doc, decorations)
+          decorations: DecorationSet.create(instance.doc, decorations)
         };
       },
       apply: function apply(tr, value, oldState, newState) {
         if (!tr.docChanged) return value;
         var decorations = getDecs(newState.doc);
         return {
-          decorations: prosemirrorView.DecorationSet.create(tr.doc, decorations)
+          decorations: DecorationSet.create(tr.doc, decorations)
         };
       }
     },
@@ -806,20 +802,20 @@ function highlightCodePlugin() {
 
 // view.ts
 // 定义输入规则
-var headingRules = [prosemirrorInputrules.textblockTypeInputRule(/^#\s$/, schema.nodes.heading, {
+var headingRules = [textblockTypeInputRule(/^#\s$/, schema.nodes.heading, {
   level: 1
-}), prosemirrorInputrules.textblockTypeInputRule(/^##\s$/, schema.nodes.heading, {
+}), textblockTypeInputRule(/^##\s$/, schema.nodes.heading, {
   level: 2
-}), prosemirrorInputrules.textblockTypeInputRule(/^###\s$/, schema.nodes.heading, {
+}), textblockTypeInputRule(/^###\s$/, schema.nodes.heading, {
   level: 3
 })];
-var listRules = [prosemirrorInputrules.wrappingInputRule(/^\s*([-+*])\s$/, schema.nodes.bullet_list), prosemirrorInputrules.wrappingInputRule(/^(\d+)\.\s$/, schema.nodes.ordered_list, function (match) {
+var listRules = [wrappingInputRule(/^\s*([-+*])\s$/, schema.nodes.bullet_list), wrappingInputRule(/^(\d+)\.\s$/, schema.nodes.ordered_list, function (match) {
   return {
     order: +match[1]
   };
 })];
 function buildInputRules() {
-  var rules = prosemirrorInputrules.inputRules({
+  var rules = inputRules({
     rules: [].concat(headingRules, listRules)
   });
   return rules;
@@ -827,8 +823,8 @@ function buildInputRules() {
 var setupEditor = function setupEditor(el) {
   if (!el) return;
   var toolbar;
-  var toolbarPlugin = new prosemirrorState.Plugin({
-    key: new prosemirrorState.PluginKey('toolbar'),
+  var toolbarPlugin = new Plugin({
+    key: new PluginKey('toolbar'),
     view: function view(_view) {
       toolbar = new ToolBar(_view, {
         groups: [{
@@ -847,15 +843,15 @@ var setupEditor = function setupEditor(el) {
     }
   });
   // 根据 schema 定义，创建 editorState 数据实例
-  var editorState = prosemirrorState.EditorState.create({
+  var editorState = EditorState.create({
     schema: schema,
-    plugins: [buildInputRules(), prosemirrorKeymap.keymap(prosemirrorCommands.baseKeymap), prosemirrorHistory.history(), prosemirrorKeymap.keymap({
-      'Mod-z': prosemirrorHistory.undo,
-      'Mod-y': prosemirrorHistory.redo
+    plugins: [buildInputRules(), keymap(baseKeymap), history(), keymap({
+      'Mod-z': undo,
+      'Mod-y': redo
     }), toolbarPlugin, highlightCodePlugin()]
   });
   // 创建编辑器视图实例，并挂在到 el 上
-  var editorView = new prosemirrorView.EditorView(el, {
+  var editorView = new EditorView(el, {
     state: editorState,
     dispatchTransaction: function dispatchTransaction(tr) {
       var _toolbar;
@@ -880,5 +876,4 @@ var index = (function () {
   return 'welocome';
 });
 
-exports.default = index;
-exports.setupEditor = setupEditor;
+export { index as default, setupEditor };

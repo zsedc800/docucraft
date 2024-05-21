@@ -1,10 +1,29 @@
 /* style.css 稍微对编辑器增加点样式 */
 #editorContainer {
-  border: 1px solid #646cffaa;
-  padding: 0px 12px;
+  /* border: 1px solid #646cffaa; */
+  /* padding: 0px 12px; */
 }
 
 #editorContainer .ProseMirror {
   outline: none;
   caret-color: #646cffaa;
+}
+
+#editorContainer .code-block-menu-container {
+  background-color: #333;
+  padding: 4px 8px;
+}
+
+#editorContainer .code-block-menu {
+  width: 100%;
+  display: flex;
+}
+#editorContainer .code-block {
+  display: block;
+  padding: 4px 8px;
+  /* background-color: #282c34; */
+}
+
+#editorContainer .line-number {
+  content: attr(line);
 }

@@ -1,3 +1,6 @@
+.code {
+  display: block;
+}
 /* style.css 稍微对编辑器增加点样式 */
 #editorContainer {
   /* border: 1px solid #646cffaa; */

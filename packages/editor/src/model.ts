@@ -1,5 +1,6 @@
 // model.ts 文件命名暂时还是以 mvc 模式命名，方便理解，实际中 命名为 schema.ts 更好
 import { Schema } from 'prosemirror-model';
+// import { schema as basicSchema } from 'prosemirror-schema-basic';
 import { codeBlock } from './components/codeBlock';
 
 export const schema = new Schema({
@@ -64,6 +65,43 @@ export const schema = new Schema({
         { tag: 'h5', attrs: { level: 5 } },
         { tag: 'h6', attrs: { level: 6 } },
       ],
+    },
+    ordered_list: {
+      content: 'list_item+',
+      group: 'block',
+      attrs: { order: { default: 1 } },
+      parseDOM: [
+        {
+          tag: 'ol',
+          getAttrs(dom) {
+            return {
+              order: dom.hasAttribute('start')
+                ? dom.getAttribute?.('start') || ''
+                : 1,
+            };
+          },
+        },
+      ],
+      toDOM(node) {
+        return node.attrs.order == 1
+          ? ['ol', 0]
+          : ['ol', { start: node.attrs.order }, 0];
+      },
+    },
+    bullet_list: {
+      content: 'list_item+',
+      group: 'block',
+      parseDOM: [{ tag: 'ul' }],
+      toDOM() {
+        return ['ul', 0];
+      },
+    },
+    list_item: {
+      content: 'paragraph block*',
+      parseDOM: [{ tag: 'li' }],
+      toDOM() {
+        return ['li', 0];
+      },
     },
   },
   // 除了上面定义 node 节点，一些富文本样式，可以通过 marks 定义

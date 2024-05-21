@@ -1,5 +1,6 @@
 import { Node } from 'prosemirror-model';
 import crel from '../../createElement';
+
 import {
   Decoration,
   DecorationSource,
@@ -7,6 +8,7 @@ import {
   NodeView,
   NodeViewConstructor,
 } from 'prosemirror-view';
+import './style.scss';
 type GetPos = () => number | undefined;
 export class CodeBlockView implements NodeView {
   name = 'block_code';
@@ -72,7 +74,7 @@ export class CodeBlockView implements NodeView {
               }
             },
           },
-          ...[
+          [
             'plaintext',
             'javascript',
             'html',
@@ -113,7 +115,7 @@ export class CodeBlockView implements NodeView {
                 }
               },
             },
-            ...[
+            [
               { value: 'true', label: '展示行号' },
               { value: 'false', label: '隐藏行号' },
             ].map((item) =>
