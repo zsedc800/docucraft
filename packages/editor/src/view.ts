@@ -15,6 +15,7 @@ import {
   wrappingInputRule,
 } from 'prosemirror-inputrules';
 import './style.css';
+import { myKeymap } from './commands';
 // 定义输入规则
 const headingRules = [
   textblockTypeInputRule(/^#\s$/, schema.nodes.heading, { level: 1 }),
@@ -65,7 +66,7 @@ export const setupEditor = (el: HTMLElement | null) => {
     schema,
     plugins: [
       buildInputRules(),
-      keymap(baseKeymap),
+      keymap({ ...baseKeymap, ...myKeymap }),
       history(),
       keymap({ 'Mod-z': undo, 'Mod-y': redo }),
       toolbarPlugin,
