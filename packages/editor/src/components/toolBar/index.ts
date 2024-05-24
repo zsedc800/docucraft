@@ -1,6 +1,7 @@
-import { EditorState, PluginView } from 'prosemirror-state';
+import { EditorState, PluginView, Plugin, PluginKey } from 'prosemirror-state';
 import { MenuGroup, MenuGroupSpec } from './menuGroup';
 import { EditorView } from 'prosemirror-view';
+import { createCodeBlockCmd } from '../codeBlock';
 
 export interface ToolBarSpec {
   groups: MenuGroupSpec[];
@@ -41,3 +42,37 @@ export class ToolBar implements PluginView {
     this.dom.parentNode?.removeChild(this.dom);
   }
 }
+
+export const buildToolbar = () => {
+  let toolbar: ToolBar | null;
+  const toolbarPlugin = new Plugin({
+    key: new PluginKey('toolbar'),
+    view(view) {
+      toolbar = new ToolBar(view, {
+        groups: [
+          {
+            menus: [
+              {
+                label: '插入代码块',
+                handler({ state, dispatch, view }, event) {
+                  createCodeBlockCmd(state, dispatch, view);
+                },
+              },
+            ],
+          },
+        ],
+      });
+      return toolbar;
+    },
+  });
+
+  return {
+    plugin: toolbarPlugin,
+    update: (view: EditorView, state: EditorState) =>
+      toolbar?.update(view, state),
+    destroy: () => {
+      toolbar?.destroy();
+      toolbar = null;
+    },
+  };
+};

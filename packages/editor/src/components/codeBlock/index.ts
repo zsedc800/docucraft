@@ -27,7 +27,7 @@ export const codeBlock: NodeSpec = {
     return [
       'pre',
       {
-        'data-lanaguage': node.attrs.lanaguage,
+        'data-lanaguage': node.attrs.language,
         'data-theme': node.attrs.theme,
         'data-show-line-number': node.attrs.showLineNumber,
         'data-node-type': 'code_block',

@@ -9,11 +9,14 @@ import {
   NodeViewConstructor,
 } from 'prosemirror-view';
 import './style.scss';
+import ReactDOM from 'react-dom';
+import { setup } from './codeBlock';
 type GetPos = () => number | undefined;
 export class CodeBlockView implements NodeView {
-  name = 'block_code';
+  name = 'blockCode';
   private view: EditorView;
   private getPos: GetPos;
+  unmount?: () => void;
   dom!: HTMLElement;
   node: Node;
   contentDOM?: HTMLElement | null | undefined;
@@ -23,6 +26,19 @@ export class CodeBlockView implements NodeView {
     this.view = view;
     this.getPos = getPos;
     this.renderUI(node);
+
+    this.renderComponent();
+  }
+
+  renderComponent() {
+    const { node } = this;
+    this.dom = crel('pre', {
+      'data-language': node.attrs.language,
+      'data-theme': node.attrs.theme,
+      'data-show-line-number': node.attrs.showLineNumber,
+      'data-node-type': 'codeBlock',
+    });
+    this.unmount = setup(this.dom, this.node);
   }
 
   update(
@@ -30,22 +46,20 @@ export class CodeBlockView implements NodeView {
     decorations: readonly Decoration[],
     innerDecorations: DecorationSource
   ) {
+    if (node.type !== this.node.type) return false;
     this.node = node;
-    if (node.type.name !== 'code_block') return false;
 
-    this.updateUI(node);
+    this.renderComponent();
 
     return true;
   }
 
+  destroy() {
+    this.unmount?.();
+  }
+
   private renderUI(node: Node) {
     // pre-wrapper
-    this.dom = crel('pre', {
-      'data-language': node.attrs.language,
-      'data-theme': node.attrs.theme,
-      'data-show-line-number': node.attrs.showLineNumber,
-      'data-node-type': 'code_block',
-    });
 
     // code-meanu
     const menuContainer = crel(

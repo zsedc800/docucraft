@@ -30,6 +30,18 @@ export const schema = new Schema({
       ],
     },
     code_block: codeBlock,
+    blockQuote: {
+      content: 'paragraph block*',
+      group: 'block',
+      toDOM(node) {
+        return ['blockquote', 0];
+      },
+      parseDOM: [
+        {
+          tag: 'blockquote',
+        },
+      ],
+    },
     // 段落中的文本
     text: {
       // 当前处于 inline 分株，意味着它是个 inline 节点。代表输入的文本

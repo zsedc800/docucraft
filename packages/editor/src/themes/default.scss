@@ -1,41 +1,4 @@
-/* style.css 稍微对编辑器增加点样式 */
-#editorContainer {
-  /* border: 1px solid #646cffaa; */
-  /* padding: 0px 12px; */
-}
-
-#editorContainer .ProseMirror {
-  outline: none;
-  caret-color: #646cffaa;
-}
-
-#editorContainer .code-block-menu-container {
-  background-color: #333;
-  padding: 4px 8px;
-}
-
-#editorContainer .code-block-menu {
-  width: 100%;
-  display: flex;
-}
-#editorContainer .code-block {
-  display: block;
-  padding: 4px 8px;
-  /* background-color: #282c34; */
-}
-
-#editorContainer .line-number {
-  content: attr(line);
-}
-
-.code {
-  display: block;
-}
-@charset "UTF-8";
-blockquote p {
-  margin: 0;
-}
-
+@import './basic.scss';
 :root {
   --side-bar-bg-color: #fff;
   --control-text-color: #777;
@@ -49,17 +12,21 @@ body {
   padding: 1em;
 }
 
+// task list
+
 .task-list-item {
   list-style-type: none;
-  text-indent: -1.5em;
-}
-.task-list-item:before {
-  content: "";
-  display: static;
-  margin-right: 0px;
-}
-.task-list-item > input[type=checkbox] {
-  text-indent: -1.7em;
+  text-indent: -1.5em; // 这个数值刚好令 checkbox 与上一行第一个字对齐
+
+  &:before {
+    content: '';
+    display: static;
+    margin-right: 0px;
+  }
+
+  > input[type='checkbox'] {
+    text-indent: -1.7em;
+  }
 }
 
 /* MWeb：代码块高亮 */
@@ -67,37 +34,52 @@ code,
 tt,
 pre {
   border-radius: 2px;
-  font-family: Roboto Mono, Source Sans Pro, Monaco, courier, monospace !important;
+  font-family:
+    Roboto Mono,
+    Source Sans Pro,
+    Monaco,
+    courier,
+    monospace !important;
   font-size: 0.92rem;
   color: #e96900;
   overflow-x: auto;
   background-color: #f8f8f8;
 }
-
+code {
+  // margin: 0 2px;
+  // padding: 2px 4px;
+}
 pre code {
   background: none;
   border: none;
   margin: 0;
   padding: 0;
 }
-
 pre {
   padding: 0.7em 1em;
 }
 
 /* cyrillic-ext */
 @font-face {
-  font-family: "Roboto Mono";
+  font-family: 'Roboto Mono';
   font-style: normal;
   font-weight: 400;
-  src: local("Roboto Mono"), local("RobotoMono-Regular");
+  src: local('Roboto Mono'), local('RobotoMono-Regular');
+  // url('vue/L0x5DF4xlVMF-BfR8bXMIjhGq3-cXbKDO1w.woff2') format('woff2');
+  // unicode-range: U+0460-052F, U+1C80-1C88, U+20B4, U+2DE0-2DFF, U+A640-A69F,
+  //   U+FE2E-FE2F;
 }
+
 html {
   font-size: 16px;
 }
 
 body {
-  font-family: Source Sans Pro, Helvetica Neue, Arial, sans-serif !important;
+  font-family:
+    Source Sans Pro,
+    Helvetica Neue,
+    Arial,
+    sans-serif !important;
   color: #34495e;
   -webkit-font-smoothing: antialiased;
   line-height: 1.6rem;
@@ -370,14 +352,17 @@ table tr td:last-child {
   html {
     font-size: 13px;
   }
+
   table,
   pre {
     page-break-inside: avoid;
   }
+
   pre {
     word-wrap: break-word;
   }
 }
+
 .md-fences {
   background-color: #f8f8f8;
 }
@@ -388,7 +373,7 @@ table tr td:last-child {
 
 .md-image > .md-meta {
   border-radius: 3px;
-  font-family: Consolas, "Liberation Mono", Courier, monospace;
+  font-family: Consolas, 'Liberation Mono', Courier, monospace;
   padding: 2px 0 0 4px;
   font-size: 0.9em;
   color: inherit;
@@ -424,6 +409,7 @@ table tr td:last-child {
 }
 
 /** focus mode */
+
 .on-focus-mode blockquote {
   border-left-color: rgba(85, 85, 85, 0.12);
 }
@@ -432,7 +418,7 @@ header,
 .context-menu,
 .megamenu-content,
 footer {
-  font-family: "Segoe UI", "Arial", sans-serif;
+  font-family: 'Segoe UI', 'Arial', sans-serif;
 }
 
 .file-node-content:hover .file-node-icon,
@@ -453,9 +439,12 @@ footer {
 }
 
 /* prismJS 代码高亮样式 */
-code[class*=language-],
-pre[class*=language-] {
-  font-family: Consolas, Menlo, Monaco, "Andale Mono WT", "Andale Mono", "Lucida Console", "Lucida Sans Typewriter", "DejaVu Sans Mono", "Bitstream Vera Sans Mono", "Liberation Mono", "Nimbus Mono L", "Courier New", Courier, monospace;
+code[class*='language-'],
+pre[class*='language-'] {
+  font-family: Consolas, Menlo, Monaco, 'Andale Mono WT', 'Andale Mono',
+    'Lucida Console', 'Lucida Sans Typewriter', 'DejaVu Sans Mono',
+    'Bitstream Vera Sans Mono', 'Liberation Mono', 'Nimbus Mono L',
+    'Courier New', Courier, monospace;
   font-size: 14px;
   line-height: 1.375;
   direction: ltr;
@@ -472,55 +461,45 @@ pre[class*=language-] {
   background: #fafbf9;
   color: #4299d7;
 }
-
-pre[class*=language-] {
+pre[class*='language-'] {
   padding: 1em;
   margin: 0.5em 0;
   overflow: auto;
 }
-
-:not(pre) > code[class*=language-] {
+:not(pre) > code[class*='language-'] {
   padding: 0.1em;
   border-radius: 0.3em;
 }
-
 .token.comment,
 .token.prolog,
 .token.doctype,
 .token.cdata {
   color: #bdc3b7;
 }
-
 .token.punctuation {
   color: #bdc3b7;
 }
-
 .token.namespace {
   opacity: 0.7;
 }
-
 .token.tag,
 .token.operator,
 .token.number {
   color: #1b6498;
 }
-
 .token.property,
 .token.function {
   color: #66a329;
 }
-
 .token.tag-id,
 .token.selector,
 .token.atrule-id {
   color: #4d8217;
 }
-
 code.language-javascript,
 .token.attr-name {
   color: #66a329;
 }
-
 code.language-css,
 code.language-scss,
 .token.boolean,
@@ -540,53 +519,52 @@ code.language-scss,
 .token.atrule {
   color: #277fbe;
 }
-
 .token.placeholder,
 .token.variable {
   color: #8dcefc;
 }
-
 .token.deleted {
   text-decoration: line-through;
 }
-
 .token.inserted {
   border-bottom: 1px dotted #4d8217;
   text-decoration: none;
 }
-
 .token.italic {
   font-style: italic;
 }
-
 .token.important,
 .token.bold {
   font-weight: bold;
 }
-
 .token.important {
   color: #66a329;
 }
-
 .token.entity {
   cursor: help;
 }
-
 pre > code.highlight {
   outline: 0.4em solid #66a329;
   outline-offset: 0.4em;
 }
-
 .line-numbers .line-numbers-rows {
   border-right-color: #f3f4f1;
 }
-
 .line-numbers-rows > span:before {
   color: #d1d6cd;
 }
-
 .line-highlight {
   background: rgba(77, 130, 23, 0.2);
-  background: -webkit-gradient(linear, left top, right top, color-stop(70%, rgba(77, 130, 23, 0.2)), to(rgba(77, 130, 23, 0)));
-  background: linear-gradient(to right, rgba(77, 130, 23, 0.2) 70%, rgba(77, 130, 23, 0));
+  background: -webkit-gradient(
+    linear,
+    left top,
+    right top,
+    color-stop(70%, rgba(77, 130, 23, 0.2)),
+    to(rgba(77, 130, 23, 0))
+  );
+  background: linear-gradient(
+    to right,
+    rgba(77, 130, 23, 0.2) 70%,
+    rgba(77, 130, 23, 0)
+  );
 }

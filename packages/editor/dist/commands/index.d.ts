@@ -1,4 +1,2 @@
-import { Command } from 'prosemirror-state';
-export declare const myKeymap: {
-    [key: string]: Command;
-};
+export { buildInputRules } from './inputRules';
+export { myKeymap } from './keymap';

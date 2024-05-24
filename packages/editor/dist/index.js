@@ -6,11 +6,220 @@ var prosemirrorView = require('prosemirror-view');
 var prosemirrorState = require('prosemirror-state');
 var prosemirrorModel = require('prosemirror-model');
 var prosemirrorKeymap = require('prosemirror-keymap');
-var prosemirrorCommands = require('prosemirror-commands');
 var prosemirrorHistory = require('prosemirror-history');
 var hljs = require('highlight.js');
 var prosemirrorInputrules = require('prosemirror-inputrules');
+var prosemirrorCommands = require('prosemirror-commands');
 var prosemirrorTransform = require('prosemirror-transform');
+
+var codeBlock = {
+  content: 'text*',
+  group: 'block',
+  marks: '',
+  code: true,
+  defining: true,
+  draggable: false,
+  selectable: true,
+  isolating: true,
+  attrs: {
+    language: {
+      "default": 'plaintext'
+    },
+    theme: {
+      "default": 'dark'
+    },
+    showLineNumber: {
+      "default": true
+    }
+  },
+  toDOM: function toDOM(node) {
+    return ['pre', {
+      'data-lanaguage': node.attrs.language,
+      'data-theme': node.attrs.theme,
+      'data-show-line-number': node.attrs.showLineNumber,
+      'data-node-type': 'code_block'
+    }, ['code', 0]];
+  },
+  parseDOM: [{
+    tag: 'pre',
+    preserveWhitespace: 'full',
+    getAttrs: function getAttrs(domNode) {
+      return {
+        language: domNode.getAttribute('data-language'),
+        theme: domNode.getAttribute('data-theme'),
+        showLineNumber: domNode.getAttribute('data-show-line-number')
+      };
+    }
+  }]
+};
+var createCodeBlockCmd = function createCodeBlockCmd(state, dispatch, view) {
+  var lastLanguage = state.schema.cached.lastLanguage || 'plaintext';
+  var code_block = state.schema.nodes.code_block;
+  var codeBlockNode = code_block.create({
+    language: lastLanguage
+  });
+  var tr = state.tr;
+  tr.replaceSelectionWith(codeBlockNode);
+  tr.scrollIntoView();
+  if (dispatch) {
+    dispatch(tr);
+    return true;
+  }
+  return false;
+};
+
+// model.ts 文件命名暂时还是以 mvc 模式命名，方便理解，实际中 命名为 schema.ts 更好
+var schema = new prosemirrorModel.Schema({
+  nodes: {
+    // 整个文档
+    doc: {
+      // 文档内容规定必须是 block 类型的节点（block 与 HTML 中的 block 概念差不多） `+` 号代表可以有一个或多个（规则类似正则）
+      content: 'block+'
+    },
+    // 文档段落
+    paragraph: {
+      // 段落内容规定必须是 inline 类型的节点（inline 与 HTML 中 inline 概念差不多）, `*` 号代表可以有 0 个或多个（规则类似正则）
+      content: 'inline*',
+      // 分组：当前节点所在的分组为 block，意味着它是个 block 节点
+      group: 'block',
+      // 渲染为 html 时候，使用 p 标签渲染，第二个参数 0 念做 “洞”，类似 vue 中 slot 插槽的概念，
+      // 证明它有子节点，以后子节点就填充在 p 标签中
+      toDOM: function toDOM() {
+        return ['p', 0];
+      },
+      // 从别处复制过来的富文本，如果包含 p 标签，将 p 标签序列化为当前的 p 节点后进行展示
+      parseDOM: [{
+        tag: 'p'
+      }]
+    },
+    code_block: codeBlock,
+    blockQuote: {
+      content: 'paragraph block*',
+      group: 'block',
+      toDOM: function toDOM(node) {
+        return ['blockquote', 0];
+      },
+      parseDOM: [{
+        tag: 'blockquote'
+      }]
+    },
+    // 段落中的文本
+    text: {
+      // 当前处于 inline 分株，意味着它是个 inline 节点。代表输入的文本
+      group: 'inline'
+    },
+    // 1-6 级标题
+    heading: {
+      // attrs 与 vue/react 组件中 props 的概念类似，代表定义当前节点有哪些属性，这里定义了 level 属性，默认值 1
+      attrs: {
+        level: {
+          "default": 1
+        }
+      },
+      // 当前节点内容可以是 0 个或多个 inline 节点
+      content: 'inline*',
+      // 当前节点分组为 block 分组
+      group: 'block',
+      // defining: 特殊属性，为 true 代表如果在当前标签内（以 h1 为例），全选内容，直接粘贴新的内容后，这些内容还会被 h1 标签包裹
+      // 如果为 false, 整个 h1 标签（包括内容与标签本身）将会被替换为其他内容，删除亦如此。
+      // 还有其他的特殊属性，后续细说
+      defining: true,
+      // 转为 html 标签时，根据当前的 level 属性，生成对应的 h1 - h6 标签，节点的内容填充在 h 标签中（“洞”在）。
+      toDOM: function toDOM(node) {
+        var tag = "h".concat(node.attrs.level);
+        return [tag, 0];
+      },
+      // 从别处复制进来的富文本内容，根据标签序列化为当前 heading 节点，并填充对应的 level 属性
+      parseDOM: [{
+        tag: 'h1',
+        attrs: {
+          level: 1
+        }
+      }, {
+        tag: 'h2',
+        attrs: {
+          level: 2
+        }
+      }, {
+        tag: 'h3',
+        attrs: {
+          level: 3
+        }
+      }, {
+        tag: 'h4',
+        attrs: {
+          level: 4
+        }
+      }, {
+        tag: 'h5',
+        attrs: {
+          level: 5
+        }
+      }, {
+        tag: 'h6',
+        attrs: {
+          level: 6
+        }
+      }]
+    },
+    ordered_list: {
+      content: 'list_item+',
+      group: 'block',
+      attrs: {
+        order: {
+          "default": 1
+        }
+      },
+      parseDOM: [{
+        tag: 'ol',
+        getAttrs: function getAttrs(dom) {
+          var _dom$getAttribute;
+          return {
+            order: dom.hasAttribute('start') ? ((_dom$getAttribute = dom.getAttribute) === null || _dom$getAttribute === void 0 ? void 0 : _dom$getAttribute.call(dom, 'start')) || '' : 1
+          };
+        }
+      }],
+      toDOM: function toDOM(node) {
+        return node.attrs.order == 1 ? ['ol', 0] : ['ol', {
+          start: node.attrs.order
+        }, 0];
+      }
+    },
+    bullet_list: {
+      content: 'list_item+',
+      group: 'block',
+      parseDOM: [{
+        tag: 'ul'
+      }],
+      toDOM: function toDOM() {
+        return ['ul', 0];
+      }
+    },
+    list_item: {
+      content: 'paragraph block*',
+      parseDOM: [{
+        tag: 'li'
+      }],
+      toDOM: function toDOM() {
+        return ['li', 0];
+      }
+    }
+  },
+  // 除了上面定义 node 节点，一些富文本样式，可以通过 marks 定义
+  marks: {
+    // 文本加粗
+    strong: {
+      // 对于加粗的部分，使用 strong 标签包裹，加粗的内容位于 strong 标签内(这里定义的 0 与上面一致，也念做 “洞”，也类似 vue 中的 slot)
+      toDOM: function toDOM() {
+        return ['strong', 0];
+      },
+      // 从别的地方复制过来的富文本，如果有 strong 标签，则被解析为一个 strong mark
+      parseDOM: [{
+        tag: 'strong'
+      }]
+    }
+  }
+});
 
 function _construct(t, e, r) {
   if (_isNativeReflectConstruct()) return Reflect.construct.apply(null, arguments);
@@ -162,305 +371,6 @@ function _createForOfIteratorHelper(o, allowArrayLike) {
   };
 }
 
-var codeBlock = {
-  content: 'text*',
-  group: 'block',
-  marks: '',
-  code: true,
-  defining: true,
-  draggable: false,
-  selectable: true,
-  isolating: true,
-  attrs: {
-    language: {
-      "default": 'plaintext'
-    },
-    theme: {
-      "default": 'dark'
-    },
-    showLineNumber: {
-      "default": true
-    }
-  },
-  toDOM: function toDOM(node) {
-    return ['pre', {
-      'data-lanaguage': node.attrs.lanaguage,
-      'data-theme': node.attrs.theme,
-      'data-show-line-number': node.attrs.showLineNumber,
-      'data-node-type': 'code_block'
-    }, ['code', 0]];
-  },
-  parseDOM: [{
-    tag: 'pre',
-    preserveWhitespace: 'full',
-    getAttrs: function getAttrs(domNode) {
-      return {
-        language: domNode.getAttribute('data-language'),
-        theme: domNode.getAttribute('data-theme'),
-        showLineNumber: domNode.getAttribute('data-show-line-number')
-      };
-    }
-  }]
-};
-var createCodeBlockCmd = function createCodeBlockCmd(state, dispatch, view) {
-  var lastLanguage = state.schema.cached.lastLanguage || 'plaintext';
-  var code_block = state.schema.nodes.code_block;
-  var codeBlockNode = code_block.create({
-    language: lastLanguage
-  });
-  var tr = state.tr;
-  tr.replaceSelectionWith(codeBlockNode);
-  tr.scrollIntoView();
-  if (dispatch) {
-    dispatch(tr);
-    return true;
-  }
-  return false;
-};
-
-// model.ts 文件命名暂时还是以 mvc 模式命名，方便理解，实际中 命名为 schema.ts 更好
-var schema = new prosemirrorModel.Schema({
-  nodes: {
-    // 整个文档
-    doc: {
-      // 文档内容规定必须是 block 类型的节点（block 与 HTML 中的 block 概念差不多） `+` 号代表可以有一个或多个（规则类似正则）
-      content: 'block+'
-    },
-    // 文档段落
-    paragraph: {
-      // 段落内容规定必须是 inline 类型的节点（inline 与 HTML 中 inline 概念差不多）, `*` 号代表可以有 0 个或多个（规则类似正则）
-      content: 'inline*',
-      // 分组：当前节点所在的分组为 block，意味着它是个 block 节点
-      group: 'block',
-      // 渲染为 html 时候，使用 p 标签渲染，第二个参数 0 念做 “洞”，类似 vue 中 slot 插槽的概念，
-      // 证明它有子节点，以后子节点就填充在 p 标签中
-      toDOM: function toDOM() {
-        return ['p', 0];
-      },
-      // 从别处复制过来的富文本，如果包含 p 标签，将 p 标签序列化为当前的 p 节点后进行展示
-      parseDOM: [{
-        tag: 'p'
-      }]
-    },
-    code_block: codeBlock,
-    // 段落中的文本
-    text: {
-      // 当前处于 inline 分株，意味着它是个 inline 节点。代表输入的文本
-      group: 'inline'
-    },
-    // 1-6 级标题
-    heading: {
-      // attrs 与 vue/react 组件中 props 的概念类似，代表定义当前节点有哪些属性，这里定义了 level 属性，默认值 1
-      attrs: {
-        level: {
-          "default": 1
-        }
-      },
-      // 当前节点内容可以是 0 个或多个 inline 节点
-      content: 'inline*',
-      // 当前节点分组为 block 分组
-      group: 'block',
-      // defining: 特殊属性，为 true 代表如果在当前标签内（以 h1 为例），全选内容，直接粘贴新的内容后，这些内容还会被 h1 标签包裹
-      // 如果为 false, 整个 h1 标签（包括内容与标签本身）将会被替换为其他内容，删除亦如此。
-      // 还有其他的特殊属性，后续细说
-      defining: true,
-      // 转为 html 标签时，根据当前的 level 属性，生成对应的 h1 - h6 标签，节点的内容填充在 h 标签中（“洞”在）。
-      toDOM: function toDOM(node) {
-        var tag = "h".concat(node.attrs.level);
-        return [tag, 0];
-      },
-      // 从别处复制进来的富文本内容，根据标签序列化为当前 heading 节点，并填充对应的 level 属性
-      parseDOM: [{
-        tag: 'h1',
-        attrs: {
-          level: 1
-        }
-      }, {
-        tag: 'h2',
-        attrs: {
-          level: 2
-        }
-      }, {
-        tag: 'h3',
-        attrs: {
-          level: 3
-        }
-      }, {
-        tag: 'h4',
-        attrs: {
-          level: 4
-        }
-      }, {
-        tag: 'h5',
-        attrs: {
-          level: 5
-        }
-      }, {
-        tag: 'h6',
-        attrs: {
-          level: 6
-        }
-      }]
-    },
-    ordered_list: {
-      content: 'list_item+',
-      group: 'block',
-      attrs: {
-        order: {
-          "default": 1
-        }
-      },
-      parseDOM: [{
-        tag: 'ol',
-        getAttrs: function getAttrs(dom) {
-          var _dom$getAttribute;
-          return {
-            order: dom.hasAttribute('start') ? ((_dom$getAttribute = dom.getAttribute) === null || _dom$getAttribute === void 0 ? void 0 : _dom$getAttribute.call(dom, 'start')) || '' : 1
-          };
-        }
-      }],
-      toDOM: function toDOM(node) {
-        return node.attrs.order == 1 ? ['ol', 0] : ['ol', {
-          start: node.attrs.order
-        }, 0];
-      }
-    },
-    bullet_list: {
-      content: 'list_item+',
-      group: 'block',
-      parseDOM: [{
-        tag: 'ul'
-      }],
-      toDOM: function toDOM() {
-        return ['ul', 0];
-      }
-    },
-    list_item: {
-      content: 'paragraph block*',
-      parseDOM: [{
-        tag: 'li'
-      }],
-      toDOM: function toDOM() {
-        return ['li', 0];
-      }
-    }
-  },
-  // 除了上面定义 node 节点，一些富文本样式，可以通过 marks 定义
-  marks: {
-    // 文本加粗
-    strong: {
-      // 对于加粗的部分，使用 strong 标签包裹，加粗的内容位于 strong 标签内(这里定义的 0 与上面一致，也念做 “洞”，也类似 vue 中的 slot)
-      toDOM: function toDOM() {
-        return ['strong', 0];
-      },
-      // 从别的地方复制过来的富文本，如果有 strong 标签，则被解析为一个 strong mark
-      parseDOM: [{
-        tag: 'strong'
-      }]
-    }
-  }
-});
-
-var MenuItem = /*#__PURE__*/function () {
-  function MenuItem(view, spec) {
-    var _this = this;
-    _classCallCheck(this, MenuItem);
-    this.view = view;
-    this.spec = spec;
-    var btn = document.createElement('button');
-    btn.setAttribute('class', spec["class"] || '');
-    btn.addEventListener('click', function (event) {
-      spec.handler({
-        view: _this.view,
-        state: _this.view.state,
-        dispatch: view.dispatch,
-        tr: view.state.tr
-      }, event);
-    });
-    btn.classList.add('menu-item');
-    btn.innerText = spec.label;
-    this.dom = btn;
-  }
-  return _createClass(MenuItem, [{
-    key: "update",
-    value: function update(view, state) {
-      var _this$spec$update, _this$spec;
-      this.view = view;
-      (_this$spec$update = (_this$spec = this.spec).update) === null || _this$spec$update === void 0 || _this$spec$update.call(_this$spec, view, state, this.dom);
-    }
-  }]);
-}();
-
-var MenuGroup = /*#__PURE__*/function () {
-  function MenuGroup(view, spec) {
-    var _this = this;
-    _classCallCheck(this, MenuGroup);
-    this.view = view;
-    this.spec = spec;
-    var dom = document.createElement('div');
-    dom.setAttribute('class', spec["class"] || '');
-    dom.classList.add('menu-group');
-    this.dom = dom;
-    this.menus = spec.menus.map(function (menuSpec) {
-      return new MenuItem(_this.view, menuSpec);
-    });
-    this.menus.forEach(function (menu) {
-      return dom.appendChild(menu.dom);
-    });
-  }
-  return _createClass(MenuGroup, [{
-    key: "update",
-    value: function update(view, state) {
-      this.view = view;
-      this.menus.forEach(function (menu) {
-        return menu.update(view, state);
-      });
-    }
-  }]);
-}();
-
-var ToolBar = /*#__PURE__*/function () {
-  function ToolBar(view, spec) {
-    var _this = this;
-    _classCallCheck(this, ToolBar);
-    this.view = view;
-    this.spec = spec;
-    var dom = document.createElement('div');
-    dom.setAttribute('class', this.spec["class"] || '');
-    dom.classList.add('toolbar');
-    this.dom = dom;
-    this.groups = this.spec.groups.map(function (menuGroupSpec) {
-      return new MenuGroup(_this.view, menuGroupSpec);
-    });
-    this.groups.forEach(function (menuGroup) {
-      return dom.appendChild(menuGroup.dom);
-    });
-    this.render();
-  }
-  return _createClass(ToolBar, [{
-    key: "render",
-    value: function render() {
-      if (this.view.dom.parentNode) {
-        this.view.dom.parentNode.insertBefore(this.dom, this.view.dom);
-      }
-    }
-  }, {
-    key: "update",
-    value: function update(view, state) {
-      this.view = view;
-      this.groups.forEach(function (group) {
-        return group.update(view, state);
-      });
-    }
-  }, {
-    key: "destroy",
-    value: function destroy() {
-      var _this$dom$parentNode;
-      (_this$dom$parentNode = this.dom.parentNode) === null || _this$dom$parentNode === void 0 || _this$dom$parentNode.removeChild(this.dom);
-    }
-  }]);
-}();
-
 function createElement(tag, options, arg) {
   var children = [];
   for (var _len = arguments.length, rest = new Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
@@ -497,7 +407,7 @@ function createElement(tag, options, arg) {
 var CodeBlockView = /*#__PURE__*/function () {
   function CodeBlockView() {
     _classCallCheck(this, CodeBlockView);
-    _defineProperty(this, "name", 'block_code');
+    _defineProperty(this, "name", 'blockCode');
     for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
       args[_key] = arguments[_key];
     }
@@ -805,6 +715,61 @@ function highlightCodePlugin() {
   });
 }
 
+// 定义输入规则
+var headingRules = [prosemirrorInputrules.textblockTypeInputRule(/^#\s$/, schema.nodes.heading, {
+  level: 1
+}), prosemirrorInputrules.textblockTypeInputRule(/^##\s$/, schema.nodes.heading, {
+  level: 2
+}), prosemirrorInputrules.textblockTypeInputRule(/^###\s$/, schema.nodes.heading, {
+  level: 3
+}), prosemirrorInputrules.textblockTypeInputRule(/^####\s$/, schema.nodes.heading, {
+  level: 4
+}), prosemirrorInputrules.textblockTypeInputRule(/^#####\s$/, schema.nodes.heading, {
+  level: 5
+}), prosemirrorInputrules.textblockTypeInputRule(/^######\s$/, schema.nodes.heading, {
+  level: 6
+})];
+var listRules = [prosemirrorInputrules.wrappingInputRule(/^\s*([-+*])\s$/, schema.nodes.bullet_list), prosemirrorInputrules.wrappingInputRule(/^(\d+)\.\s$/, schema.nodes.ordered_list, function (match) {
+  return {
+    order: +match[1]
+  };
+})];
+var map = {
+  javascript: 'javascript',
+  typescript: 'typescript',
+  rust: 'rust',
+  golang: 'golang',
+  python: 'python',
+  ruby: 'ruby',
+  php: 'php',
+  html: 'html',
+  css: 'css',
+  markdown: 'markdown',
+  java: 'java',
+  'c++': 'c++',
+  'c#': 'c#',
+  c: 'c',
+  js: 'javascript',
+  ts: 'typescript',
+  py: 'python',
+  go: 'golang',
+  rs: 'rust',
+  plaintext: 'plaintext'
+};
+var mapTolang = function mapTolang(lang) {
+  return map[lang] || 'plaintext';
+};
+var rules = [].concat(headingRules, listRules, [prosemirrorInputrules.textblockTypeInputRule(/^```([\w+#]*)\s$/, schema.nodes.code_block, function (match) {
+  return {
+    language: mapTolang(match[1])
+  };
+}), prosemirrorInputrules.wrappingInputRule(/^>\s$/, schema.nodes.blockQuote)]);
+var buildInputRules = function buildInputRules() {
+  return prosemirrorInputrules.inputRules({
+    rules: rules
+  });
+};
+
 var splitListItem = function splitListItem(itemType, itemAttrs) {
   return function (state, dispatch) {
     var _state$selection = state.selection,
@@ -814,23 +779,24 @@ var splitListItem = function splitListItem(itemType, itemAttrs) {
     if (node && node.isBlock || $from.depth < 2 || !$from.sameParent($to)) return false;
     var grandParent = $from.node(-1);
     if (grandParent.type != itemType) return false;
+    var liCount = $from.node(-2).childCount;
     if ($from.parent.content.size == 0 && $from.node(-1).childCount == $from.indexAfter(-1)) {
       // In an empty block. If this is a nested list, the wrapping
       // list item should be split. Otherwise, bail out and let next
       // command handle lifting.
-      if ($from.depth == 3 || $from.node(-3).type != itemType || $from.index(-2) != $from.node(-2).childCount - 1) return false;
+      if ($from.depth == 3 || $from.node(-3).type != itemType || $from.index(-2) != liCount - 1) return false;
       if (dispatch) {
         var wrap = prosemirrorModel.Fragment.empty;
         var depthBefore = $from.index(-1) ? 1 : $from.index(-2) ? 2 : 3;
         // Build a fragment containing empty versions of the structure
         // from the outer list item to the parent node of the cursor
         for (var d = $from.depth - depthBefore; d >= $from.depth - 3; d--) wrap = prosemirrorModel.Fragment.from($from.node(d).copy(wrap));
+        // wrap = Fragment.from($from.node($from.depth - depthBefore).copy(wrap));
         var depthAfter = $from.indexAfter(-1) < $from.node(-2).childCount ? 1 : $from.indexAfter(-2) < $from.node(-3).childCount ? 2 : 3;
         // Add a second list item with an empty default start node
         wrap = wrap.append(prosemirrorModel.Fragment.from(itemType.createAndFill()));
         var start = $from.before($from.depth - (depthBefore - 1));
         var s = new prosemirrorModel.Slice(wrap, 4 - depthBefore, 0);
-        console.log(s, JSON.stringify(s.toJSON()));
         var _tr = state.tr.replace(start, $from.after(-depthAfter), s);
         var sel = -1;
         _tr.doc.nodesBetween(start, _tr.doc.content.size, function (node, pos) {
@@ -852,34 +818,112 @@ var splitListItem = function splitListItem(itemType, itemAttrs) {
     return true;
   };
 };
-var myKeymap = {
-  Enter: function Enter(state, dispatch, view) {
-    if (splitListItem(schema.nodes.list_item)(state, dispatch)) return true;
-    return prosemirrorCommands.splitBlock(state, dispatch);
-  }
-};
+var myKeymap = _objectSpread2(_objectSpread2({}, prosemirrorCommands.baseKeymap), {}, {
+  Enter: prosemirrorCommands.chainCommands(splitListItem(schema.nodes.list_item), prosemirrorCommands.newlineInCode, prosemirrorCommands.createParagraphNear, prosemirrorCommands.liftEmptyBlock, prosemirrorCommands.splitBlock),
+  'Mod-z': prosemirrorHistory.undo,
+  'Mod-y': prosemirrorHistory.redo
+});
 
-// 定义输入规则
-var headingRules = [prosemirrorInputrules.textblockTypeInputRule(/^#\s$/, schema.nodes.heading, {
-  level: 1
-}), prosemirrorInputrules.textblockTypeInputRule(/^##\s$/, schema.nodes.heading, {
-  level: 2
-}), prosemirrorInputrules.textblockTypeInputRule(/^###\s$/, schema.nodes.heading, {
-  level: 3
-})];
-var listRules = [prosemirrorInputrules.wrappingInputRule(/^\s*([-+*])\s$/, schema.nodes.bullet_list), prosemirrorInputrules.wrappingInputRule(/^(\d+)\.\s$/, schema.nodes.ordered_list, function (match) {
-  return {
-    order: +match[1]
-  };
-})];
-function buildInputRules() {
-  var rules = prosemirrorInputrules.inputRules({
-    rules: [].concat(headingRules, listRules)
-  });
-  return rules;
-}
-var setupEditor = function setupEditor(el) {
-  if (!el) return;
+var MenuItem = /*#__PURE__*/function () {
+  function MenuItem(view, spec) {
+    var _this = this;
+    _classCallCheck(this, MenuItem);
+    this.view = view;
+    this.spec = spec;
+    var btn = document.createElement('button');
+    btn.setAttribute('class', spec["class"] || '');
+    btn.addEventListener('click', function (event) {
+      spec.handler({
+        view: _this.view,
+        state: _this.view.state,
+        dispatch: view.dispatch,
+        tr: view.state.tr
+      }, event);
+    });
+    btn.classList.add('menu-item');
+    btn.innerText = spec.label;
+    this.dom = btn;
+  }
+  return _createClass(MenuItem, [{
+    key: "update",
+    value: function update(view, state) {
+      var _this$spec$update, _this$spec;
+      this.view = view;
+      (_this$spec$update = (_this$spec = this.spec).update) === null || _this$spec$update === void 0 || _this$spec$update.call(_this$spec, view, state, this.dom);
+    }
+  }]);
+}();
+
+var MenuGroup = /*#__PURE__*/function () {
+  function MenuGroup(view, spec) {
+    var _this = this;
+    _classCallCheck(this, MenuGroup);
+    this.view = view;
+    this.spec = spec;
+    var dom = document.createElement('div');
+    dom.setAttribute('class', spec["class"] || '');
+    dom.classList.add('menu-group');
+    this.dom = dom;
+    this.menus = spec.menus.map(function (menuSpec) {
+      return new MenuItem(_this.view, menuSpec);
+    });
+    this.menus.forEach(function (menu) {
+      return dom.appendChild(menu.dom);
+    });
+  }
+  return _createClass(MenuGroup, [{
+    key: "update",
+    value: function update(view, state) {
+      this.view = view;
+      this.menus.forEach(function (menu) {
+        return menu.update(view, state);
+      });
+    }
+  }]);
+}();
+
+var ToolBar = /*#__PURE__*/function () {
+  function ToolBar(view, spec) {
+    var _this = this;
+    _classCallCheck(this, ToolBar);
+    this.view = view;
+    this.spec = spec;
+    var dom = document.createElement('div');
+    dom.setAttribute('class', this.spec["class"] || '');
+    dom.classList.add('toolbar');
+    this.dom = dom;
+    this.groups = this.spec.groups.map(function (menuGroupSpec) {
+      return new MenuGroup(_this.view, menuGroupSpec);
+    });
+    this.groups.forEach(function (menuGroup) {
+      return dom.appendChild(menuGroup.dom);
+    });
+    this.render();
+  }
+  return _createClass(ToolBar, [{
+    key: "render",
+    value: function render() {
+      if (this.view.dom.parentNode) {
+        this.view.dom.parentNode.insertBefore(this.dom, this.view.dom);
+      }
+    }
+  }, {
+    key: "update",
+    value: function update(view, state) {
+      this.view = view;
+      this.groups.forEach(function (group) {
+        return group.update(view, state);
+      });
+    }
+  }, {
+    key: "destroy",
+    value: function destroy() {
+      var _this$dom$parentNode;
+      (_this$dom$parentNode = this.dom.parentNode) === null || _this$dom$parentNode === void 0 || _this$dom$parentNode.removeChild(this.dom);
+    }
+  }]);
+}();
+var buildToolbar = function buildToolbar() {
   var toolbar;
   var toolbarPlugin = new prosemirrorState.Plugin({
     key: new prosemirrorState.PluginKey('toolbar'),
@@ -900,33 +944,44 @@ var setupEditor = function setupEditor(el) {
       return toolbar;
     }
   });
+  return {
+    plugin: toolbarPlugin,
+    update: function update(view, state) {
+      var _toolbar;
+      return (_toolbar = toolbar) === null || _toolbar === void 0 ? void 0 : _toolbar.update(view, state);
+    },
+    destroy: function destroy() {
+      var _toolbar2;
+      (_toolbar2 = toolbar) === null || _toolbar2 === void 0 || _toolbar2.destroy();
+      toolbar = null;
+    }
+  };
+};
+
+// view.ts
+var setupEditor = function setupEditor(el) {
+  if (!el) return;
+  var toolbar = buildToolbar();
   // 根据 schema 定义，创建 editorState 数据实例
   var editorState = prosemirrorState.EditorState.create({
     schema: schema,
-    plugins: [buildInputRules(), prosemirrorKeymap.keymap(_objectSpread2(_objectSpread2({}, prosemirrorCommands.baseKeymap), myKeymap)), prosemirrorHistory.history(), prosemirrorKeymap.keymap({
-      'Mod-z': prosemirrorHistory.undo,
-      'Mod-y': prosemirrorHistory.redo
-    }), toolbarPlugin, highlightCodePlugin()]
+    plugins: [buildInputRules(), prosemirrorKeymap.keymap(myKeymap), prosemirrorHistory.history(), toolbar.plugin, highlightCodePlugin()]
   });
   // 创建编辑器视图实例，并挂在到 el 上
   var editorView = new prosemirrorView.EditorView(el, {
     state: editorState,
     dispatchTransaction: function dispatchTransaction(tr) {
-      var _toolbar;
       var newState = editorView.state.apply(tr);
       editorView.updateState(newState);
-      (_toolbar = toolbar) === null || _toolbar === void 0 || _toolbar.update(editorView, editorView.state);
+      toolbar.update(editorView, editorView.state);
     },
     nodeViews: {
       code_block: CodeBlockViewConstructor
     }
   });
-  console.log('editorView', editorView);
   return function () {
-    var _toolbar2;
     editorView.destroy();
-    (_toolbar2 = toolbar) === null || _toolbar2 === void 0 || _toolbar2.destroy();
-    toolbar = null;
+    toolbar.destroy();
   };
 };
 

@@ -1,4 +1,4 @@
-import { EditorState, PluginView } from 'prosemirror-state';
+import { EditorState, PluginView, Plugin } from 'prosemirror-state';
 import { MenuGroupSpec } from './menuGroup';
 import { EditorView } from 'prosemirror-view';
 export interface ToolBarSpec {
@@ -15,3 +15,8 @@ export declare class ToolBar implements PluginView {
     update(view: EditorView, state: EditorState): void;
     destroy(): void;
 }
+export declare const buildToolbar: () => {
+    plugin: Plugin<any>;
+    update: (view: EditorView, state: EditorState) => void | undefined;
+    destroy: () => void;
+};
