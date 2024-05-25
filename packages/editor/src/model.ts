@@ -29,7 +29,7 @@ export const schema = new Schema({
         },
       ],
     },
-    code_block: codeBlock,
+    codeBlock,
     blockQuote: {
       content: 'paragraph block*',
       group: 'block',

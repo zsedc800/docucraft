@@ -36,7 +36,7 @@ export const setupEditor = (el: HTMLElement | null) => {
       toolbar.update(editorView, editorView.state);
     },
     nodeViews: {
-      code_block: CodeBlockViewConstructor,
+      codeBlock: CodeBlockViewConstructor,
     },
   });
   return () => {

@@ -74,7 +74,8 @@ export function highlightCodePlugin() {
     if (!doc || !doc.nodeSize) {
       return [];
     }
-    const blocks = findNodesByType(doc, 'code_block');
+    const blocks = findNodesByType(doc, 'codeBlock');
+    console.log(blocks, 'block');
     let decorations: Decoration[] = [];
 
     blocks.forEach((block) => {
@@ -87,6 +88,7 @@ export function highlightCodePlugin() {
         : hljs.highlightAuto(block.node.textContent);
 
       const emitter = highlightResult._emitter;
+      console.log(highlightResult, 're');
 
       const renderer = new HighlightRenderer(emitter, block.pos);
 
@@ -102,10 +104,10 @@ export function highlightCodePlugin() {
         decorations = decorations.concat(blockDecorations);
       }
 
-      if (block.node.attrs.showLineNumber) {
-        const lineNumberDecorations = createLineNumberDecorations(block);
-        decorations = decorations.concat(lineNumberDecorations);
-      }
+      // if (block.node.attrs.showLineNumber) {
+      //   const lineNumberDecorations = createLineNumberDecorations(block);
+      //   decorations = decorations.concat(lineNumberDecorations);
+      // }
     });
     return decorations;
   }

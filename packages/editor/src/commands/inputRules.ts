@@ -52,7 +52,7 @@ const rules = [
   ...listRules,
   textblockTypeInputRule(
     /^```([\w+#]*)\s$/,
-    schema.nodes.code_block,
+    schema.nodes.codeBlock,
     (match) => ({ language: mapTolang(match[1]) })
   ),
   wrappingInputRule(/^>\s$/, schema.nodes.blockQuote),

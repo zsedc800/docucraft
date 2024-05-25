@@ -31,3 +31,12 @@ function createElement(
 }
 
 export default createElement;
+
+export const updateElement = (
+  dom: HTMLElement,
+  attrs: Record<string, string>
+) => {
+  for (const key of Object.keys(attrs)) {
+    dom.setAttribute(key, attrs[key]);
+  }
+};

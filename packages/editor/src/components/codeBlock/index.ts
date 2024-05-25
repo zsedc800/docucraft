@@ -52,8 +52,8 @@ export const codeBlock: NodeSpec = {
 
 export const createCodeBlockCmd: Command = (state, dispatch, view) => {
   const lastLanguage = state.schema.cached.lastLanguage || 'plaintext';
-  const { code_block } = state.schema.nodes;
-  const codeBlockNode = code_block.create({ language: lastLanguage });
+  const { codeBlock } = state.schema.nodes;
+  const codeBlockNode = codeBlock.create({ language: lastLanguage });
   let tr = state.tr;
   tr.replaceSelectionWith(codeBlockNode);
   tr.scrollIntoView();

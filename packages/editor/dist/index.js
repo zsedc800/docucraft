@@ -7,6 +7,8 @@ var prosemirrorState = require('prosemirror-state');
 var prosemirrorModel = require('prosemirror-model');
 var prosemirrorKeymap = require('prosemirror-keymap');
 var prosemirrorHistory = require('prosemirror-history');
+var ReactDOM = require('react-dom/client');
+var React = require('react');
 var hljs = require('highlight.js');
 var prosemirrorInputrules = require('prosemirror-inputrules');
 var prosemirrorCommands = require('prosemirror-commands');
@@ -54,8 +56,8 @@ var codeBlock = {
 };
 var createCodeBlockCmd = function createCodeBlockCmd(state, dispatch, view) {
   var lastLanguage = state.schema.cached.lastLanguage || 'plaintext';
-  var code_block = state.schema.nodes.code_block;
-  var codeBlockNode = code_block.create({
+  var codeBlock = state.schema.nodes.codeBlock;
+  var codeBlockNode = codeBlock.create({
     language: lastLanguage
   });
   var tr = state.tr;
@@ -92,7 +94,7 @@ var schema = new prosemirrorModel.Schema({
         tag: 'p'
       }]
     },
-    code_block: codeBlock,
+    codeBlock: codeBlock,
     blockQuote: {
       content: 'paragraph block*',
       group: 'block',
@@ -376,7 +378,7 @@ function createElement(tag, options, arg) {
   for (var _len = arguments.length, rest = new Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
     rest[_key - 3] = arguments[_key];
   }
-  if (Array.isArray(arg)) children = arg;else children = arg ? [arg].concat(rest) : [];
+  if (Array.isArray(arg)) children = arg;else children = [];
   var dom = document.createElement(tag);
   for (var _i = 0, _Object$keys = Object.keys(options); _i < _Object$keys.length; _i++) {
     var key = _Object$keys[_i];
@@ -403,6 +405,66 @@ function createElement(tag, options, arg) {
   dom.appendChild(fragment);
   return dom;
 }
+var updateElement = function updateElement(dom, attrs) {
+  for (var _i2 = 0, _Object$keys2 = Object.keys(attrs); _i2 < _Object$keys2.length; _i2++) {
+    var key = _Object$keys2[_i2];
+    dom.setAttribute(key, attrs[key]);
+  }
+};
+
+var languages = ['plaintext', 'javascript', 'html', 'markdown', 'typescript', 'python', 'java'];
+var CodeBlock = function CodeBlock(_ref) {
+  var nodeView = _ref.nodeView;
+  React.useRef(null);
+  var _nodeView$node$attrs = nodeView.node.attrs,
+    language = _nodeView$node$attrs.language;
+    _nodeView$node$attrs.showLineNumber;
+  React.useEffect(function () {
+    console.log('mount');
+    // nodeView.contentDOM = $code.current;
+  }, []);
+  return React.createElement(React.Fragment, null, React.createElement("div", {
+    className: "code-block-menu"
+  }, React.createElement("div", {
+    className: "code-block-menu-content"
+  }, React.createElement("select", {
+    className: 'code-type-select',
+    onChange: function onChange(e) {
+      var _nodeView$view = nodeView.view,
+        state = _nodeView$view.state,
+        dispatch = _nodeView$view.dispatch;
+      var language = e.target.value;
+      var pos = nodeView.getPos();
+      state.schema.cached.lastLanguage = language;
+      if (pos || pos == 0) {
+        var tr = state.tr.setNodeAttribute(pos, 'language', language);
+        dispatch(tr);
+        setTimeout(function () {
+          return nodeView.view.focus();
+        }, 16);
+      }
+    }
+  }, languages.map(function (lang) {
+    return React.createElement("option", {
+      value: lang,
+      selected: lang === language
+    }, lang);
+  }))), React.createElement("div", {
+    className: "code-block-menu-tile"
+  }, React.createElement("div", {
+    className: 'btn',
+    onClick: function onClick() {
+      navigator.clipboard.writeText(nodeView.node.textContent).then(function () {
+        alert('copied!');
+      });
+    }
+  }, "\u590D\u5236"))));
+};
+var setup = function setup(nodeView) {
+  nodeView.root.render(React.createElement(CodeBlock, {
+    nodeView: nodeView
+  }));
+};
 
 var CodeBlockView = /*#__PURE__*/function () {
   function CodeBlockView() {
@@ -417,116 +479,55 @@ var CodeBlockView = /*#__PURE__*/function () {
     this.node = node;
     this.view = view;
     this.getPos = getPos;
-    this.renderUI(node);
+    this.contentDOM = createElement('code', {
+      "class": 'scrollbar',
+      'data-language': node.attrs.language,
+      'data-theme': node.attrs.theme,
+      'data-show-line-number': node.attrs.showLineNumber,
+      'data-node-type': 'codeBlock'
+    });
+    this.menu = createElement('div', {
+      "class": 'code-block-menu-container'
+    });
+    this.dom = createElement('pre', {
+      "class": 'docucraft-codeblock',
+      'data-language': node.attrs.language,
+      'data-theme': node.attrs.theme,
+      'data-show-line-number': node.attrs.showLineNumber,
+      'data-node-type': 'codeBlock'
+    });
+    this.root = ReactDOM.createRoot(this.menu);
+    this.dom.appendChild(this.menu);
+    this.dom.appendChild(this.contentDOM);
+    this.renderComponent();
   }
   return _createClass(CodeBlockView, [{
+    key: "renderComponent",
+    value: function renderComponent() {
+      setup(this);
+    }
+  }, {
     key: "update",
     value: function update(node, decorations, innerDecorations) {
+      if (node.type !== this.node.type) return false;
       this.node = node;
-      if (node.type.name !== 'code_block') return false;
-      this.updateUI(node);
+      updateElement(this.dom, {
+        'data-language': node.attrs.language,
+        'data-theme': node.attrs.theme,
+        'data-show-line-number': node.attrs.showLineNumber
+      });
+      updateElement(this.contentDOM, {
+        'data-language': node.attrs.language,
+        'data-theme': node.attrs.theme,
+        'data-show-line-number': node.attrs.showLineNumber
+      });
+      this.renderComponent();
       return true;
     }
   }, {
-    key: "renderUI",
-    value: function renderUI(node) {
-      var _this = this;
-      // pre-wrapper
-      this.dom = createElement('pre', {
-        'data-language': node.attrs.language,
-        'data-theme': node.attrs.theme,
-        'data-show-line-number': node.attrs.showLineNumber,
-        'data-node-type': 'code_block'
-      });
-      // code-meanu
-      var menuContainer = createElement('div', {
-        "class": 'code-block-menu-container'
-      }, createElement('div', {
-        "class": 'code-block-menu'
-      }, createElement('select', {
-        "class": 'code-name-select',
-        onchange: function onchange(event) {
-          var _this$view = _this.view,
-            state = _this$view.state,
-            dispatch = _this$view.dispatch;
-          var language = event.target.value;
-          var pos = _this.getPos();
-          _this.view.state.schema.cached.lastLanguage = language;
-          if (pos) {
-            var tr = state.tr.setNodeAttribute(pos, 'language', language);
-            dispatch(tr);
-            setTimeout(function () {
-              return _this.view.focus();
-            }, 16);
-          }
-        }
-      }, ['plaintext', 'javascript', 'html', 'markdown', 'typescript', 'python', 'java'].map(function (item) {
-        return createElement('option', {
-          value: item,
-          selected: item === node.attrs.language
-        }, item);
-      })), createElement('div', {
-        "class": 'code-menu-right'
-      }, createElement('select', {
-        "class": 'show-line-number-select',
-        onchange: function onchange(event) {
-          var _this$view2 = _this.view,
-            state = _this$view2.state,
-            dispatch = _this$view2.dispatch;
-          var showLineNumber = event.target.value === 'true';
-          var pos = _this.getPos();
-          if (pos) {
-            var tr = state.tr.setNodeAttribute(pos, 'showLineNumber', showLineNumber);
-            dispatch(tr);
-            setTimeout(function () {
-              return _this.view.focus();
-            }, 16);
-          }
-        }
-      }, [{
-        value: 'true',
-        label: '展示行号'
-      }, {
-        value: 'false',
-        label: '隐藏行号'
-      }].map(function (item) {
-        return createElement('option', {
-          selected: item.value === node.attrs.showLineNumber.toString(),
-          value: item.value
-        }, item.label);
-      })), createElement('button', {
-        "class": 'copy-btn',
-        onmousedown: function onmousedown() {
-          navigator.clipboard.writeText(_this.node.textContent).then(function () {
-            alert('copied!');
-          });
-        }
-      }, 'copy'))));
-      // content dom
-      var code = createElement('code', {
-        "class": "code-block language-typescript ".concat(node.attrs.showLineNumber ? 'show-line-number' : ''),
-        lang: node.attrs.language
-      });
-      this.contentDOM = code;
-      this.dom.appendChild(menuContainer);
-      this.dom.appendChild(code);
-    }
-  }, {
-    key: "updateUI",
-    value: function updateUI(node) {
-      var _this$contentDOM, _this$contentDOM3;
-      var _node$attrs = node.attrs,
-        showLineNumber = _node$attrs.showLineNumber,
-        language = _node$attrs.language;
-      var showLineNumberClass = 'show-line-number';
-      if (showLineNumber && !((_this$contentDOM = this.contentDOM) !== null && _this$contentDOM !== void 0 && _this$contentDOM.classList.contains(showLineNumberClass))) {
-        var _this$contentDOM2;
-        (_this$contentDOM2 = this.contentDOM) === null || _this$contentDOM2 === void 0 || _this$contentDOM2.classList.add(showLineNumberClass);
-      }
-      if (!showLineNumber && (_this$contentDOM3 = this.contentDOM) !== null && _this$contentDOM3 !== void 0 && _this$contentDOM3.classList.contains(showLineNumberClass)) {
-        this.contentDOM.classList.remove(showLineNumberClass);
-      }
-      this.contentDOM.dataset.lang = language;
+    key: "destroy",
+    value: function destroy() {
+      this.root.unmount();
     }
   }]);
 }();
@@ -635,35 +636,13 @@ function findNodesByType(doc, type) {
   });
   return nodes;
 }
-function createLineNumberDecorations(block) {
-  var textContent = block.node.textContent;
-  var lineInfos = textContent.split('\n');
-  var currentPos = block.pos + 1;
-  var decorations = lineInfos.map(function (item, index) {
-    var span = createElement('span', {
-      "class": 'line-number',
-      line: "".concat(index + 1)
-    }, "\u200B");
-    var decoration = prosemirrorView.Decoration.widget(currentPos, function (view) {
-      return span;
-    }, {
-      side: -1,
-      ignoreSelection: true,
-      destroy: function destroy() {
-        span.remove();
-      }
-    });
-    currentPos += item.length + 1;
-    return decoration;
-  });
-  return decorations;
-}
 function highlightCodePlugin() {
   function getDecs(doc) {
     if (!doc || !doc.nodeSize) {
       return [];
     }
-    var blocks = findNodesByType(doc, 'code_block');
+    var blocks = findNodesByType(doc, 'codeBlock');
+    console.log(blocks, 'block');
     var decorations = [];
     blocks.forEach(function (block) {
       var language = block.node.attrs.language;
@@ -672,6 +651,7 @@ function highlightCodePlugin() {
         language: language
       }) : hljs.highlightAuto(block.node.textContent);
       var emitter = highlightResult._emitter;
+      console.log(highlightResult, 're');
       var renderer = new HighlightRenderer(emitter, block.pos);
       console.log(renderer.value, 'val');
       if (renderer.value.length) {
@@ -682,10 +662,10 @@ function highlightCodePlugin() {
         });
         decorations = decorations.concat(blockDecorations);
       }
-      if (block.node.attrs.showLineNumber) {
-        var lineNumberDecorations = createLineNumberDecorations(block);
-        decorations = decorations.concat(lineNumberDecorations);
-      }
+      // if (block.node.attrs.showLineNumber) {
+      //   const lineNumberDecorations = createLineNumberDecorations(block);
+      //   decorations = decorations.concat(lineNumberDecorations);
+      // }
     });
     return decorations;
   }
@@ -759,7 +739,7 @@ var map = {
 var mapTolang = function mapTolang(lang) {
   return map[lang] || 'plaintext';
 };
-var rules = [].concat(headingRules, listRules, [prosemirrorInputrules.textblockTypeInputRule(/^```([\w+#]*)\s$/, schema.nodes.code_block, function (match) {
+var rules = [].concat(headingRules, listRules, [prosemirrorInputrules.textblockTypeInputRule(/^```([\w+#]*)\s$/, schema.nodes.codeBlock, function (match) {
   return {
     language: mapTolang(match[1])
   };
@@ -821,7 +801,19 @@ var splitListItem = function splitListItem(itemType, itemAttrs) {
 var myKeymap = _objectSpread2(_objectSpread2({}, prosemirrorCommands.baseKeymap), {}, {
   Enter: prosemirrorCommands.chainCommands(splitListItem(schema.nodes.list_item), prosemirrorCommands.newlineInCode, prosemirrorCommands.createParagraphNear, prosemirrorCommands.liftEmptyBlock, prosemirrorCommands.splitBlock),
   'Mod-z': prosemirrorHistory.undo,
-  'Mod-y': prosemirrorHistory.redo
+  'Mod-y': prosemirrorHistory.redo,
+  Tab: function Tab(state, dispatch) {
+    var _state$selection2 = state.selection,
+      $from = _state$selection2.$from,
+      $to = _state$selection2.$to;
+    console.log($from.parent, 'p');
+    if (!$from.sameParent($to) || $from.parent.type !== schema.nodes.codeBlock) return false;
+    if (dispatch) {
+      dispatch(state.tr.insertText('\t'));
+      return true;
+    }
+    return false;
+  }
 });
 
 var MenuItem = /*#__PURE__*/function () {
@@ -976,7 +968,7 @@ var setupEditor = function setupEditor(el) {
       toolbar.update(editorView, editorView.state);
     },
     nodeViews: {
-      code_block: CodeBlockViewConstructor
+      codeBlock: CodeBlockViewConstructor
     }
   });
   return function () {

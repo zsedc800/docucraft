@@ -17,6 +17,7 @@ import {
 } from 'prosemirror-state';
 import { schema } from '../model';
 import { redo, undo } from 'prosemirror-history';
+import { EditorView } from 'prosemirror-view';
 
 const splitListItem = (itemType: NodeType, itemAttrs?: Attrs): Command => {
   return (
@@ -98,4 +99,15 @@ export const myKeymap: { [key: string]: Command } = {
   ),
   'Mod-z': undo,
   'Mod-y': redo,
+  Tab: (state: EditorState, dispatch?: EditorView['dispatch']) => {
+    const { $from, $to } = state.selection;
+    console.log($from.parent, 'p');
+    if (!$from.sameParent($to) || $from.parent.type !== schema.nodes.codeBlock)
+      return false;
+    if (dispatch) {
+      dispatch(state.tr.insertText('\t'));
+      return true;
+    }
+    return false;
+  },
 };
