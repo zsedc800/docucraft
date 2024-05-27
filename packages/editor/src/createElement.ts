@@ -1,5 +1,5 @@
 interface Spec {
-  [key: string]: string | boolean | string | ((e: Event) => void);
+  [key: string]: undefined | null | boolean | string | ((e: Event) => void);
 }
 type DOMNode = HTMLElement | string;
 
@@ -16,6 +16,7 @@ function createElement(
   const dom = document.createElement(tag);
   for (const key of Object.keys(options)) {
     const val = options[key];
+    if (val === null || val === undefined) continue;
     if (typeof val === 'function') {
       dom.addEventListener(key.replace('on', ''), val);
     } else {

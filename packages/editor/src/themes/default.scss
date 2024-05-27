@@ -14,20 +14,20 @@ body {
 
 // task list
 
-.task-list-item {
-  list-style-type: none;
-  text-indent: -1.5em; // 这个数值刚好令 checkbox 与上一行第一个字对齐
+// .task-list-item {
+//   list-style-type: none;
+//   text-indent: -1.5em; // 这个数值刚好令 checkbox 与上一行第一个字对齐
 
-  &:before {
-    content: '';
-    display: static;
-    margin-right: 0px;
-  }
+//   &:before {
+//     content: '';
+//     display: static;
+//     margin-right: 0px;
+//   }
 
-  > input[type='checkbox'] {
-    text-indent: -1.7em;
-  }
-}
+//   > input[type='checkbox'] {
+//     text-indent: -1.7em;
+//   }
+// }
 
 /* MWeb：代码块高亮 */
 code,

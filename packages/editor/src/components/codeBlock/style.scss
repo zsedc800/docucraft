@@ -1,11 +1,10 @@
 .docucraft-codeblock {
-  background-color: #23241f;
+  // background-color: #23241f;
   padding: 0;
   border-radius: 8px;
   overflow: hidden;
   code {
     font-size: 14px;
-    color: #fff;
     display: block;
     padding: 16px;
   }
@@ -13,10 +12,14 @@
     font-size: 12px;
     line-height: 16px;
     display: flex;
+    align-items: center;
     padding: 8px 16px;
-    background-color: #2f2f2f;
-    color: #cdcdcd;
+    // background-color: #2f2f2f;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    // color: #cdcdcd;
     &-content {
+      display: flex;
+      align-items: center;
       flex-grow: 1;
     }
     &-tile {

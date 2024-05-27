@@ -75,7 +75,6 @@ export function highlightCodePlugin() {
       return [];
     }
     const blocks = findNodesByType(doc, 'codeBlock');
-    console.log(blocks, 'block');
     let decorations: Decoration[] = [];
 
     blocks.forEach((block) => {
@@ -88,11 +87,8 @@ export function highlightCodePlugin() {
         : hljs.highlightAuto(block.node.textContent);
 
       const emitter = highlightResult._emitter;
-      console.log(highlightResult, 're');
 
       const renderer = new HighlightRenderer(emitter, block.pos);
-
-      console.log(renderer.value, 'val');
 
       if (renderer.value.length) {
         const blockDecorations = renderer.value.map((renderInfo) =>

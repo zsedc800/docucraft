@@ -2,6 +2,7 @@
 import { Schema } from 'prosemirror-model';
 // import { schema as basicSchema } from 'prosemirror-schema-basic';
 import { codeBlock } from './components/codeBlock';
+import { taskItem, taskList } from './components/taskList';
 
 export const schema = new Schema({
   nodes: {
@@ -115,6 +116,8 @@ export const schema = new Schema({
         return ['li', 0];
       },
     },
+    taskList,
+    taskItem,
   },
   // 除了上面定义 node 节点，一些富文本样式，可以通过 marks 定义
   marks: {

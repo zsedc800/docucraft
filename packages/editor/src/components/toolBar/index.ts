@@ -2,6 +2,7 @@ import { EditorState, PluginView, Plugin, PluginKey } from 'prosemirror-state';
 import { MenuGroup, MenuGroupSpec } from './menuGroup';
 import { EditorView } from 'prosemirror-view';
 import { createCodeBlockCmd } from '../codeBlock';
+import { createTaskList } from '../taskList';
 
 export interface ToolBarSpec {
   groups: MenuGroupSpec[];
@@ -56,6 +57,12 @@ export const buildToolbar = () => {
                 label: '插入代码块',
                 handler({ state, dispatch, view }, event) {
                   createCodeBlockCmd(state, dispatch, view);
+                },
+              },
+              {
+                label: '插入tasklist',
+                handler({ state, dispatch, view }) {
+                  createTaskList(state, dispatch, view);
                 },
               },
             ],

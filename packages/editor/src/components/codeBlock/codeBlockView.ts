@@ -34,7 +34,7 @@ export class CodeBlockView implements NodeView {
     });
     this.menu = crel('div', { class: 'code-block-menu-container' });
     this.dom = crel('pre', {
-      class: 'docucraft-codeblock',
+      class: 'docucraft-codeblock hljs',
       'data-language': node.attrs.language,
       'data-theme': node.attrs.theme,
       'data-show-line-number': node.attrs.showLineNumber,
