@@ -1,12 +1,43 @@
+.task-list {
+  padding-left: 0;
+  list-style: none;
+  font-size: 16px;
+  line-height: 22px;
+}
+.task-list .task-item {
+  padding: 4px 0;
+  display: flex;
+  text-indent: 0em;
+}
+.task-list .task-item.checked {
+  text-decoration: line-through rgba(55, 53, 47, 0.45);
+  color: rgba(55, 53, 47, 0.65);
+}
+.task-list .task-item input[type=checkbox] {
+  width: 14px;
+  height: 14px;
+  margin: 0;
+}
+.task-list .task-item-checkbox {
+  padding: 4px 0;
+  margin-right: 4px;
+  display: flex;
+  flex-shrink: 0;
+}
+.task-list .task-item-content {
+  flex-grow: 1;
+}
+.task-list .task-item p {
+  padding: 0;
+  margin: 0;
+}
 .docucraft-codeblock {
-  background-color: #23241f;
   padding: 0;
   border-radius: 8px;
   overflow: hidden;
 }
 .docucraft-codeblock code {
   font-size: 14px;
-  color: #fff;
   display: block;
   padding: 16px;
 }
@@ -14,11 +45,13 @@
   font-size: 12px;
   line-height: 16px;
   display: flex;
+  align-items: center;
   padding: 8px 16px;
-  background-color: #2f2f2f;
-  color: #cdcdcd;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 .docucraft-codeblock .code-block-menu-content {
+  display: flex;
+  align-items: center;
   flex-grow: 1;
 }
 .docucraft-codeblock .code-block-menu-tile .btn {
@@ -46,6 +79,7 @@ pre code {
 .scrollbar::-webkit-scrollbar {
   width: 12px;
   height: 12px;
+  cursor: move;
 }
 .scrollbar::-webkit-scrollbar-track {
   background-color: transparent;
@@ -72,19 +106,6 @@ body {
   max-width: 760px;
   margin: 0 auto !important;
   padding: 1em;
-}
-
-.task-list-item {
-  list-style-type: none;
-  text-indent: -1.5em;
-}
-.task-list-item:before {
-  content: "";
-  display: static;
-  margin-right: 0px;
-}
-.task-list-item > input[type=checkbox] {
-  text-indent: -1.7em;
 }
 
 /* MWeb：代码块高亮 */

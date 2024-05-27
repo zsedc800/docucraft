@@ -18,6 +18,7 @@ import {
 import { schema } from '../model';
 import { redo, undo } from 'prosemirror-history';
 import { EditorView } from 'prosemirror-view';
+import { createTaskList } from '../components/taskList';
 
 const splitListItem = (itemType: NodeType, itemAttrs?: Attrs): Command => {
   return (
@@ -28,7 +29,11 @@ const splitListItem = (itemType: NodeType, itemAttrs?: Attrs): Command => {
     if ((node && node.isBlock) || $from.depth < 2 || !$from.sameParent($to))
       return false;
     let grandParent = $from.node(-1);
-    if (grandParent.type != itemType) return false;
+    if (
+      grandParent.type != itemType &&
+      grandParent.type != schema.nodes.taskItem
+    )
+      return false;
     const liCount = $from.node(-2).childCount;
     if (
       $from.parent.content.size == 0 &&
@@ -110,4 +115,5 @@ export const myKeymap: { [key: string]: Command } = {
     }
     return false;
   },
+  'Ctrl-Shift-L': createTaskList,
 };

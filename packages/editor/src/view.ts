@@ -9,6 +9,7 @@ import { highlightCodePlugin } from './components/codeBlock/highlightCodePlugin'
 import { myKeymap, buildInputRules } from './commands';
 import { buildToolbar } from './components/toolBar';
 import './themes/default.scss';
+import { TaskItemViewConstructor, taskItem } from './components/taskList';
 
 export const setupEditor = (el: HTMLElement | null) => {
   if (!el) return;
@@ -37,6 +38,7 @@ export const setupEditor = (el: HTMLElement | null) => {
     },
     nodeViews: {
       codeBlock: CodeBlockViewConstructor,
+      taskItem: TaskItemViewConstructor,
     },
   });
   return () => {
