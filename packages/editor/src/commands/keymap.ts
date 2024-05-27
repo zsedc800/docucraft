@@ -106,7 +106,6 @@ export const myKeymap: { [key: string]: Command } = {
   'Mod-y': redo,
   Tab: (state: EditorState, dispatch?: EditorView['dispatch']) => {
     const { $from, $to } = state.selection;
-    console.log($from.parent, 'p');
     if (!$from.sameParent($to) || $from.parent.type !== schema.nodes.codeBlock)
       return false;
     if (dispatch) {

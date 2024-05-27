@@ -907,7 +907,6 @@ var myKeymap = _objectSpread2(_objectSpread2({}, prosemirrorCommands.baseKeymap)
     var _state$selection2 = state.selection,
       $from = _state$selection2.$from,
       $to = _state$selection2.$to;
-    console.log($from.parent, 'p');
     if (!$from.sameParent($to) || $from.parent.type !== schema.nodes.codeBlock) return false;
     if (dispatch) {
       dispatch(state.tr.insertText('\t'));
