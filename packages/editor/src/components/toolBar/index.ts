@@ -3,6 +3,7 @@ import { MenuGroup, MenuGroupSpec } from './menuGroup';
 import { EditorView } from 'prosemirror-view';
 import { createCodeBlockCmd } from '../codeBlock';
 import { createTaskList } from '../taskList';
+import { createTable, insertTable } from '../tables/commands';
 
 export interface ToolBarSpec {
   groups: MenuGroupSpec[];
@@ -63,6 +64,13 @@ export const buildToolbar = () => {
                 label: '插入tasklist',
                 handler({ state, dispatch, view }) {
                   createTaskList(state, dispatch, view);
+                },
+              },
+              {
+                label: '插入表格',
+                handler({ state, dispatch, view }) {
+                  createTable(3, 4)(state, dispatch, view);
+                  // insertTable(state, dispatch);
                 },
               },
             ],

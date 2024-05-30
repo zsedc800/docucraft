@@ -14,62 +14,6 @@ var prosemirrorInputrules = require('prosemirror-inputrules');
 var prosemirrorCommands = require('prosemirror-commands');
 var prosemirrorTransform = require('prosemirror-transform');
 
-var codeBlock = {
-  content: 'text*',
-  group: 'block',
-  marks: '',
-  code: true,
-  defining: true,
-  draggable: false,
-  selectable: true,
-  isolating: true,
-  attrs: {
-    language: {
-      "default": 'plaintext'
-    },
-    theme: {
-      "default": 'dark'
-    },
-    showLineNumber: {
-      "default": true
-    }
-  },
-  toDOM: function toDOM(node) {
-    return ['pre', {
-      'data-lanaguage': node.attrs.language,
-      'data-theme': node.attrs.theme,
-      'data-show-line-number': node.attrs.showLineNumber,
-      'data-node-type': 'code_block'
-    }, ['code', 0]];
-  },
-  parseDOM: [{
-    tag: 'pre',
-    preserveWhitespace: 'full',
-    getAttrs: function getAttrs(domNode) {
-      return {
-        language: domNode.getAttribute('data-language'),
-        theme: domNode.getAttribute('data-theme'),
-        showLineNumber: domNode.getAttribute('data-show-line-number')
-      };
-    }
-  }]
-};
-var createCodeBlockCmd = function createCodeBlockCmd(state, dispatch, view) {
-  var lastLanguage = state.schema.cached.lastLanguage || 'plaintext';
-  var codeBlock = state.schema.nodes.codeBlock;
-  var codeBlockNode = codeBlock.create({
-    language: lastLanguage
-  });
-  var tr = state.tr;
-  tr.replaceSelectionWith(codeBlockNode);
-  tr.scrollIntoView();
-  if (dispatch) {
-    dispatch(tr);
-    return true;
-  }
-  return false;
-};
-
 function _construct(t, e, r) {
   if (_isNativeReflectConstruct()) return Reflect.construct.apply(null, arguments);
   var o = [null];
@@ -220,7 +164,65 @@ function _createForOfIteratorHelper(o, allowArrayLike) {
   };
 }
 
-function createElement(tag, options, arg) {
+var codeBlock = {
+  content: 'text*',
+  group: 'block',
+  marks: '',
+  code: true,
+  defining: true,
+  draggable: false,
+  selectable: true,
+  isolating: true,
+  attrs: {
+    language: {
+      "default": 'plaintext'
+    },
+    theme: {
+      "default": 'dark'
+    },
+    showLineNumber: {
+      "default": true
+    }
+  },
+  toDOM: function toDOM(node) {
+    return ['pre', {
+      'data-lanaguage': node.attrs.language,
+      'data-theme': node.attrs.theme,
+      'data-show-line-number': node.attrs.showLineNumber,
+      'data-node-type': 'code_block'
+    }, ['code', 0]];
+  },
+  parseDOM: [{
+    tag: 'pre',
+    preserveWhitespace: 'full',
+    getAttrs: function getAttrs(domNode) {
+      return {
+        language: domNode.getAttribute('data-language'),
+        theme: domNode.getAttribute('data-theme'),
+        showLineNumber: domNode.getAttribute('data-show-line-number')
+      };
+    }
+  }]
+};
+var createCodeBlockCmd = function createCodeBlockCmd(state, dispatch, view) {
+  var lastLanguage = state.schema.cached.lastLanguage || 'plaintext';
+  var codeBlock = state.schema.nodes.codeBlock;
+  var codeBlockNode = codeBlock.create({
+    language: lastLanguage
+  });
+  var tr = state.tr;
+  tr.replaceSelectionWith(codeBlockNode);
+  tr.scrollIntoView();
+  if (dispatch) {
+    dispatch(tr);
+    return true;
+  }
+  return false;
+};
+
+function createElement(tag) {
+  var options = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : {};
+  var arg = arguments.length > 2 ? arguments[2] : undefined;
   var children = [];
   for (var _len = arguments.length, rest = new Array(_len > 3 ? _len - 3 : 0), _key = 3; _key < _len; _key++) {
     rest[_key - 3] = arguments[_key];
@@ -361,9 +363,113 @@ var TaskItemViewConstructor = function TaskItemViewConstructor() {
   return _construct(TaskItemView, args);
 };
 
-// model.ts 文件命名暂时还是以 mvc 模式命名，方便理解，实际中 命名为 schema.ts 更好
+var getCellAttrs = function getCellAttrs(dom, extraAttrs) {
+  if (typeof dom === 'string') return {};
+  var widthAttr = dom.getAttribute('data-colwidth');
+  var widths = widthAttr && /^\d+(,\d+)*$/.test(widthAttr) ? widthAttr.split(',').map(Number) : null;
+  var colspan = Number(dom.getAttribute('colspan') || 1);
+  var rowspan = Number(dom.getAttribute('rowspan') || 1);
+  var result = {
+    colspan: colspan,
+    rowspan: rowspan,
+    colwidth: widths && widths.length == colspan ? widths : null
+  };
+  for (var _i = 0, _Object$keys = Object.keys(extraAttrs); _i < _Object$keys.length; _i++) {
+    var prop = _Object$keys[_i];
+    var getter = extraAttrs[prop].getFromDOM;
+    var value = getter && getter(dom);
+    if (value !== null) result[prop] = value;
+  }
+  return result;
+};
+var setCellAttrs = function setCellAttrs(node, extraAttrs) {
+  var attrs = {};
+  if (node.attrs.colspan != 1) attrs.colspan = node.attrs.colspan;
+  if (node.attrs.rowspan != 1) attrs.rowspan = node.attrs.rowspan;
+  if (node.attrs.colwidth) attrs['data-colwidth'] = node.attrs.colwidth.join(',');
+  for (var prop in extraAttrs) {
+    var setter = extraAttrs[prop].setDOMAttr;
+    if (setter) setter(node.attrs[prop], attrs);
+  }
+  return attrs;
+};
+var tableNodes = function tableNodes(options) {
+  var extraAttrs = options.cellAttributes || {};
+  var cellAttrs = {
+    colspan: {
+      "default": 1
+    },
+    rowspan: {
+      "default": 1
+    },
+    colwidth: {
+      "default": null
+    }
+  };
+  for (var _i2 = 0, _Object$keys2 = Object.keys(extraAttrs); _i2 < _Object$keys2.length; _i2++) {
+    var prop = _Object$keys2[_i2];
+    cellAttrs[prop] = {
+      "default": extraAttrs[prop]["default"]
+    };
+  }
+  return {
+    table: {
+      content: 'tableRow+',
+      tableRole: 'table',
+      isolating: true,
+      group: options.tableGroup,
+      parseDOM: [{
+        tag: 'table'
+      }],
+      toDOM: function toDOM() {
+        return ['table', ['tbody', 0]];
+      }
+    },
+    tableRow: {
+      content: '(tableCell | tableHeader)*',
+      tableRole: 'row',
+      parseDOM: [{
+        tag: 'tr'
+      }],
+      toDOM: function toDOM() {
+        return ['tr', 0];
+      }
+    },
+    tableCell: {
+      content: options.cellContent,
+      attrs: cellAttrs,
+      tableRow: 'cell',
+      isolating: true,
+      parseDOM: [{
+        tag: 'td',
+        getAttrs: function getAttrs(dom) {
+          return getCellAttrs(dom, extraAttrs);
+        }
+      }],
+      toDOM: function toDOM(node) {
+        return ['td', setCellAttrs(node, extraAttrs), 0];
+      }
+    },
+    tableHeader: {
+      content: options.cellContent,
+      attrs: cellAttrs,
+      tableRole: 'headerCell',
+      isolating: true,
+      parseDOM: [{
+        tag: 'th',
+        getAttrs: function getAttrs(dom) {
+          return getCellAttrs(dom, extraAttrs);
+        }
+      }],
+      toDOM: function toDOM(node) {
+        return ['th', setCellAttrs(node, extraAttrs), 0];
+      }
+    }
+  };
+};
+
 var schema = new prosemirrorModel.Schema({
-  nodes: {
+  nodes: _objectSpread2({
     // 整个文档
     doc: {
       // 文档内容规定必须是 block 类型的节点（block 与 HTML 中的 block 概念差不多） `+` 号代表可以有一个或多个（规则类似正则）
@@ -499,7 +605,11 @@ var schema = new prosemirrorModel.Schema({
     },
     taskList: taskList,
     taskItem: taskItem
-  },
+  }, tableNodes({
+    tableGroup: 'block',
+    cellContent: 'block+',
+    cellAttributes: {}
+  })),
   // 除了上面定义 node 节点，一些富文本样式，可以通过 marks 定义
   marks: {
     // 文本加粗
@@ -814,7 +924,7 @@ var listRules = [prosemirrorInputrules.wrappingInputRule(/^\s*([-+*])\s$/, schem
   return {
     order: +match[1]
   };
-})];
+}), prosemirrorInputrules.wrappingInputRule(/^\-\[\]\s$/, schema.nodes.taskList)];
 var map = {
   javascript: 'javascript',
   typescript: 'typescript',
@@ -975,6 +1085,26 @@ var MenuGroup = /*#__PURE__*/function () {
   }]);
 }();
 
+var createTable = function createTable(rows, columns) {
+  return function (state, dispatch, view) {
+    var _state$schema$nodes = state.schema.nodes,
+      table = _state$schema$nodes.table,
+      tableRow = _state$schema$nodes.tableRow,
+      tableHeader = _state$schema$nodes.tableHeader,
+      tableCell = _state$schema$nodes.tableCell,
+      paragraph = _state$schema$nodes.paragraph;
+    if (dispatch) {
+      dispatch(state.tr.replaceSelectionWith(table.create(null, Array(rows + 1).fill(null).map(function (_, row) {
+        return tableRow.create(null, Array(columns).fill(null).map(function (_, col) {
+          return (row === 0 ? tableHeader : tableCell).create(null, paragraph.create(null, state.schema.text('cell row ' + row + ', col ' + col)));
+        }));
+      }))).scrollIntoView());
+      return true;
+    }
+    return false;
+  };
+};
+
 var ToolBar = /*#__PURE__*/function () {
   function ToolBar(view, spec) {
     var _this = this;
@@ -1038,6 +1168,15 @@ var buildToolbar = function buildToolbar() {
                 dispatch = _ref2.dispatch;
                 _ref2.view;
               createTaskList(state, dispatch);
+            }
+          }, {
+            label: '插入表格',
+            handler: function handler(_ref3) {
+              var state = _ref3.state,
+                dispatch = _ref3.dispatch,
+                view = _ref3.view;
+              createTable(3, 4)(state, dispatch, view);
+              // insertTable(state, dispatch);
             }
           }]
         }]

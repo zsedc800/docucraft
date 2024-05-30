@@ -3,6 +3,7 @@ import { Schema } from 'prosemirror-model';
 // import { schema as basicSchema } from 'prosemirror-schema-basic';
 import { codeBlock } from './components/codeBlock';
 import { taskItem, taskList } from './components/taskList';
+import { tableNodes } from './components/tables';
 
 export const schema = new Schema({
   nodes: {
@@ -118,6 +119,11 @@ export const schema = new Schema({
     },
     taskList,
     taskItem,
+    ...tableNodes({
+      tableGroup: 'block',
+      cellContent: 'block+',
+      cellAttributes: {},
+    }),
   },
   // 除了上面定义 node 节点，一些富文本样式，可以通过 marks 定义
   marks: {

@@ -20,6 +20,7 @@ const listRules = [
   wrappingInputRule(/^(\d+)\.\s$/, schema.nodes.ordered_list, (match) => ({
     order: +match[1],
   })),
+  wrappingInputRule(/^\-\[\]\s$/, schema.nodes.taskList),
 ];
 const map: Record<string, string> = {
   javascript: 'javascript',
