@@ -43,6 +43,9 @@ export class TableView implements NodeView {
       (record.target == this.table || this.colgroup.contains(record.target))
     );
   }
+  selectNode() {
+    console.log('select', this);
+  }
 }
 
 export function updateColumnsOnResize(

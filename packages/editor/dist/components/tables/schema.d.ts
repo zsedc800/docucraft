@@ -16,5 +16,5 @@ export interface TableNodesOptions {
 }
 export type TableNodes = Record<'table' | 'tableRow' | 'tableCell' | 'tableHeader', NodeSpec>;
 export declare const tableNodes: (options: TableNodesOptions) => TableNodes;
-export type TableRole = 'table' | 'row' | 'cel' | 'headerCell';
+export type TableRole = 'table' | 'row' | 'cell' | 'headerCell';
 export declare function tableNodeTypes(schema: Schema): Record<TableRole, NodeType>;

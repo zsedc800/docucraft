@@ -3,7 +3,7 @@ import { MenuGroup, MenuGroupSpec } from './menuGroup';
 import { EditorView } from 'prosemirror-view';
 import { createCodeBlockCmd } from '../codeBlock';
 import { createTaskList } from '../taskList';
-import { createTable, insertTable } from '../tables/commands';
+import { addColumnAfter, createTable, insertTable } from '../tables/commands';
 
 export interface ToolBarSpec {
   groups: MenuGroupSpec[];
@@ -71,6 +71,12 @@ export const buildToolbar = () => {
                 handler({ state, dispatch, view }) {
                   createTable(3, 4)(state, dispatch, view);
                   // insertTable(state, dispatch);
+                },
+              },
+              {
+                label: '插入列',
+                handler({ state, dispatch, view }) {
+                  addColumnAfter(state, dispatch, view);
                 },
               },
             ],

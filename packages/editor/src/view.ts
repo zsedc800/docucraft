@@ -10,6 +10,7 @@ import { myKeymap, buildInputRules } from './commands';
 import { buildToolbar } from './components/toolBar';
 import './themes/default.scss';
 import { TaskItemViewConstructor, taskItem } from './components/taskList';
+import { tableEditing } from './components/tables';
 
 export const setupEditor = (el: HTMLElement | null) => {
   if (!el) return;
@@ -25,6 +26,7 @@ export const setupEditor = (el: HTMLElement | null) => {
       history(),
       toolbar.plugin,
       highlightCodePlugin(),
+      tableEditing({}),
     ],
   });
 

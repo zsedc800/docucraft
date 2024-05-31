@@ -1,6 +1,19 @@
+import { Attrs, Node, ResolvedPos } from 'prosemirror-model';
+import { TableMap } from './tableMap';
+import { EditorState, PluginKey } from 'prosemirror-state';
+export declare const tableEditingKey: PluginKey<number>;
 export interface CellAttrs {
     colspan: number;
     rowspan: number;
     colwidth: number[] | null;
 }
 export type MutableAttrs = Record<string, unknown>;
+export declare const addColspan: (attrs: CellAttrs, pos: number, n?: number) => Attrs;
+export declare function columnIsHeader(map: TableMap, table: Node, col: number): boolean;
+export declare function isInTable(state: EditorState): boolean;
+export declare function pointsAtCell($pos: ResolvedPos): boolean;
+export declare function inSameTable($cellA: ResolvedPos, $cellB: ResolvedPos): boolean;
+export declare function removeColSpan(attrs: CellAttrs, pos: number, n?: number): CellAttrs;
+export declare function cellAround($pos: ResolvedPos): ResolvedPos | null;
+export declare function cellNear($pos: ResolvedPos): ResolvedPos | undefined;
+export declare function selectionCell(state: EditorState): ResolvedPos;

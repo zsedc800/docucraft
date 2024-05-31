@@ -10,5 +10,6 @@ export declare class TableView implements NodeView {
     constructor(node: Node, cellMinWidth: number);
     update(node: Node): boolean;
     ignoreMutation(record: MutationRecord): boolean;
+    selectNode(): void;
 }
 export declare function updateColumnsOnResize(node: Node, colgroup: HTMLTableColElement, table: HTMLTableElement, cellMinWidth: number, overrideCol?: number, overrideValue?: number): void;

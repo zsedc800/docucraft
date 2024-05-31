@@ -122,7 +122,7 @@ export const tableNodes = (options: TableNodesOptions): TableNodes => {
   };
 };
 
-export type TableRole = 'table' | 'row' | 'cel' | 'headerCell';
+export type TableRole = 'table' | 'row' | 'cell' | 'headerCell';
 
 export function tableNodeTypes(schema: Schema): Record<TableRole, NodeType> {
   let result = schema.cached.tableNodeTypes;
