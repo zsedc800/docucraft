@@ -312,16 +312,16 @@ export class CellBookmark {
   }
 }
 
-export function drawCellSelection(state: EditorState): DecorationSource | null {
-  if (!(state.selection instanceof CellSelection)) return null;
+export function drawCellSelection(state: EditorState): Decoration[] {
   const cells: Decoration[] = [];
+  if (!(state.selection instanceof CellSelection)) return cells;
   state.selection.forEachCell((node, pos) => {
     cells.push(
       Decoration.node(pos, pos + node.nodeSize, { class: 'selectedCell' })
     );
   });
 
-  return DecorationSet.create(state.doc, cells);
+  return cells;
 }
 
 function isCellBoundarySelection({ $from, $to }: TextSelection) {

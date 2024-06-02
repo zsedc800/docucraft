@@ -1,7 +1,13 @@
 import { Attrs, Node, ResolvedPos } from 'prosemirror-model';
 import { TableMap } from './tableMap';
 import { EditorState, PluginKey } from 'prosemirror-state';
-export declare const tableEditingKey: PluginKey<number>;
+import { Decoration, DecorationSet } from 'prosemirror-view';
+export interface TableState {
+    decorations: DecorationSet;
+    set: number | null;
+    hoverDecos?: Decoration[];
+}
+export declare const tableEditingKey: PluginKey<TableState>;
 export interface CellAttrs {
     colspan: number;
     rowspan: number;

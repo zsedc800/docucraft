@@ -52,13 +52,13 @@ export function handleMouseDown(
     view.root.removeEventListener('mouseup', stop);
     view.root.removeEventListener('dragstart', stop);
     view.root.removeEventListener('mousemove', move);
-    if (tableEditingKey.getState(view.state) != null)
-      view.dispatch(view.state.tr.setMeta(tableEditingKey, -1));
+    if (tableEditingKey.getState(view.state)?.set != null)
+      view.dispatch(view.state.tr.setMeta(tableEditingKey, { set: -1 }));
   }
 
   function move(_event: Event): void {
     const event = _event as MouseEvent;
-    const anchor = tableEditingKey.getState(view.state);
+    const anchor = tableEditingKey.getState(view.state)?.set;
     let $anchor;
     if (anchor != null) {
       // Continuing an existing cross-cell selection

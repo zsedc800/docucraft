@@ -78,13 +78,21 @@ export const tableNodes = (options: TableNodesOptions): TableNodes => {
     cellAttrs[prop] = { default: extraAttrs[prop].default };
   return {
     table: {
+      attrs: { class: { default: '' } },
       content: 'tableRow+',
       tableRole: 'table',
       isolating: true,
       group: options.tableGroup,
-      parseDOM: [{ tag: 'table' }],
-      toDOM() {
-        return ['table', ['tbody', 0]];
+      parseDOM: [
+        {
+          tag: 'table',
+          getAttrs(dom) {
+            return { class: dom.getAttribute('class') };
+          },
+        },
+      ],
+      toDOM(node) {
+        return ['table', { class: node.attrs.class }, ['tbody', 0]];
       },
     },
     tableRow: {

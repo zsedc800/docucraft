@@ -1,7 +1,7 @@
 import { Node, ResolvedPos, Slice } from 'prosemirror-model';
 import { EditorState, Selection, Transaction } from 'prosemirror-state';
 import { Mappable } from 'prosemirror-transform';
-import { DecorationSource } from 'prosemirror-view';
+import { Decoration } from 'prosemirror-view';
 export interface CellSelectionJSON {
     type: string;
     anchor: number;
@@ -35,5 +35,5 @@ export declare class CellBookmark {
     map(mapping: Mappable): CellBookmark;
     resolve(doc: Node): CellSelection | Selection;
 }
-export declare function drawCellSelection(state: EditorState): DecorationSource | null;
+export declare function drawCellSelection(state: EditorState): Decoration[];
 export declare function normalizeSelection(state: EditorState, tr: Transaction | undefined, allowTableNodeSelection: boolean): Transaction | undefined;

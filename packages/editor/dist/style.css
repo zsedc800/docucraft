@@ -31,21 +31,6 @@
   padding: 0;
   margin: 0;
 }
-.ProseMirror .tableWrapper {
-  overflow-x: auto;
-}
-.ProseMirror table {
-  border-collapse: collapse;
-  table-layout: fixed;
-  width: 100%;
-  overflow: hidden;
-}
-.ProseMirror td,
-.ProseMirror th {
-  vertical-align: top;
-  box-sizing: border-box;
-  position: relative;
-}
 .ProseMirror .column-resize-handle {
   position: absolute;
   right: -2px;
@@ -56,15 +41,17 @@
   background-color: #adf;
   pointer-events: none;
 }
+
 .ProseMirror.resize-cursor {
   cursor: ew-resize;
   cursor: col-resize;
 }
+
 /* Give selected cells a blue overlay */
 .ProseMirror .selectedCell:after {
   z-index: 2;
   position: absolute;
-  content: '';
+  content: "";
   left: 0;
   right: 0;
   top: 0;
@@ -73,6 +60,76 @@
   pointer-events: none;
 }
 
+.ProseMirror .tableWrapper {
+  overflow-x: auto;
+}
+.ProseMirror .tableWrapper table {
+  position: relative;
+}
+.ProseMirror .tableWrapper.col-active .colBar {
+  display: block;
+}
+.ProseMirror .tableWrapper.row-active .rowBar {
+  display: block;
+}
+.ProseMirror .tableWrapper .rowBar,
+.ProseMirror .tableWrapper .colBar {
+  position: absolute;
+  display: none;
+  background-color: #cdcdcd;
+  border-radius: 4px;
+}
+.ProseMirror .tableWrapper .rowBar {
+  width: 100%;
+  height: 14px;
+  top: 100%;
+  left: 0;
+}
+.ProseMirror .tableWrapper .colBar {
+  width: 14px;
+  height: 100%;
+  left: 100%;
+  top: 0;
+}
+.ProseMirror table {
+  border-collapse: collapse;
+  table-layout: fixed;
+  width: 100%;
+}
+.ProseMirror th,
+.ProseMirror td {
+  vertical-align: top;
+  box-sizing: border-box;
+  position: relative;
+}
+.ProseMirror th.row-active .rowBtn,
+.ProseMirror td.row-active .rowBtn {
+  display: block;
+}
+.ProseMirror th.col-active .colBtn,
+.ProseMirror td.col-active .colBtn {
+  display: block;
+}
+.ProseMirror .rowBtn,
+.ProseMirror .colBtn {
+  display: none;
+  position: absolute;
+  background-color: #cdcdcd;
+  border-radius: 4px;
+  cursor: pointer;
+}
+.ProseMirror .rowBtn {
+  height: 100%;
+  width: 14px;
+  right: 100%;
+  top: 0;
+}
+.ProseMirror .colBtn {
+  width: 100%;
+  height: 14px;
+  bottom: 100%;
+  left: 0;
+}
 .docucraft-codeblock {
   padding: 0;
   border-radius: 8px;
@@ -135,6 +192,10 @@ pre code {
 }
 .scrollbar::-webkit-scrollbar-thumb:hover {
   background-color: rgba(0, 0, 0, 0.6);
+}
+
+.dc-block {
+  padding: 20px;
 }
 
 :root {

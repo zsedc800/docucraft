@@ -26,7 +26,7 @@ export class CodeBlockView implements NodeView {
     this.view = view;
     this.getPos = getPos;
     this.contentDOM = crel('code', {
-      class: 'scrollbar',
+      class: 'scrollbar dc-block',
       'data-language': node.attrs.language,
       'data-theme': node.attrs.theme,
       'data-show-line-number': node.attrs.showLineNumber,

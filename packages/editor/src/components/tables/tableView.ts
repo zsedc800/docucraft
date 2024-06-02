@@ -1,20 +1,37 @@
-import { Node } from 'prosemirror-model';
-import { NodeView } from 'prosemirror-view';
-import createElement from '../../createElement';
-import { CellAttrs } from './utils';
+import { Node, ResolvedPos } from 'prosemirror-model';
+import {
+  Decoration,
+  DecorationSet,
+  EditorView,
+  NodeView,
+  NodeViewConstructor,
+} from 'prosemirror-view';
+import createElement, { updateElement } from '../../createElement';
+import { CellAttrs, cellAround, tableEditingKey } from './utils';
+import { EditorState } from 'prosemirror-state';
+import { TableMap } from './tableMap';
 
 export class TableView implements NodeView {
   dom: HTMLDivElement;
   table: HTMLTableElement;
   colgroup: HTMLTableColElement;
   contentDOM: HTMLTableSectionElement;
-
+  private $cell?: ResolvedPos;
   constructor(
     public node: Node,
+    public view: EditorView,
+    private getPos: () => number | undefined,
     public cellMinWidth: number
   ) {
-    this.dom = createElement('div', { class: 'tableWrapper' });
-    this.table = this.dom.appendChild(createElement('table'));
+    this.dom = createElement('div', { class: 'tableWrapper dc-block' });
+    this.table = this.dom.appendChild(
+      createElement(
+        'table'
+        // {},
+        // createElement('div', { class: 'rowBar' }),
+        // createElement('div', { class: 'colBar' })
+      )
+    );
     this.colgroup = this.table.appendChild(createElement('colgroup'));
     updateColumnsOnResize(
       this.node,
@@ -23,11 +40,83 @@ export class TableView implements NodeView {
       this.cellMinWidth
     );
     this.contentDOM = this.table.appendChild(createElement('tbody'));
+    this.dom.addEventListener('mouseover', this.handleMouseOver);
+    this.dom.addEventListener('mouseleave', this.handleMouseLeave);
   }
 
-  update(node: Node): boolean {
+  handleMouseOver = (event: MouseEvent) => {
+    const { clientX, clientY } = event;
+    const mousePos = this.view.posAtCoords({ left: clientX, top: clientY });
+    if (!mousePos) return;
+    const $cell = cellAround(this.view.state.doc.resolve(mousePos.pos));
+    if (!$cell) return;
+    // this.$cell = $cell;
+    const tableStart = $cell.start(-1);
+    const map = TableMap.get(this.node);
+    const { left, top, right, bottom } = map.findCell($cell.pos - tableStart);
+    // console.log(left, top, right, bottom, 'o');
+    const decs: Decoration[] = [];
+    for (let i = top; i < bottom; i++) {
+      const pos = map.map[i * map.width] + tableStart;
+      const $pos = this.view.state.doc.resolve(pos);
+      decs.push(
+        Decoration.node(pos, pos + $pos.nodeAfter!.nodeSize, {
+          class: 'row-active',
+        })
+      );
+    }
+
+    for (let i = left; i < right; i++) {
+      const pos = map.map[i] + tableStart;
+      const $pos = this.view.state.doc.resolve(pos);
+      decs.push(
+        Decoration.node(pos, pos + $pos.nodeAfter!.nodeSize, {
+          class: 'col-active',
+        })
+      );
+    }
+
+    let tr = this.view.state.tr;
+    const classList = [];
+    if (bottom == map.height) classList.push('row-active');
+    if (right == map.width) classList.push('col-active');
+    const pos = this.getPos()!;
+    // decs.push(
+    //   Decoration.node(pos, pos + this.node.nodeSize, {
+    //     class: classList.join(' '),
+    //   })
+    // );
+    // console.log(pos, 'pos');
+    tr.setNodeMarkup(pos!, null, {
+      ...this.node.attrs,
+      class: 'tableWrapper dc-block ' + classList.join(' '),
+    });
+
+    if (decs.length) {
+      tr.setMeta(tableEditingKey, { hoverDecos: decs });
+    }
+    this.view.dispatch(tr);
+  };
+
+  handleMouseLeave = () => {
+    let tr = this.view.state.tr;
+    tr.setMeta(tableEditingKey, { hoverDecos: [] });
+    tr.setNodeMarkup(this.getPos()!, null, {
+      class: 'tableWrapper dc-block',
+    });
+    this.view.dispatch(tr);
+  };
+
+  destroy() {
+    this.dom.removeEventListener('mouseover', this.handleMouseOver);
+    this.dom.removeEventListener('mouseleave', this.handleMouseLeave);
+  }
+
+  update(node: Node, decorations: readonly Decoration[]): boolean {
     if (node.type !== this.node.type) return false;
     this.node = node;
+
+    this.dom.className = node.attrs.class || 'tableWrapper dc-block';
     updateColumnsOnResize(
       this.node,
       this.colgroup,
@@ -94,3 +183,38 @@ export function updateColumnsOnResize(
     }
   }
 }
+
+export const TableViewConstructor: NodeViewConstructor = (node, view, getPos) =>
+  new TableView(node, view, getPos, 80);
+
+export const addToolkit = (table: Node, start: number): Decoration[] => {
+  const map = TableMap.get(table);
+  let seen: Record<number, boolean> = {};
+  const { width, height } = map;
+  const result: Decoration[] = [];
+
+  for (let i = 0; i < width * height; i += width) {
+    if (seen[i]) continue;
+    seen[i] = true;
+    const div = createElement('div', { class: 'rowBtn' });
+    result.push(Decoration.widget(start + map.map[i] + 2, () => div));
+  }
+
+  seen = {};
+  for (let i = 0; i < width; i++) {
+    if (seen[i]) continue;
+    seen[i] = true;
+    const div = createElement('div', { class: 'colBtn' });
+    result.push(Decoration.widget(start + map.map[i] + 2, () => div));
+  }
+
+  const tools = createElement(
+    'div',
+    {},
+    createElement('div', { class: 'rowBar' }),
+    createElement('div', { class: 'colBar' })
+  );
+
+  result.push(Decoration.widget(start + 1, () => tools));
+  return result;
+};

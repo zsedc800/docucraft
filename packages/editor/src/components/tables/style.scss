@@ -1,0 +1,107 @@
+.ProseMirror .column-resize-handle {
+  position: absolute;
+  right: -2px;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  z-index: 20;
+  background-color: #adf;
+  pointer-events: none;
+}
+.ProseMirror.resize-cursor {
+  cursor: ew-resize;
+  cursor: col-resize;
+}
+/* Give selected cells a blue overlay */
+.ProseMirror .selectedCell:after {
+  z-index: 2;
+  position: absolute;
+  content: '';
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: rgba(200, 200, 255, 0.4);
+  pointer-events: none;
+}
+
+.ProseMirror {
+  .tableWrapper {
+    overflow-x: auto;
+    table {
+      position: relative;
+    }
+    &.col-active {
+      .colBar {
+        display: block;
+      }
+    }
+    &.row-active {
+      .rowBar {
+        display: block;
+      }
+    }
+    .rowBar,
+    .colBar {
+      position: absolute;
+      display: none;
+      background-color: #cdcdcd;
+      border-radius: 4px;
+    }
+    .rowBar {
+      width: 100%;
+      height: 14px;
+      top: 100%;
+      left: 0;
+    }
+    .colBar {
+      width: 14px;
+      height: 100%;
+      left: 100%;
+      top: 0;
+    }
+  }
+  table {
+    border-collapse: collapse;
+    table-layout: fixed;
+    width: 100%;
+  }
+  th,
+  td {
+    vertical-align: top;
+    box-sizing: border-box;
+    position: relative;
+    &.row-active {
+      .rowBtn {
+        display: block;
+      }
+    }
+    &.col-active {
+      .colBtn {
+        display: block;
+      }
+    }
+  }
+  .rowBtn,
+  .colBtn {
+    display: none;
+    position: absolute;
+    background-color: #cdcdcd;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+  .rowBtn {
+    height: 100%;
+    width: 14px;
+    right: 100%;
+    top: 0;
+    // margin-right: 4px;
+  }
+  .colBtn {
+    width: 100%;
+    height: 14px;
+    bottom: 100%;
+    left: 0;
+    // margin-bottom: 4px;
+  }
+}

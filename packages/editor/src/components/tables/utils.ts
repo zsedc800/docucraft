@@ -3,8 +3,14 @@ import { TableMap } from './tableMap';
 import { tableNodeTypes } from './schema';
 import { EditorState, NodeSelection, PluginKey } from 'prosemirror-state';
 import { CellSelection } from './cellSelection';
+import { Decoration, DecorationSet, DecorationSource } from 'prosemirror-view';
 
-export const tableEditingKey = new PluginKey<number>('selectingCells');
+export interface TableState {
+  decorations: DecorationSet;
+  set: number | null;
+  hoverDecos?: Decoration[];
+}
+export const tableEditingKey = new PluginKey<TableState>('selectingCells');
 
 export interface CellAttrs {
   colspan: number;

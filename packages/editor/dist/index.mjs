@@ -1,5 +1,5 @@
 import { Decoration, DecorationSet, EditorView } from 'prosemirror-view';
-import { PluginKey, Selection, TextSelection, SelectionRange, NodeSelection, Plugin, EditorState } from 'prosemirror-state';
+import { PluginKey, Selection, TextSelection, SelectionRange, Plugin, EditorState } from 'prosemirror-state';
 import { Fragment, Slice, Schema } from 'prosemirror-model';
 import { keymap } from 'prosemirror-keymap';
 import { undo, redo, history } from 'prosemirror-history';
@@ -457,15 +457,27 @@ var tableNodes = function tableNodes(options) {
   }
   return {
     table: {
+      attrs: {
+        "class": {
+          "default": ''
+        }
+      },
       content: 'tableRow+',
       tableRole: 'table',
       isolating: true,
       group: options.tableGroup,
       parseDOM: [{
-        tag: 'table'
+        tag: 'table',
+        getAttrs: function getAttrs(dom) {
+          return {
+            "class": dom.getAttribute('class')
+          };
+        }
       }],
-      toDOM: function toDOM() {
-        return ['table', ['tbody', 0]];
+      toDOM: function toDOM(node) {
+        return ['table', {
+          "class": node.attrs["class"]
+        }, ['tbody', 0]];
       }
     },
     tableRow: {
@@ -1063,159 +1075,213 @@ var CellBookmark = /*#__PURE__*/function () {
   }]);
 }();
 function drawCellSelection(state) {
-  if (!(state.selection instanceof CellSelection)) return null;
   var cells = [];
+  if (!(state.selection instanceof CellSelection)) return cells;
   state.selection.forEachCell(function (node, pos) {
     cells.push(Decoration.node(pos, pos + node.nodeSize, {
       "class": 'selectedCell'
     }));
   });
-  return DecorationSet.create(state.doc, cells);
-}
-function isCellBoundarySelection(_ref) {
-  var $from = _ref.$from,
-    $to = _ref.$to;
-  if ($from.pos == $to.pos || $from.pos < $from.pos - 6) return false; // Cheap elimination
-  var afterFrom = $from.pos;
-  var beforeTo = $to.pos;
-  var depth = $from.depth;
-  for (; depth >= 0; depth--, afterFrom++) if ($from.after(depth + 1) < $from.end(depth)) break;
-  for (var d = $to.depth; d >= 0; d--, beforeTo--) if ($to.before(d + 1) > $to.start(d)) break;
-  return afterFrom == beforeTo && /row|table/.test($from.node(depth).type.spec.tableRole);
-}
-function isTextSelectionAcrossCells(_ref2) {
-  var $from = _ref2.$from,
-    $to = _ref2.$to;
-  var fromCellBoundaryNode;
-  var toCellBoundaryNode;
-  for (var i = $from.depth; i > 0; i--) {
-    var node = $from.node(i);
-    if (node.type.spec.tableRole === 'cell' || node.type.spec.tableRole === 'headerCell') {
-      fromCellBoundaryNode = node;
-      break;
-    }
-  }
-  for (var _i = $to.depth; _i > 0; _i--) {
-    var _node = $to.node(_i);
-    if (_node.type.spec.tableRole === 'cell' || _node.type.spec.tableRole === 'headerCell') {
-      toCellBoundaryNode = _node;
-      break;
-    }
-  }
-  return fromCellBoundaryNode !== toCellBoundaryNode && $to.parentOffset === 0;
-}
-function normalizeSelection(state, tr, allowTableNodeSelection) {
-  var sel = (tr || state).selection;
-  var doc = (tr || state).doc;
-  var normalize;
-  var role;
-  if (sel instanceof NodeSelection && (role = sel.node.type.spec.tableRole)) {
-    if (role == 'cell' || role == 'headerCell') {
-      normalize = CellSelection.create(doc, sel.from);
-    } else if (role == 'row') {
-      var $cell = doc.resolve(sel.from + 1);
-      normalize = CellSelection.rowSelection($cell);
-    } else if (!allowTableNodeSelection) {
-      var map = TableMap.get(sel.node);
-      var start = sel.from + 1;
-      var lastCell = start + map.map[map.width * map.height - 1];
-      normalize = CellSelection.create(doc, start + 1, lastCell);
-    }
-  } else if (sel instanceof TextSelection && isCellBoundarySelection(sel)) {
-    normalize = TextSelection.create(doc, sel.from);
-  } else if (sel instanceof TextSelection && isTextSelectionAcrossCells(sel)) {
-    normalize = TextSelection.create(doc, sel.$from.start(), sel.$from.end());
-  }
-  if (normalize) (tr || (tr = state.tr)).setSelection(normalize);
-  return tr;
+  return cells;
 }
 
-var fixTablesKey = new PluginKey('fix-tables');
-function changedDescendants(old, cur, offset, f) {
-  var oldSize = old.childCount,
-    curSize = cur.childCount;
-  outer: for (var i = 0, j = 0; i < curSize; i++) {
-    var child = cur.child(i);
-    for (var scan = j, e = Math.min(oldSize, i + 3); scan < e; scan++) {
-      if (old.child(scan) == child) {
-        j = scan + 1;
-        offset += child.nodeSize;
-        continue outer;
+var TableView = /*#__PURE__*/function () {
+  function TableView(node, view, getPos, cellMinWidth) {
+    var _this = this;
+    _classCallCheck(this, TableView);
+    _defineProperty(this, "handleMouseOver", function (event) {
+      var clientX = event.clientX,
+        clientY = event.clientY;
+      var mousePos = _this.view.posAtCoords({
+        left: clientX,
+        top: clientY
+      });
+      if (!mousePos) return;
+      var $cell = cellAround(_this.view.state.doc.resolve(mousePos.pos));
+      if (!$cell) return;
+      // this.$cell = $cell;
+      var tableStart = $cell.start(-1);
+      var map = TableMap.get(_this.node);
+      var _map$findCell = map.findCell($cell.pos - tableStart),
+        left = _map$findCell.left,
+        top = _map$findCell.top,
+        right = _map$findCell.right,
+        bottom = _map$findCell.bottom;
+      // console.log(left, top, right, bottom, 'o');
+      var decs = [];
+      for (var i = top; i < bottom; i++) {
+        var _pos = map.map[i * map.width] + tableStart;
+        var $pos = _this.view.state.doc.resolve(_pos);
+        decs.push(Decoration.node(_pos, _pos + $pos.nodeAfter.nodeSize, {
+          "class": 'row-active'
+        }));
+      }
+      for (var _i = left; _i < right; _i++) {
+        var _pos2 = map.map[_i] + tableStart;
+        var _$pos = _this.view.state.doc.resolve(_pos2);
+        decs.push(Decoration.node(_pos2, _pos2 + _$pos.nodeAfter.nodeSize, {
+          "class": 'col-active'
+        }));
+      }
+      var tr = _this.view.state.tr;
+      var classList = [];
+      if (bottom == map.height) classList.push('row-active');
+      if (right == map.width) classList.push('col-active');
+      var pos = _this.getPos();
+      // decs.push(
+      //   Decoration.node(pos, pos + this.node.nodeSize, {
+      //     class: classList.join(' '),
+      //   })
+      // );
+      // console.log(pos, 'pos');
+      tr.setNodeMarkup(pos, null, _objectSpread2(_objectSpread2({}, _this.node.attrs), {}, {
+        "class": 'tableWrapper dc-block ' + classList.join(' ')
+      }));
+      if (decs.length) {
+        tr.setMeta(tableEditingKey, {
+          hoverDecos: decs
+        });
+      }
+      _this.view.dispatch(tr);
+    });
+    _defineProperty(this, "handleMouseLeave", function () {
+      var tr = _this.view.state.tr;
+      tr.setMeta(tableEditingKey, {
+        hoverDecos: []
+      });
+      tr.setNodeMarkup(_this.getPos(), null, {
+        "class": 'tableWrapper dc-block'
+      });
+      _this.view.dispatch(tr);
+    });
+    this.node = node;
+    this.view = view;
+    this.getPos = getPos;
+    this.cellMinWidth = cellMinWidth;
+    this.dom = createElement('div', {
+      "class": 'tableWrapper dc-block'
+    });
+    this.table = this.dom.appendChild(createElement('table'
+    // {},
+    // createElement('div', { class: 'rowBar' }),
+    // createElement('div', { class: 'colBar' })
+    ));
+    this.colgroup = this.table.appendChild(createElement('colgroup'));
+    updateColumnsOnResize(this.node, this.colgroup, this.table, this.cellMinWidth);
+    this.contentDOM = this.table.appendChild(createElement('tbody'));
+    this.dom.addEventListener('mouseover', this.handleMouseOver);
+    this.dom.addEventListener('mouseleave', this.handleMouseLeave);
+  }
+  return _createClass(TableView, [{
+    key: "destroy",
+    value: function destroy() {
+      this.dom.removeEventListener('mouseover', this.handleMouseOver);
+      this.dom.removeEventListener('mouseleave', this.handleMouseLeave);
+    }
+  }, {
+    key: "update",
+    value: function update(node, decorations) {
+      if (node.type !== this.node.type) return false;
+      this.node = node;
+      this.dom.className = node.attrs["class"] || 'tableWrapper dc-block';
+      updateColumnsOnResize(this.node, this.colgroup, this.table, this.cellMinWidth);
+      return true;
+    }
+  }, {
+    key: "ignoreMutation",
+    value: function ignoreMutation(record) {
+      return record.type == 'attributes' && (record.target == this.table || this.colgroup.contains(record.target));
+    }
+  }, {
+    key: "selectNode",
+    value: function selectNode() {
+      console.log('select', this);
+    }
+  }]);
+}();
+function updateColumnsOnResize(node, colgroup, table, cellMinWidth, overrideCol, overrideValue) {
+  var totalWidth = 0,
+    fixedWidth = true,
+    nextDOM = colgroup.firstChild;
+  var row = node.firstChild;
+  if (!row) return;
+  for (var i = 0, col = 0; i < row.childCount; i++) {
+    var _row$child$attrs = row.child(i).attrs,
+      colspan = _row$child$attrs.colspan,
+      colwidth = _row$child$attrs.colwidth;
+    for (var j = 0; j < colspan; j++, col++) {
+      var hasWidth = overrideCol == col ? overrideValue : colwidth && colwidth[j];
+      var cssWidth = hasWidth ? hasWidth + 'px' : '';
+      totalWidth += hasWidth || cellMinWidth;
+      if (!hasWidth) fixedWidth = false;
+      if (!nextDOM) {
+        colgroup.appendChild(createElement('col')).style.width = cssWidth;
+      } else {
+        if (nextDOM.style.width != cssWidth) nextDOM.style.width = cssWidth;
+        nextDOM = nextDOM.nextSibling;
       }
     }
-    f(child, offset);
-    if (j < oldSize && old.child(j).sameMarkup(child)) changedDescendants(old.child(j), child, offset + 1, f);else child.nodesBetween(0, child.content.size, f, offset + 1);
-    offset += child.nodeSize;
+  }
+  while (nextDOM) {
+    var _nextDOM$parentNode;
+    var after = nextDOM.nextSibling;
+    (_nextDOM$parentNode = nextDOM.parentNode) === null || _nextDOM$parentNode === void 0 || _nextDOM$parentNode.removeChild(nextDOM);
+    nextDOM = after;
+    if (fixedWidth) {
+      table.style.width = totalWidth + 'px';
+      table.style.minWidth = '';
+    } else {
+      table.style.width = '';
+      table.style.minWidth = totalWidth + 'px';
+    }
   }
 }
-function fixTables(state, oldState) {
-  var tr;
-  var check = function check(node, pos) {
-    if (node.type.spec.tableRole == 'table') tr = fixTable(state, node, pos, tr);
-  };
-  if (!oldState) state.doc.descendants(check);else if (oldState.doc != state.doc) changedDescendants(oldState.doc, state.doc, 0, check);
-  return tr;
-}
-function fixTable(state, table, tablePos, tr) {
+var TableViewConstructor = function TableViewConstructor(node, view, getPos) {
+  return new TableView(node, view, getPos, 80);
+};
+var addToolkit = function addToolkit(table, start) {
   var map = TableMap.get(table);
-  if (!map.problems) return tr;
-  if (!tr) tr = state.tr;
-  // Track which rows we must add cells to, so that we can adjust that
-  // when fixing collisions.
-  var mustAdd = [];
-  for (var i = 0; i < map.height; i++) mustAdd.push(0);
-  for (var _i = 0; _i < map.problems.length; _i++) {
-    var prob = map.problems[_i];
-    if (prob.type == 'collision') {
-      var cell = table.nodeAt(prob.pos);
-      if (!cell) continue;
-      var attrs = cell.attrs;
-      for (var j = 0; j < attrs.rowspan; j++) mustAdd[prob.row + j] += prob.n;
-      tr.setNodeMarkup(tr.mapping.map(tablePos + 1 + prob.pos), null, removeColSpan(attrs, attrs.colspan - prob.n, prob.n));
-    } else if (prob.type == 'missing') {
-      mustAdd[prob.row] += prob.n;
-    } else if (prob.type == 'overlong_rowspan') {
-      var _cell = table.nodeAt(prob.pos);
-      if (!_cell) continue;
-      tr.setNodeMarkup(tr.mapping.map(tablePos + 1 + prob.pos), null, _objectSpread2(_objectSpread2({}, _cell.attrs), {}, {
-        rowspan: _cell.attrs.rowspan - prob.n
-      }));
-    } else if (prob.type == 'colwidth mismatch') {
-      var _cell2 = table.nodeAt(prob.pos);
-      if (!_cell2) continue;
-      tr.setNodeMarkup(tr.mapping.map(tablePos + 1 + prob.pos), null, _objectSpread2(_objectSpread2({}, _cell2.attrs), {}, {
-        colwidth: prob.colwidth
-      }));
-    }
+  var seen = {};
+  var width = map.width,
+    height = map.height;
+  var result = [];
+  var _loop = function _loop() {
+    if (seen[i]) return 1; // continue
+    seen[i] = true;
+    var div = createElement('div', {
+      "class": 'rowBtn'
+    });
+    result.push(Decoration.widget(start + map.map[i] + 2, function () {
+      return div;
+    }));
+  };
+  for (var i = 0; i < width * height; i += width) {
+    if (_loop()) continue;
   }
-  var first, last;
-  for (var _i2 = 0; _i2 < mustAdd.length; _i2++) if (mustAdd[_i2]) {
-    if (first == null) first = _i2;
-    last = _i2;
+  seen = {};
+  var _loop2 = function _loop2() {
+    if (seen[_i2]) return 1; // continue
+    seen[_i2] = true;
+    var div = createElement('div', {
+      "class": 'colBtn'
+    });
+    result.push(Decoration.widget(start + map.map[_i2] + 2, function () {
+      return div;
+    }));
+  };
+  for (var _i2 = 0; _i2 < width; _i2++) {
+    if (_loop2()) continue;
   }
-  for (var _i3 = 0, pos = tablePos + 1; _i3 < map.height; _i3++) {
-    var row = table.child(_i3);
-    var end = pos + row.nodeSize;
-    var add = mustAdd[_i3];
-    if (add > 0) {
-      var role = 'cell';
-      if (row.firstChild) {
-        role = row.firstChild.type.spec.tableRole;
-      }
-      var nodes = [];
-      for (var _j = 0; _j < add; _j++) {
-        var node = tableNodeTypes(state.schema)[role].createAndFill();
-        if (node) nodes.push(node);
-      }
-      var side = (_i3 == 0 || first == _i3 - 1) && last == _i3 ? pos + 1 : end - 1;
-      tr.insert(tr.mapping.map(side), nodes);
-    }
-    pos = end;
-  }
-  return tr.setMeta(fixTablesKey, {
-    fixTables: true
-  });
-}
+  var tools = createElement('div', {}, createElement('div', {
+    "class": 'rowBar'
+  }), createElement('div', {
+    "class": 'colBar'
+  }));
+  result.push(Decoration.widget(start + 1, function () {
+    return tools;
+  }));
+  return result;
+};
 
 function handleMouseDown(view, startEvent) {
   var _cellUnderMouse;
@@ -1252,14 +1318,18 @@ function handleMouseDown(view, startEvent) {
   }
   // Stop listening to mouse motion events.
   function stop() {
+    var _tableEditingKey$getS;
     view.root.removeEventListener('mouseup', stop);
     view.root.removeEventListener('dragstart', stop);
     view.root.removeEventListener('mousemove', move);
-    if (tableEditingKey.getState(view.state) != null) view.dispatch(view.state.tr.setMeta(tableEditingKey, -1));
+    if (((_tableEditingKey$getS = tableEditingKey.getState(view.state)) === null || _tableEditingKey$getS === void 0 ? void 0 : _tableEditingKey$getS.set) != null) view.dispatch(view.state.tr.setMeta(tableEditingKey, {
+      set: -1
+    }));
   }
   function move(_event) {
+    var _tableEditingKey$getS2;
     var event = _event;
-    var anchor = tableEditingKey.getState(view.state);
+    var anchor = (_tableEditingKey$getS2 = tableEditingKey.getState(view.state)) === null || _tableEditingKey$getS2 === void 0 ? void 0 : _tableEditingKey$getS2.set;
     var $anchor;
     if (anchor != null) {
       // Continuing an existing cross-cell selection
@@ -1293,36 +1363,68 @@ function cellUnderMouse(view, event) {
 }
 
 function tableEditing(_ref) {
-  var _ref$allowTableNodeSe = _ref.allowTableNodeSelection,
-    allowTableNodeSelection = _ref$allowTableNodeSe === void 0 ? false : _ref$allowTableNodeSe;
+  var getDecorations = function getDecorations(state) {
+    var decs = [];
+    decs = decs.concat(drawCellSelection(state));
+    state.doc.descendants(function (node, pos) {
+      if (node.type.name !== 'table') return;
+      decs = decs.concat(addToolkit(node, pos));
+    });
+    return decs;
+  };
   return new Plugin({
     key: tableEditingKey,
     state: {
-      init: function init() {
-        return null;
+      init: function init(_, state) {
+        return {
+          decorations: DecorationSet.create(state.doc, getDecorations(state)),
+          set: null
+        };
       },
-      apply: function apply(tr, value) {
-        var set = tr.getMeta(tableEditingKey);
-        if (set != null) return set == -1 ? null : set;
-        if (value == null || !tr.docChanged) return value;
-        var _tr$mapping$mapResult = tr.mapping.mapResult(value),
+      apply: function apply(tr, value, _, state) {
+        var _ref2 = tr.getMeta(tableEditingKey) || {},
+          set = _ref2.set,
+          hoverDecos = _ref2.hoverDecos;
+        if (set != null) return _objectSpread2(_objectSpread2({}, value), {}, {
+          set: set == -1 ? null : set
+        });
+        if (!tr.docChanged && !hoverDecos) return value;
+        var _tr$mapping$mapResult = tr.mapping.mapResult(set),
           deleted = _tr$mapping$mapResult.deleted,
           pos = _tr$mapping$mapResult.pos;
-        return deleted ? null : pos;
+        var decorations = getDecorations(state).concat(hoverDecos ? hoverDecos : value.hoverDecos || []);
+        return {
+          set: deleted ? null : pos,
+          decorations: DecorationSet.create(state.doc, decorations),
+          hoverDecos: hoverDecos
+        };
       }
     },
     props: {
-      decorations: drawCellSelection,
+      nodeViews: {
+        table: TableViewConstructor
+      },
+      decorations: function decorations(state) {
+        var _this$getState;
+        return (_this$getState = this.getState(state)) === null || _this$getState === void 0 ? void 0 : _this$getState.decorations;
+      },
       handleDOMEvents: {
         mousedown: handleMouseDown
-      },
-      createSelectionBetween: function createSelectionBetween(view) {
-        return tableEditingKey.getState(view.state) != null ? view.state.selection : null;
       }
-    },
-    appendTransaction: function appendTransaction(_, oldState, newState) {
-      return normalizeSelection(newState, fixTables(newState, oldState), allowTableNodeSelection);
+      // createSelectionBetween(view) {
+      //   return tableEditingKey.getState(view.state)?.set != null
+      //     ? view.state.selection
+      //     : null;
+      // },
     }
+    // appendTransaction(_, oldState, newState) {
+    //   return normalizeSelection(
+    //     newState,
+    //     // newState.tr,
+    //     fixTables(newState, oldState),
+    //     allowTableNodeSelection
+    //   );
+    // },
   });
 }
 
@@ -1552,7 +1654,7 @@ var CodeBlockView = /*#__PURE__*/function () {
     this.view = view;
     this.getPos = getPos;
     this.contentDOM = createElement('code', {
-      "class": 'scrollbar',
+      "class": 'scrollbar dc-block',
       'data-language': node.attrs.language,
       'data-theme': node.attrs.theme,
       'data-show-line-number': node.attrs.showLineNumber,
@@ -2117,7 +2219,7 @@ var setupEditor = function setupEditor(el) {
   // 根据 schema 定义，创建 editorState 数据实例
   var editorState = EditorState.create({
     schema: schema,
-    plugins: [buildInputRules(), keymap(myKeymap), history(), toolbar.plugin, highlightCodePlugin(), tableEditing({})]
+    plugins: [buildInputRules(), keymap(myKeymap), history(), toolbar.plugin, highlightCodePlugin(), tableEditing()]
   });
   // 创建编辑器视图实例，并挂在到 el 上
   var editorView = new EditorView(el, {
