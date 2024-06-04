@@ -121,3 +121,6 @@ export function selectionCell(state: EditorState): ResolvedPos {
 
   throw new RangeError(`No cell found around position ${sel.head}`);
 }
+
+export const isEmpty = (val: unknown) =>
+  val === null || val === undefined || Number.isNaN(val);

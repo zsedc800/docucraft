@@ -23,3 +23,4 @@ export declare function removeColSpan(attrs: CellAttrs, pos: number, n?: number)
 export declare function cellAround($pos: ResolvedPos): ResolvedPos | null;
 export declare function cellNear($pos: ResolvedPos): ResolvedPos | undefined;
 export declare function selectionCell(state: EditorState): ResolvedPos;
+export declare const isEmpty: (val: unknown) => boolean;

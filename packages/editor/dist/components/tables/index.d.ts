@@ -5,4 +5,4 @@ import './style.scss';
 export type TableEditingOptions = {
     allowTableNodeSelection?: boolean;
 };
-export declare function tableEditing({ allowTableNodeSelection, }: TableEditingOptions): Plugin;
+export declare function tableEditing({ allowTableNodeSelection }: TableEditingOptions): Plugin;

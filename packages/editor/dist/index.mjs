@@ -1,5 +1,5 @@
 import { Decoration, DecorationSet, EditorView } from 'prosemirror-view';
-import { PluginKey, Selection, TextSelection, SelectionRange, Plugin, EditorState } from 'prosemirror-state';
+import { PluginKey, Selection, TextSelection, SelectionRange, NodeSelection, Plugin, EditorState } from 'prosemirror-state';
 import { Fragment, Slice, Schema } from 'prosemirror-model';
 import { keymap } from 'prosemirror-keymap';
 import { undo, redo, history } from 'prosemirror-history';
@@ -554,11 +554,6 @@ function columnIsHeader(map, table, col) {
   }
   return true;
 }
-function isInTable(state) {
-  var $head = state.selection.$head;
-  for (var d = $head.depth; d > 0; d--) if ($head.node(d).type.spec.tableRole == 'row') return true;
-  return false;
-}
 function pointsAtCell($pos) {
   return $pos.parent.type.spec.tableRole == 'row' && !!$pos.nodeAfter;
 }
@@ -606,6 +601,9 @@ function selectionCell(state) {
   if ($cell) return $cell;
   throw new RangeError("No cell found around position ".concat(sel.head));
 }
+var isEmpty$1 = function isEmpty(val) {
+  return val === null || val === undefined || Number.isNaN(val);
+};
 
 var readFromCache;
 var addToCache;
@@ -1082,9 +1080,396 @@ function drawCellSelection(state) {
       "class": 'selectedCell'
     }));
   });
+  console.log(cells, 'cell');
   return cells;
 }
+function isCellBoundarySelection(_ref) {
+  var $from = _ref.$from,
+    $to = _ref.$to;
+  if ($from.pos == $to.pos || $from.pos < $from.pos - 6) return false; // Cheap elimination
+  var afterFrom = $from.pos;
+  var beforeTo = $to.pos;
+  var depth = $from.depth;
+  for (; depth >= 0; depth--, afterFrom++) if ($from.after(depth + 1) < $from.end(depth)) break;
+  for (var d = $to.depth; d >= 0; d--, beforeTo--) if ($to.before(d + 1) > $to.start(d)) break;
+  return afterFrom == beforeTo && /row|table/.test($from.node(depth).type.spec.tableRole);
+}
+function isTextSelectionAcrossCells(_ref2) {
+  var $from = _ref2.$from,
+    $to = _ref2.$to;
+  var fromCellBoundaryNode;
+  var toCellBoundaryNode;
+  for (var i = $from.depth; i > 0; i--) {
+    var node = $from.node(i);
+    if (node.type.spec.tableRole === 'cell' || node.type.spec.tableRole === 'headerCell') {
+      fromCellBoundaryNode = node;
+      break;
+    }
+  }
+  for (var _i = $to.depth; _i > 0; _i--) {
+    var _node = $to.node(_i);
+    if (_node.type.spec.tableRole === 'cell' || _node.type.spec.tableRole === 'headerCell') {
+      toCellBoundaryNode = _node;
+      break;
+    }
+  }
+  return fromCellBoundaryNode !== toCellBoundaryNode && $to.parentOffset === 0;
+}
+function normalizeSelection(state, tr, allowTableNodeSelection) {
+  var sel = (tr || state).selection;
+  var doc = (tr || state).doc;
+  var normalize;
+  var role;
+  if (sel instanceof NodeSelection && (role = sel.node.type.spec.tableRole)) {
+    if (role == 'cell' || role == 'headerCell') {
+      normalize = CellSelection.create(doc, sel.from);
+    } else if (role == 'row') {
+      var $cell = doc.resolve(sel.from + 1);
+      normalize = CellSelection.rowSelection($cell);
+    } else if (!allowTableNodeSelection) {
+      var map = TableMap.get(sel.node);
+      var start = sel.from + 1;
+      var lastCell = start + map.map[map.width * map.height - 1];
+      normalize = CellSelection.create(doc, start + 1, lastCell);
+    }
+  } else if (sel instanceof TextSelection && isCellBoundarySelection(sel)) {
+    normalize = TextSelection.create(doc, sel.from);
+  } else if (sel instanceof TextSelection && isTextSelectionAcrossCells(sel)) {
+    normalize = TextSelection.create(doc, sel.$from.start(), sel.$from.end());
+  }
+  if (normalize) (tr || (tr = state.tr)).setSelection(normalize);
+  return tr;
+}
 
+var fixTablesKey = new PluginKey('fix-tables');
+function changedDescendants(old, cur, offset, f) {
+  var oldSize = old.childCount,
+    curSize = cur.childCount;
+  outer: for (var i = 0, j = 0; i < curSize; i++) {
+    var child = cur.child(i);
+    for (var scan = j, e = Math.min(oldSize, i + 3); scan < e; scan++) {
+      if (old.child(scan) == child) {
+        j = scan + 1;
+        offset += child.nodeSize;
+        continue outer;
+      }
+    }
+    f(child, offset);
+    if (j < oldSize && old.child(j).sameMarkup(child)) changedDescendants(old.child(j), child, offset + 1, f);else child.nodesBetween(0, child.content.size, f, offset + 1);
+    offset += child.nodeSize;
+  }
+}
+function fixTables(state, oldState) {
+  var tr;
+  var check = function check(node, pos) {
+    if (node.type.spec.tableRole == 'table') tr = fixTable(state, node, pos, tr);
+  };
+  if (!oldState) state.doc.descendants(check);else if (oldState.doc != state.doc) changedDescendants(oldState.doc, state.doc, 0, check);
+  return tr;
+}
+function fixTable(state, table, tablePos, tr) {
+  var map = TableMap.get(table);
+  if (!map.problems) return tr;
+  if (!tr) tr = state.tr;
+  // Track which rows we must add cells to, so that we can adjust that
+  // when fixing collisions.
+  var mustAdd = [];
+  for (var i = 0; i < map.height; i++) mustAdd.push(0);
+  for (var _i = 0; _i < map.problems.length; _i++) {
+    var prob = map.problems[_i];
+    if (prob.type == 'collision') {
+      var cell = table.nodeAt(prob.pos);
+      if (!cell) continue;
+      var attrs = cell.attrs;
+      for (var j = 0; j < attrs.rowspan; j++) mustAdd[prob.row + j] += prob.n;
+      tr.setNodeMarkup(tr.mapping.map(tablePos + 1 + prob.pos), null, removeColSpan(attrs, attrs.colspan - prob.n, prob.n));
+    } else if (prob.type == 'missing') {
+      mustAdd[prob.row] += prob.n;
+    } else if (prob.type == 'overlong_rowspan') {
+      var _cell = table.nodeAt(prob.pos);
+      if (!_cell) continue;
+      tr.setNodeMarkup(tr.mapping.map(tablePos + 1 + prob.pos), null, _objectSpread2(_objectSpread2({}, _cell.attrs), {}, {
+        rowspan: _cell.attrs.rowspan - prob.n
+      }));
+    } else if (prob.type == 'colwidth mismatch') {
+      var _cell2 = table.nodeAt(prob.pos);
+      if (!_cell2) continue;
+      tr.setNodeMarkup(tr.mapping.map(tablePos + 1 + prob.pos), null, _objectSpread2(_objectSpread2({}, _cell2.attrs), {}, {
+        colwidth: prob.colwidth
+      }));
+    }
+  }
+  var first, last;
+  for (var _i2 = 0; _i2 < mustAdd.length; _i2++) if (mustAdd[_i2]) {
+    if (first == null) first = _i2;
+    last = _i2;
+  }
+  for (var _i3 = 0, pos = tablePos + 1; _i3 < map.height; _i3++) {
+    var row = table.child(_i3);
+    var end = pos + row.nodeSize;
+    var add = mustAdd[_i3];
+    if (add > 0) {
+      var role = 'cell';
+      if (row.firstChild) {
+        role = row.firstChild.type.spec.tableRole;
+      }
+      var nodes = [];
+      for (var _j = 0; _j < add; _j++) {
+        var node = tableNodeTypes(state.schema)[role].createAndFill();
+        if (node) nodes.push(node);
+      }
+      var side = (_i3 == 0 || first == _i3 - 1) && last == _i3 ? pos + 1 : end - 1;
+      tr.insert(tr.mapping.map(side), nodes);
+    }
+    pos = end;
+  }
+  return tr.setMeta(fixTablesKey, {
+    fixTables: true
+  });
+}
+
+var createTable = function createTable(rows, columns) {
+  return function (state, dispatch, view) {
+    var _state$schema$nodes = state.schema.nodes,
+      table = _state$schema$nodes.table,
+      tableRow = _state$schema$nodes.tableRow,
+      tableHeader = _state$schema$nodes.tableHeader,
+      tableCell = _state$schema$nodes.tableCell,
+      paragraph = _state$schema$nodes.paragraph;
+    var tableNode = table.create(null, Array(rows + 1).fill(null).map(function (_, row) {
+      return tableRow.create(null, Array(columns).fill(null).map(function (_, col) {
+        return (row === 0 ? tableHeader : tableCell).create(null, paragraph.create(null
+        // state.schema.text('cell row ' + row + ', col ' + col)
+        ));
+      }));
+    }));
+    TableMap.get(tableNode);
+    if (dispatch) {
+      dispatch(state.tr.replaceSelectionWith(tableNode).scrollIntoView());
+      return true;
+    }
+    return false;
+  };
+};
+function selectedRect(state) {
+  var sel = state.selection;
+  var $pos = selectionCell(state);
+  var table = $pos.node(-1);
+  var tableStart = $pos.start(-1);
+  var map = TableMap.get(table);
+  var rect = sel instanceof CellSelection ? map.rectBetween(sel.$anchorCell.pos - tableStart, sel.$headCell.pos - tableStart) : map.findCell($pos.pos - tableStart);
+  return _objectSpread2(_objectSpread2({}, rect), {}, {
+    tableStart: tableStart,
+    map: map,
+    table: table
+  });
+}
+function addColumn(tr, _ref, col) {
+  var map = _ref.map,
+    table = _ref.table,
+    tableStart = _ref.tableStart;
+  var refColumn = col > 0 ? -1 : 0;
+  if (columnIsHeader(map, table, col + refColumn)) {
+    refColumn = col == 0 || col == map.width ? null : 0;
+  }
+  for (var row = 0; row < map.height; row++) {
+    var index = row * map.width + col;
+    if (col > 0 && col < map.width && map.map[index - 1] == map.map[index]) {
+      var pos = map.map[index];
+      var cell = table.nodeAt(pos);
+      tr.setNodeMarkup(tr.mapping.map(tableStart + pos), null, addColspan(cell.attrs, col - map.colCount(pos)));
+      row += cell.attrs.rowspan - 1;
+    } else {
+      var type = refColumn == null ? tableNodeTypes(table.type.schema).cell : table.nodeAt(map.map[index + refColumn]).type;
+      var _pos = map.positionAt(row, col, table);
+      tr.insert(tr.mapping.map(tableStart + _pos), type.createAndFill());
+    }
+  }
+  return tr;
+}
+var addColumnAtEnd = function addColumnAtEnd(pos, view) {
+  var state = view.state,
+    dispatch = view.dispatch;
+  var tr = state.tr;
+  var tableStart = tr.mapping.map(pos);
+  var $start = state.doc.resolve(tableStart);
+  var table = $start.nodeAfter;
+  // console.log($start);
+  // console.log($start.node($start.depth), 'nn');
+  var map = TableMap.get(table);
+  dispatch(addColumn(tr, {
+    map: map,
+    table: table,
+    tableStart: pos + 1
+  }, map.width));
+};
+var removeColumn = function removeColumn(tr, _ref2, col) {
+  var map = _ref2.map,
+    table = _ref2.table,
+    tableStart = _ref2.tableStart;
+  var mapStart = tr.mapping.maps.length;
+  for (var row = 0; row < map.height;) {
+    var index = row * map.width + col;
+    var pos = map.map[index];
+    var cell = table.nodeAt(pos);
+    var attrs = cell.attrs;
+    if (col > 0 && map.map[index - 1] == pos || col < map.width - 1 && map.map[index + 1] == pos) {
+      tr.setNodeMarkup(tr.mapping.slice(mapStart).map(tableStart + pos), null, removeColSpan(attrs, col - map.colCount(pos)));
+    } else {
+      var start = tr.mapping.slice(mapStart).map(tableStart + pos);
+      tr["delete"](start, start + cell.nodeSize);
+    }
+    row += attrs.rowspan;
+  }
+  return tr;
+};
+var rowIsHeader = function rowIsHeader(map, table, row) {
+  var headerCell = tableNodeTypes(table.type.schema).headerCell;
+  for (var col = 0; col < map.width; col++) {
+    var _table$nodeAt;
+    if (((_table$nodeAt = table.nodeAt(map.map[col + row * map.width])) === null || _table$nodeAt === void 0 ? void 0 : _table$nodeAt.type) != headerCell) return false;
+  }
+  return true;
+};
+var addRow = function addRow(tr, _ref3, row) {
+  var map = _ref3.map,
+    table = _ref3.table,
+    tableStart = _ref3.tableStart;
+  var rowPos = tableStart;
+  for (var i = 0; i < row; i++) rowPos += table.child(i).nodeSize;
+  var cells = [];
+  var refRow = row > 0 ? -1 : 0;
+  if (rowIsHeader(map, table, row + refRow)) refRow = row == 0 || row == map.height ? null : 0;
+  for (var col = 0, index = map.width * row; col < map.width; col++, index++) {
+    if (row > 0 && row < map.height && map.map[index] == map.map[index - map.width]) {
+      var pos = map.map[index];
+      var attrs = table.nodeAt(pos).attrs;
+      tr.setNodeMarkup(tableStart + pos, null, _objectSpread2(_objectSpread2({}, attrs), {}, {
+        rowspan: attrs.rowspan + 1
+      }));
+      col += attrs.colspan - 1;
+    } else {
+      var _table$nodeAt2;
+      var type = refRow === null ? tableNodeTypes(table.type.schema).cell : (_table$nodeAt2 = table.nodeAt(map.map[index + refRow * map.width])) === null || _table$nodeAt2 === void 0 ? void 0 : _table$nodeAt2.type;
+      var node = type === null || type === void 0 ? void 0 : type.createAndFill();
+      if (node) cells.push(node);
+    }
+  }
+  tr.insert(rowPos, tableNodeTypes(table.type.schema).row.create(null, cells));
+  return tr;
+};
+var addRowAtEnd = function addRowAtEnd(pos, view) {
+  var $pos = view.state.doc.resolve(pos);
+  var table = $pos.nodeAfter;
+  var map = TableMap.get(table);
+  view.dispatch(addRow(view.state.tr, {
+    map: map,
+    table: table,
+    tableStart: pos + 1
+  }, map.height));
+};
+var removeRow = function removeRow(tr, _ref4, row) {
+  var map = _ref4.map,
+    table = _ref4.table,
+    tableStart = _ref4.tableStart;
+  var rowPos = 0;
+  for (var i = 0; i < row; i++) rowPos += table.child(i).nodeSize;
+  var nextRow = rowPos + table.child(row).nodeSize;
+  var mapFrom = tr.mapping.maps.length;
+  tr["delete"](rowPos + tableStart, nextRow + tableStart);
+  var seen = new Set();
+  for (var col = 0, index = row * map.width; col < map.width; col++, index++) {
+    var pos = map.map[index];
+    if (seen.has(pos)) continue;
+    seen.add(pos);
+    if (row > 0 && pos == map.map[index - map.width]) {
+      var _table$nodeAt3;
+      var attrs = (_table$nodeAt3 = table.nodeAt(pos)) === null || _table$nodeAt3 === void 0 ? void 0 : _table$nodeAt3.attrs;
+      tr.setNodeMarkup(tr.mapping.slice(mapFrom).map(pos + tableStart), null, _objectSpread2(_objectSpread2({}, attrs), {}, {
+        rowspan: attrs.rowspan - 1
+      }));
+      col += attrs.colspan - 1;
+    } else if (row < map.height && pos == map.map[index + map.width]) {
+      var cell = table.nodeAt(pos);
+      var _attrs = cell === null || cell === void 0 ? void 0 : cell.attrs;
+      var copy = cell.type.create(_objectSpread2(_objectSpread2({}, _attrs), {}, {
+        rowspan: cell.attrs.rowspan - 1
+      }), cell.content);
+      var newPos = map.positionAt(row + 1, col, table);
+      tr.insert(tr.mapping.slice(mapFrom).map(tableStart + newPos), copy);
+      col += _attrs.colspan - 1;
+    }
+  }
+  return tr;
+};
+var cellsOverlapRectangle = function cellsOverlapRectangle(_ref5, rect) {
+  var width = _ref5.width,
+    height = _ref5.height,
+    map = _ref5.map;
+  var indexTop = rect.top * width + rect.left,
+    indexLeft = indexTop;
+  var indexBottom = (rect.bottom - 1) * width + rect.left,
+    indexRight = indexTop + (rect.right - rect.left - 1);
+  for (var i = rect.top; i < rect.bottom; i++) {
+    if (rect.left > 0 && map[indexLeft] == map[indexLeft - 1] || rect.right < width && map[indexRight] == map[indexRight + 1]) return true;
+    indexLeft += width;
+    indexRight += width;
+  }
+  for (var _i = rect.left; _i < rect.right; _i++) {
+    if (rect.top > 0 && map[indexTop] == map[indexTop - width] || rect.bottom < height && map[indexBottom] == map[indexBottom + width]) return true;
+    indexTop++;
+    indexBottom++;
+  }
+  return false;
+};
+var isEmpty = function isEmpty(cell) {
+  var c = cell.content;
+  return c.childCount == 1 && c.child(0).isTextblock && c.child(0).childCount == 0;
+};
+var mergeCells = function mergeCells(state, dispatch) {
+  var sel = state.selection;
+  if (!(sel instanceof CellSelection) || sel.$anchorCell.pos == sel.$headCell.pos) return false;
+  var rect = selectedRect(state),
+    map = rect.map;
+  if (cellsOverlapRectangle(map, rect)) return false;
+  if (dispatch) {
+    var tr = state.tr;
+    var seen = {};
+    var content = Fragment.empty;
+    var mergedPos;
+    var mergedCell;
+    for (var row = rect.top; row < rect.bottom; row++) {
+      for (var col = rect.left; col < rect.right; col++) {
+        var cellPos = map.map[row * map.width + col];
+        var cell = rect.table.nodeAt(cellPos);
+        if (seen[cellPos] || !cell) continue;
+        seen[cellPos] = true;
+        if (mergedPos == null) {
+          mergedPos = cellPos;
+          mergedCell = cell;
+        } else {
+          if (!isEmpty(cell)) content = content.append(cell.content);
+          var mapped = tr.mapping.map(cellPos + rect.tableStart);
+          tr["delete"](mapped, mapped + cell.nodeSize);
+        }
+      }
+    }
+    if (mergedPos == null || mergedCell == null) return true;
+    tr.setNodeMarkup(mergedPos + rect.tableStart, null, _objectSpread2(_objectSpread2({}, addColspan(mergedCell.attrs, mergedCell.attrs.colspan, rect.right - rect.left - mergedCell.attrs.colspan)), {}, {
+      rowspan: rect.bottom - rect.top
+    }));
+    if (content.size) {
+      var end = mergedPos + 1 + mergedCell.content.size;
+      var start = isEmpty(mergedCell) ? mergedPos + 1 : end;
+      tr.replaceWith(start + rect.tableStart, end + rect.tableStart, content);
+    }
+    tr.setSelection(new CellSelection(tr.doc.resolve(mergedPos + rect.tableStart)));
+    dispatch(tr);
+  }
+  return true;
+};
+
+var tableClassName = 'tableWrapper dc-block scrollbar';
 var TableView = /*#__PURE__*/function () {
   function TableView(node, view, getPos, cellMinWidth) {
     var _this = this;
@@ -1135,7 +1520,7 @@ var TableView = /*#__PURE__*/function () {
       // );
       // console.log(pos, 'pos');
       tr.setNodeMarkup(pos, null, _objectSpread2(_objectSpread2({}, _this.node.attrs), {}, {
-        "class": 'tableWrapper dc-block ' + classList.join(' ')
+        "class": tableClassName + ' ' + classList.join(' ')
       }));
       if (decs.length) {
         tr.setMeta(tableEditingKey, {
@@ -1150,7 +1535,7 @@ var TableView = /*#__PURE__*/function () {
         hoverDecos: []
       });
       tr.setNodeMarkup(_this.getPos(), null, {
-        "class": 'tableWrapper dc-block'
+        "class": tableClassName
       });
       _this.view.dispatch(tr);
     });
@@ -1159,7 +1544,7 @@ var TableView = /*#__PURE__*/function () {
     this.getPos = getPos;
     this.cellMinWidth = cellMinWidth;
     this.dom = createElement('div', {
-      "class": 'tableWrapper dc-block'
+      "class": tableClassName
     });
     this.table = this.dom.appendChild(createElement('table'
     // {},
@@ -1183,7 +1568,7 @@ var TableView = /*#__PURE__*/function () {
     value: function update(node, decorations) {
       if (node.type !== this.node.type) return false;
       this.node = node;
-      this.dom.className = node.attrs["class"] || 'tableWrapper dc-block';
+      this.dom.className = node.attrs["class"] || tableClassName;
       updateColumnsOnResize(this.node, this.colgroup, this.table, this.cellMinWidth);
       return true;
     }
@@ -1245,40 +1630,68 @@ var addToolkit = function addToolkit(table, start) {
   var width = map.width,
     height = map.height;
   var result = [];
-  var _loop = function _loop() {
+  var _loop = function _loop(i) {
     if (seen[i]) return 1; // continue
     seen[i] = true;
-    var div = createElement('div', {
-      "class": 'rowBtn'
-    });
-    result.push(Decoration.widget(start + map.map[i] + 2, function () {
-      return div;
+    result.push(Decoration.widget(start + map.map[i] + 2, function (view) {
+      return createElement('div', {
+        "class": 'rowBtn',
+        onclick: function onclick() {
+          var dispatch = view.dispatch,
+            state = view.state;
+          var row = i / width;
+          var table = state.doc.nodeAt(start);
+          var map = TableMap.get(table);
+          dispatch(removeRow(state.tr, {
+            map: map,
+            table: table,
+            tableStart: start + 1
+          }, row));
+        }
+      });
     }));
   };
   for (var i = 0; i < width * height; i += width) {
-    if (_loop()) continue;
+    if (_loop(i)) continue;
   }
   seen = {};
-  var _loop2 = function _loop2() {
+  var _loop2 = function _loop2(_i2) {
     if (seen[_i2]) return 1; // continue
     seen[_i2] = true;
-    var div = createElement('div', {
-      "class": 'colBtn'
-    });
-    result.push(Decoration.widget(start + map.map[_i2] + 2, function () {
-      return div;
+    result.push(Decoration.widget(start + map.map[_i2] + 2, function (view) {
+      return createElement('div', {
+        "class": 'colBtn',
+        onclick: function onclick() {
+          var state = view.state,
+            dispatch = view.dispatch;
+          var table = state.doc.nodeAt(start);
+          var map = TableMap.get(table);
+          dispatch(removeColumn(state.tr, {
+            map: map,
+            table: table,
+            tableStart: start + 1
+          }, _i2));
+        }
+      });
     }));
   };
   for (var _i2 = 0; _i2 < width; _i2++) {
-    if (_loop2()) continue;
+    if (_loop2(_i2)) continue;
   }
-  var tools = createElement('div', {}, createElement('div', {
-    "class": 'rowBar'
-  }), createElement('div', {
-    "class": 'colBar'
-  }));
-  result.push(Decoration.widget(start + 1, function () {
-    return tools;
+  result.push(Decoration.widget(start + 1, function (view) {
+    return createElement('div', {
+      "class": 'tools'
+    }, createElement('div', {
+      "class": 'rowBar',
+      onclick: function onclick() {
+        return addRowAtEnd(start, view);
+      }
+    }, '+'), createElement('div', {
+      "class": 'colBar',
+      onclick: function onclick() {
+        return addColumnAtEnd(start, view);
+      }
+    }, '+'));
   }));
   return result;
 };
@@ -1304,34 +1717,43 @@ function handleMouseDown(view, startEvent) {
   // Create and dispatch a cell selection between the given anchor and
   // the position under the mouse.
   function setCellSelection($anchor, event) {
+    var _tableEditingKey$getS;
     var $head = cellUnderMouse(view, event);
-    var starting = tableEditingKey.getState(view.state) == null;
+    var starting = ((_tableEditingKey$getS = tableEditingKey.getState(view.state)) === null || _tableEditingKey$getS === void 0 ? void 0 : _tableEditingKey$getS.set) == null;
     if (!$head || !inSameTable($anchor, $head)) {
       if (starting) $head = $anchor;else return;
     }
     var selection = new CellSelection($anchor, $head);
     if (starting || !view.state.selection.eq(selection)) {
       var tr = view.state.tr.setSelection(selection);
-      if (starting) tr.setMeta(tableEditingKey, $anchor.pos);
+      if (starting) tr.setMeta(tableEditingKey, {
+        set: $anchor.pos
+      });
       view.dispatch(tr);
     }
   }
   // Stop listening to mouse motion events.
   function stop() {
-    var _tableEditingKey$getS;
+    var _tableEditingKey$getS2;
     view.root.removeEventListener('mouseup', stop);
     view.root.removeEventListener('dragstart', stop);
     view.root.removeEventListener('mousemove', move);
-    if (((_tableEditingKey$getS = tableEditingKey.getState(view.state)) === null || _tableEditingKey$getS === void 0 ? void 0 : _tableEditingKey$getS.set) != null) view.dispatch(view.state.tr.setMeta(tableEditingKey, {
+    if (!isEmpty$1((_tableEditingKey$getS2 = tableEditingKey.getState(view.state)) === null || _tableEditingKey$getS2 === void 0 ? void 0 : _tableEditingKey$getS2.set)) view.dispatch(view.state.tr.setMeta(tableEditingKey, {
       set: -1
     }));
   }
+  var x1 = startEvent.clientX,
+    y1 = startEvent.clientY;
   function move(_event) {
-    var _tableEditingKey$getS2;
+    var _tableEditingKey$getS3;
     var event = _event;
-    var anchor = (_tableEditingKey$getS2 = tableEditingKey.getState(view.state)) === null || _tableEditingKey$getS2 === void 0 ? void 0 : _tableEditingKey$getS2.set;
+    var x2 = event.clientX,
+      y2 = event.clientY;
+    if (Math.abs(x1 - x2) < 4 && Math.abs(y1 - y2) < 4) return;
+    console.log('move');
+    var anchor = (_tableEditingKey$getS3 = tableEditingKey.getState(view.state)) === null || _tableEditingKey$getS3 === void 0 ? void 0 : _tableEditingKey$getS3.set;
     var $anchor;
-    if (anchor != null) {
+    if (anchor || anchor == 0) {
       // Continuing an existing cross-cell selection
       $anchor = view.state.doc.resolve(anchor);
     } else if (domInCell(view, event.target) != startDOMCell) {
@@ -1361,8 +1783,19 @@ function cellUnderMouse(view, event) {
   if (!mousePos) return null;
   return mousePos ? cellAround(view.state.doc.resolve(mousePos.pos)) : null;
 }
+var handleTripleClick = function handleTripleClick(view, pos) {
+  var doc = view.state.doc,
+    $cell = cellAround(doc.resolve(pos));
+  if (!$cell) return false;
+  view.dispatch(view.state.tr.setSelection(new CellSelection($cell)).setMeta(tableEditingKey, {
+    set: $cell.pos
+  }));
+  return true;
+};
 
 function tableEditing(_ref) {
+  var _ref$allowTableNodeSe = _ref.allowTableNodeSelection,
+    allowTableNodeSelection = _ref$allowTableNodeSe === void 0 ? false : _ref$allowTableNodeSe;
   var getDecorations = function getDecorations(state) {
     var decs = [];
     decs = decs.concat(drawCellSelection(state));
@@ -1382,20 +1815,26 @@ function tableEditing(_ref) {
         };
       },
       apply: function apply(tr, value, _, state) {
-        var _ref2 = tr.getMeta(tableEditingKey) || {},
-          set = _ref2.set,
-          hoverDecos = _ref2.hoverDecos;
-        if (set != null) return _objectSpread2(_objectSpread2({}, value), {}, {
-          set: set == -1 ? null : set
+        var st = tr.getMeta(tableEditingKey);
+        if (!st) return value;
+        var _st$set = st.set,
+          set = _st$set === void 0 ? null : _st$set,
+          hoverDecos = st.hoverDecos;
+        var decorations = DecorationSet.create(state.doc, getDecorations(state).concat(hoverDecos ? hoverDecos : value.hoverDecos || []));
+        if (!isEmpty$1(set)) return _objectSpread2(_objectSpread2({}, value), {}, {
+          set: set == -1 ? null : set,
+          decorations: decorations
         });
         if (!tr.docChanged && !hoverDecos) return value;
-        var _tr$mapping$mapResult = tr.mapping.mapResult(set),
-          deleted = _tr$mapping$mapResult.deleted,
-          pos = _tr$mapping$mapResult.pos;
-        var decorations = getDecorations(state).concat(hoverDecos ? hoverDecos : value.hoverDecos || []);
+        if (!isEmpty$1(value.set)) {
+          var _tr$mapping$mapResult = tr.mapping.mapResult(value.set),
+            deleted = _tr$mapping$mapResult.deleted,
+            pos = _tr$mapping$mapResult.pos;
+          set = deleted ? null : pos;
+        }
         return {
-          set: deleted ? null : pos,
-          decorations: DecorationSet.create(state.doc, decorations),
+          set: set,
+          decorations: decorations,
           hoverDecos: hoverDecos
         };
       }
@@ -1410,21 +1849,36 @@ function tableEditing(_ref) {
       },
       handleDOMEvents: {
         mousedown: handleMouseDown
+      },
+      handleTripleClick: handleTripleClick,
+      handleClick: function handleClick(view, pos, event) {
+        // const startDOMCell = domInCell(view, event.target as Node);
+        // console.log(pos, 'pos');
+        // const doc = view.state.doc;
+        // if (startDOMCell) {
+        //   event.preventDefault();
+        //   const $pos = doc.resolve(pos);
+        //   const $from = cellAround($pos);
+        //   const sel = new CellSelection($from!);
+        //   view.dispatch(
+        //     view.state.tr
+        //       .setSelection(sel)
+        //       .setMeta(tableEditingKey, { set: $from?.pos! })
+        //   );
+        // }
+      },
+      createSelectionBetween: function createSelectionBetween(view) {
+        var _tableEditingKey$getS;
+        var set = (_tableEditingKey$getS = tableEditingKey.getState(view.state)) === null || _tableEditingKey$getS === void 0 ? void 0 : _tableEditingKey$getS.set;
+        console.log(set, 'selection');
+        return !isEmpty$1(set) ? view.state.selection : null;
       }
-      // createSelectionBetween(view) {
-      //   return tableEditingKey.getState(view.state)?.set != null
-      //     ? view.state.selection
-      //     : null;
-      // },
+    },
+    appendTransaction: function appendTransaction(_, oldState, newState) {
+      return normalizeSelection(newState,
+      // newState.tr,
+      fixTables(newState, oldState), allowTableNodeSelection);
     }
-    // appendTransaction(_, oldState, newState) {
-    //   return normalizeSelection(
-    //     newState,
-    //     // newState.tr,
-    //     fixTables(newState, oldState),
-    //     allowTableNodeSelection
-    //   );
-    // },
   });
 }
 
@@ -2045,72 +2499,6 @@ var MenuGroup = /*#__PURE__*/function () {
   }]);
 }();
 
-var createTable = function createTable(rows, columns) {
-  return function (state, dispatch, view) {
-    var _state$schema$nodes = state.schema.nodes,
-      table = _state$schema$nodes.table,
-      tableRow = _state$schema$nodes.tableRow,
-      tableHeader = _state$schema$nodes.tableHeader,
-      tableCell = _state$schema$nodes.tableCell,
-      paragraph = _state$schema$nodes.paragraph;
-    var tableNode = table.create(null, Array(rows + 1).fill(null).map(function (_, row) {
-      return tableRow.create(null, Array(columns).fill(null).map(function (_, col) {
-        return (row === 0 ? tableHeader : tableCell).create(null, paragraph.create(null, state.schema.text('cell row ' + row + ', col ' + col)));
-      }));
-    }));
-    TableMap.get(tableNode);
-    if (dispatch) {
-      dispatch(state.tr.replaceSelectionWith(tableNode).scrollIntoView());
-      return true;
-    }
-    return false;
-  };
-};
-function selectedRect(state) {
-  var sel = state.selection;
-  var $pos = selectionCell(state);
-  var table = $pos.node(-1);
-  var tableStart = $pos.start(-1);
-  var map = TableMap.get(table);
-  var rect = sel instanceof CellSelection ? map.rectBetween(sel.$anchorCell.pos - tableStart, sel.$headCell.pos - tableStart) : map.findCell($pos.pos - tableStart);
-  return _objectSpread2(_objectSpread2({}, rect), {}, {
-    tableStart: tableStart,
-    map: map,
-    table: table
-  });
-}
-function addColumn(tr, _ref, col) {
-  var map = _ref.map,
-    table = _ref.table,
-    tableStart = _ref.tableStart;
-  var refColumn = col > 0 ? -1 : 0;
-  if (columnIsHeader(map, table, col + refColumn)) {
-    refColumn = col == 0 || col == map.width ? null : 0;
-  }
-  for (var row = 0; row < map.height; row++) {
-    var index = row * map.width + col;
-    if (col > 0 && col < map.width && map.map[index - 1] == map.map[index]) {
-      var pos = map.map[index];
-      var cell = table.nodeAt(pos);
-      tr.setNodeMarkup(tr.mapping.map(tableStart + pos), null, addColspan(cell.attrs, col - map.colCount(pos)));
-      row += cell.attrs.rowspan - 1;
-    } else {
-      var type = refColumn == null ? tableNodeTypes(table.type.schema).cell : table.nodeAt(map.map[index + refColumn]).type;
-      var _pos = map.positionAt(row, col, table);
-      tr.insert(tr.mapping.map(tableStart + _pos), type.createAndFill());
-    }
-  }
-  return tr;
-}
-var addColumnAfter = function addColumnAfter(state, dispatch) {
-  if (!isInTable(state)) return false;
-  if (dispatch) {
-    var rect = selectedRect(state);
-    dispatch(addColumn(state.tr, rect, rect.right));
-  }
-  return true;
-};
-
 var ToolBar = /*#__PURE__*/function () {
   function ToolBar(view, spec) {
     var _this = this;
@@ -2185,12 +2573,12 @@ var buildToolbar = function buildToolbar() {
               // insertTable(state, dispatch);
             }
           }, {
-            label: '插入列',
+            label: '合并单元格',
             handler: function handler(_ref4) {
               var state = _ref4.state,
                 dispatch = _ref4.dispatch;
                 _ref4.view;
-              addColumnAfter(state, dispatch);
+              mergeCells(state, dispatch);
             }
           }]
         }]
@@ -2219,7 +2607,7 @@ var setupEditor = function setupEditor(el) {
   // 根据 schema 定义，创建 editorState 数据实例
   var editorState = EditorState.create({
     schema: schema,
-    plugins: [buildInputRules(), keymap(myKeymap), history(), toolbar.plugin, highlightCodePlugin(), tableEditing()]
+    plugins: [buildInputRules(), keymap(myKeymap), history(), toolbar.plugin, highlightCodePlugin(), tableEditing({})]
   });
   // 创建编辑器视图实例，并挂在到 el 上
   var editorView = new EditorView(el, {

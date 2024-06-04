@@ -320,6 +320,7 @@ export function drawCellSelection(state: EditorState): Decoration[] {
       Decoration.node(pos, pos + node.nodeSize, { class: 'selectedCell' })
     );
   });
+  console.log(cells, 'cell');
 
   return cells;
 }

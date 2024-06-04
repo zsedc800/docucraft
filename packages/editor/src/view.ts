@@ -11,40 +11,42 @@ import { buildToolbar } from './components/toolBar';
 import './themes/default.scss';
 import { TaskItemViewConstructor, taskItem } from './components/taskList';
 import { tableEditing } from './components/tables';
+import { addView } from './utils';
 
 export const setupEditor = (el: HTMLElement | null) => {
-  if (!el) return;
+	if (!el) return;
 
-  const toolbar = buildToolbar();
+	const toolbar = buildToolbar();
 
-  // 根据 schema 定义，创建 editorState 数据实例
-  const editorState = EditorState.create({
-    schema,
-    plugins: [
-      buildInputRules(),
-      keymap(myKeymap),
-      history(),
-      toolbar.plugin,
-      highlightCodePlugin(),
-      tableEditing({}),
-    ],
-  });
+	// 根据 schema 定义，创建 editorState 数据实例
+	const editorState = EditorState.create({
+		schema,
+		plugins: [
+			buildInputRules(),
+			keymap(myKeymap),
+			history(),
+			toolbar.plugin,
+			highlightCodePlugin(),
+			tableEditing({})
+		]
+	});
 
-  // 创建编辑器视图实例，并挂在到 el 上
-  const editorView = new EditorView(el, {
-    state: editorState,
-    dispatchTransaction(tr) {
-      const newState = editorView.state.apply(tr);
-      editorView.updateState(newState);
-      toolbar.update(editorView, editorView.state);
-    },
-    nodeViews: {
-      codeBlock: CodeBlockViewConstructor,
-      taskItem: TaskItemViewConstructor,
-    },
-  });
-  return () => {
-    editorView.destroy();
-    toolbar.destroy();
-  };
+	// 创建编辑器视图实例，并挂在到 el 上
+	const editorView = new EditorView(el, {
+		state: editorState,
+		dispatchTransaction(tr) {
+			const newState = editorView.state.apply(tr);
+			editorView.updateState(newState);
+			toolbar.update(editorView, editorView.state);
+		},
+		nodeViews: {
+			codeBlock: CodeBlockViewConstructor,
+			taskItem: TaskItemViewConstructor
+		}
+	});
+	addView(editorView);
+	return () => {
+		editorView.destroy();
+		toolbar.destroy();
+	};
 };
