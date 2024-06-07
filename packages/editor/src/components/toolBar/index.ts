@@ -9,6 +9,9 @@ import {
 	insertTable,
 	mergeCells
 } from '../tables/commands';
+import { insertMath } from '../katex';
+import { escapeLatex } from '../../utils';
+import { addLink, setBold } from './commands';
 
 export interface ToolBarSpec {
 	groups: MenuGroupSpec[];
@@ -58,6 +61,23 @@ export const buildToolbar = () => {
 			toolbar = new ToolBar(view, {
 				groups: [
 					{
+						name: '格式',
+						menus: [
+							{
+								label: '加粗',
+								handler({ view }) {
+									setBold(view);
+								}
+							},
+							{
+								label: '链接',
+								handler({ view }) {
+									addLink(view);
+								}
+							}
+						]
+					},
+					{
 						menus: [
 							{
 								label: '插入代码块',
@@ -82,6 +102,15 @@ export const buildToolbar = () => {
 								label: '合并单元格',
 								handler({ state, dispatch, view }) {
 									mergeCells(state, dispatch, view);
+								}
+							},
+							{
+								label: '插入公式',
+								handler({ view }) {
+									const formula = prompt('输入一条 LaTex 公式: ');
+									// console.log(escapeLatex(formula));
+
+									if (formula) insertMath(view, formula);
 								}
 							}
 						]

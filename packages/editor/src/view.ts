@@ -12,6 +12,7 @@ import './themes/default.scss';
 import { TaskItemViewConstructor, taskItem } from './components/taskList';
 import { columnResizing, tableEditing } from './components/tables';
 import { addView } from './utils';
+import { mathRender } from './components/katex';
 
 export const setupEditor = (el: HTMLElement | null) => {
 	if (!el) return;
@@ -28,7 +29,8 @@ export const setupEditor = (el: HTMLElement | null) => {
 			toolbar.plugin,
 			highlightCodePlugin(),
 			columnResizing(),
-			tableEditing({})
+			tableEditing({}),
+			mathRender()
 		]
 	});
 
@@ -43,6 +45,20 @@ export const setupEditor = (el: HTMLElement | null) => {
 		nodeViews: {
 			codeBlock: CodeBlockViewConstructor,
 			taskItem: TaskItemViewConstructor
+		},
+		handleClickOn(view, pos, node, nodePos, event, direct) {
+			const markType = view.state.schema.marks.link;
+			const $pos = view.state.doc.resolve(pos);
+			if ($pos.marks().some((mark) => mark.type === markType)) {
+				const linkMark = $pos.marks().find((mark) => mark.type === markType);
+				const { href, target } = linkMark?.attrs || {};
+				if (href) {
+					if ($pos.end() === pos) return false;
+					window.open(href, target);
+				}
+				return true;
+			}
+			return false;
 		}
 	});
 	addView(editorView);

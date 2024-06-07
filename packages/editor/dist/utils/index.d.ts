@@ -3,3 +3,4 @@ export declare const addView: (v: EditorView) => EditorView;
 export declare const getView: () => EditorView | undefined;
 declare const _default: () => string;
 export default _default;
+export declare function escapeLatex(latex: string): string;

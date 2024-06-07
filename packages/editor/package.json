@@ -13,6 +13,7 @@
   "license": "ISC",
   "dependencies": {
     "highlight.js": "^11.9.0",
+    "katex": "^0.16.10",
     "prosemirror-commands": "^1.5.2",
     "prosemirror-history": "^1.4.0",
     "prosemirror-inputrules": "^1.4.0",
@@ -29,6 +30,7 @@
     "react-dom": "^18"
   },
   "devDependencies": {
+    "@types/katex": "^0.16.7",
     "rollup": "^4.17.2",
     "typescript": "^5"
   }

@@ -7,6 +7,8 @@ var prosemirrorState = require('prosemirror-state');
 var prosemirrorModel = require('prosemirror-model');
 var prosemirrorKeymap = require('prosemirror-keymap');
 var prosemirrorTransform = require('prosemirror-transform');
+var katex = require('katex');
+require('katex/dist/katex.min.css');
 var prosemirrorHistory = require('prosemirror-history');
 var ReactDOM = require('react-dom/client');
 var React = require('react');
@@ -2515,6 +2517,61 @@ function tableEditing(_ref) {
   });
 }
 
+var mathNodeSpec = {
+  group: 'inline',
+  inline: true,
+  atom: true,
+  toDOM: function toDOM(node) {
+    return ['span', {
+      "class": 'math-node'
+    }, node.attrs.formula];
+  },
+  parseDOM: [{
+    tag: 'span.math-node',
+    getAttrs: function getAttrs(dom) {
+      return {
+        formula: dom.textContent
+      };
+    }
+  }],
+  attrs: {
+    formula: {}
+  }
+};
+var renderMath = function renderMath(formula) {
+  var span = createElement('span', {
+    "class": 'math-node'
+  });
+  katex.render(formula, span);
+  return span;
+};
+var mathRender = function mathRender() {
+  return new prosemirrorState.Plugin({
+    props: {
+      nodeViews: {
+        math: function math(node, view, getPos) {
+          var dom = renderMath(node.attrs.formula);
+          return {
+            dom: dom,
+            update: function update(newNode) {
+              if (newNode.type.name === 'math' && newNode.attrs.formula === node.attrs.formula) return true;
+              return false;
+            }
+          };
+        }
+      }
+    }
+  });
+};
+var insertMath = function insertMath(view, formula) {
+  var state = view.state,
+    dispatch = view.dispatch;
+  var node = state.schema.nodes.math.create({
+    formula: formula
+  });
+  dispatch(state.tr.replaceSelectionWith(node));
+};
+
 var schema = new prosemirrorModel.Schema({
   nodes: _objectSpread2({
     // 整个文档
@@ -2522,6 +2579,7 @@ var schema = new prosemirrorModel.Schema({
       // 文档内容规定必须是 block 类型的节点（block 与 HTML 中的 block 概念差不多） `+` 号代表可以有一个或多个（规则类似正则）
       content: 'block+'
     },
+    math: mathNodeSpec,
     // 文档段落
     paragraph: {
       // 段落内容规定必须是 inline 类型的节点（inline 与 HTML 中 inline 概念差不多）, `*` 号代表可以有 0 个或多个（规则类似正则）
@@ -2660,14 +2718,66 @@ var schema = new prosemirrorModel.Schema({
   // 除了上面定义 node 节点，一些富文本样式，可以通过 marks 定义
   marks: {
     // 文本加粗
-    strong: {
-      // 对于加粗的部分，使用 strong 标签包裹，加粗的内容位于 strong 标签内(这里定义的 0 与上面一致，也念做 “洞”，也类似 vue 中的 slot)
+    bold: {
       toDOM: function toDOM() {
         return ['strong', 0];
       },
-      // 从别的地方复制过来的富文本，如果有 strong 标签，则被解析为一个 strong mark
       parseDOM: [{
-        tag: 'strong'
+        tag: 'stong'
+      }, {
+        tag: 'b',
+        getAttrs: function getAttrs(dom) {
+          return dom.style.fontWeight !== 'normal' && null;
+        }
+      }, {
+        style: 'font-weight',
+        getAttrs: function getAttrs(val) {
+          return /^(bold(er)?|[5-9]\d{2})$/.test(val) && null;
+        }
+      }]
+    },
+    italic: {
+      group: 'heading',
+      toDOM: function toDOM() {
+        return ['em', 0];
+      },
+      parseDOM: [{
+        tag: 'em'
+      }, {
+        tag: 'i',
+        getAttrs: function getAttrs(dom) {
+          return dom.style.fontStyle !== 'normal' && null;
+        }
+      }, {
+        style: 'font-style=italic'
+      }]
+    },
+    link: {
+      group: 'heading',
+      attrs: {
+        href: {
+          "default": null
+        },
+        ref: {
+          "default": 'noopener noreferrer nofollow'
+        },
+        target: {
+          "default": '_blank'
+        }
+      },
+      toDOM: function toDOM(mark) {
+        var _mark$attrs = mark.attrs,
+          href = _mark$attrs.href,
+          ref = _mark$attrs.ref,
+          target = _mark$attrs.target;
+        return ['a', {
+          href: href,
+          ref: ref,
+          target: target
+        }, 0];
+      },
+      parseDOM: [{
+        tag: 'a[href]:not([href *= "javascript:" i])'
       }]
     }
   }
@@ -3132,6 +3242,27 @@ var MenuGroup = /*#__PURE__*/function () {
   }]);
 }();
 
+var setMark = function setMark(view, markType) {
+  var attrs = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : null;
+  var _view$state = view.state,
+    schema = _view$state.schema,
+    selection = _view$state.selection,
+    tr = _view$state.tr;
+  var $from = selection.$from,
+    $to = selection.$to;
+  var mark = schema.mark(markType, attrs);
+  view.dispatch(tr.addMark($from.pos, $to.pos, mark));
+  return true;
+};
+var setBold = function setBold(view) {
+  return setMark(view, view.state.schema.marks.bold);
+};
+var addLink = function addLink(view) {
+  return setMark(view, view.state.schema.marks.link, {
+    href: 'https://www.baidu.com'
+  });
+};
+
 var ToolBar = /*#__PURE__*/function () {
   function ToolBar(view, spec) {
     var _this = this;
@@ -3180,38 +3311,61 @@ var buildToolbar = function buildToolbar() {
     view: function view(_view) {
       toolbar = new ToolBar(_view, {
         groups: [{
+          name: '格式',
+          menus: [{
+            label: '加粗',
+            handler: function handler(_ref) {
+              var view = _ref.view;
+              setBold(view);
+            }
+          }, {
+            label: '链接',
+            handler: function handler(_ref2) {
+              var view = _ref2.view;
+              addLink(view);
+            }
+          }]
+        }, {
           menus: [{
             label: '插入代码块',
-            handler: function handler(_ref, event) {
-              var state = _ref.state,
-                dispatch = _ref.dispatch;
-                _ref.view;
+            handler: function handler(_ref3, event) {
+              var state = _ref3.state,
+                dispatch = _ref3.dispatch;
+                _ref3.view;
               createCodeBlockCmd(state, dispatch);
             }
           }, {
             label: '插入tasklist',
-            handler: function handler(_ref2) {
-              var state = _ref2.state,
-                dispatch = _ref2.dispatch;
-                _ref2.view;
+            handler: function handler(_ref4) {
+              var state = _ref4.state,
+                dispatch = _ref4.dispatch;
+                _ref4.view;
               createTaskList(state, dispatch);
             }
           }, {
             label: '插入表格',
-            handler: function handler(_ref3) {
-              var state = _ref3.state,
-                dispatch = _ref3.dispatch,
-                view = _ref3.view;
+            handler: function handler(_ref5) {
+              var state = _ref5.state,
+                dispatch = _ref5.dispatch,
+                view = _ref5.view;
               createTable(3, 4)(state, dispatch, view);
               // insertTable(state, dispatch);
             }
           }, {
             label: '合并单元格',
-            handler: function handler(_ref4) {
-              var state = _ref4.state,
-                dispatch = _ref4.dispatch;
-                _ref4.view;
+            handler: function handler(_ref6) {
+              var state = _ref6.state,
+                dispatch = _ref6.dispatch;
+                _ref6.view;
               mergeCells(state, dispatch);
+            }
+          }, {
+            label: '插入公式',
+            handler: function handler(_ref7) {
+              var view = _ref7.view;
+              var formula = prompt('输入一条 LaTex 公式: ');
+              // console.log(escapeLatex(formula));
+              if (formula) insertMath(view, formula);
             }
           }]
         }]
@@ -3240,7 +3394,7 @@ var setupEditor = function setupEditor(el) {
   // 根据 schema 定义，创建 editorState 数据实例
   var editorState = prosemirrorState.EditorState.create({
     schema: schema,
-    plugins: [buildInputRules(), prosemirrorKeymap.keymap(myKeymap), prosemirrorHistory.history(), toolbar.plugin, highlightCodePlugin(), columnResizing(), tableEditing({})]
+    plugins: [buildInputRules(), prosemirrorKeymap.keymap(myKeymap), prosemirrorHistory.history(), toolbar.plugin, highlightCodePlugin(), columnResizing(), tableEditing({}), mathRender()]
   });
   // 创建编辑器视图实例，并挂在到 el 上
   var editorView = new prosemirrorView.EditorView(el, {
@@ -3253,6 +3407,26 @@ var setupEditor = function setupEditor(el) {
     nodeViews: {
       codeBlock: CodeBlockViewConstructor,
       taskItem: TaskItemViewConstructor
+    },
+    handleClickOn: function handleClickOn(view, pos, node, nodePos, event, direct) {
+      var markType = view.state.schema.marks.link;
+      var $pos = view.state.doc.resolve(pos);
+      if ($pos.marks().some(function (mark) {
+        return mark.type === markType;
+      })) {
+        var linkMark = $pos.marks().find(function (mark) {
+          return mark.type === markType;
+        });
+        var _ref = (linkMark === null || linkMark === void 0 ? void 0 : linkMark.attrs) || {},
+          href = _ref.href,
+          target = _ref.target;
+        if (href) {
+          if ($pos.end() === pos) return false;
+          window.open(href, target);
+        }
+        return true;
+      }
+      return false;
     }
   });
   return function () {
