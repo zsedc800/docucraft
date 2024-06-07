@@ -1,17 +1,24 @@
-import { Command, EditorState, Transaction } from 'prosemirror-state';
+import {
+	Command,
+	EditorState,
+	TextSelection,
+	Transaction
+} from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { Rect, TableMap } from './tableMap';
-import { Fragment, Node } from 'prosemirror-model';
+import { Fragment, Node, NodeType, ResolvedPos } from 'prosemirror-model';
 import {
 	CellAttrs,
 	addColspan,
 	columnIsHeader,
 	isInTable,
+	moveCellForward,
 	removeColSpan,
 	selectionCell
 } from './utils';
 import { CellAttributes, tableNodeTypes } from './schema';
 import { CellSelection } from './cellSelection';
+import { Direction } from './input';
 export const createTable: (rows: number, columns: number) => Command =
 	(rows, columns) => (state, dispatch, view) => {
 		const { table, tableRow, tableHeader, tableCell, paragraph } =
@@ -456,4 +463,195 @@ export const mergeCells: Command = (state, dispatch) => {
 	}
 
 	return true;
+};
+
+export const setCellAttrs =
+	(name: string, value: unknown): Command =>
+	(state, dispatch) => {
+		if (!isInTable(state)) return false;
+		const $cell = selectionCell(state);
+		if ($cell.nodeAfter!.attrs[name] === value) return false;
+		if (dispatch) {
+			const tr = state.tr;
+			if (state.selection instanceof CellSelection)
+				state.selection.forEachCell((node, pos) => {
+					if (node.attrs[name] !== value)
+						tr.setNodeMarkup(pos, null, {
+							...node.attrs,
+							[name]: value
+						});
+				});
+			else
+				tr.setNodeMarkup($cell.pos, null, {
+					...$cell.nodeAfter!.attrs,
+					[name]: value
+				});
+			dispatch(tr);
+		}
+
+		return true;
+	};
+
+function isHeaderEnabledByType(
+	type: 'row' | 'column',
+	rect: TableRect,
+	types: Record<string, NodeType>
+): boolean {
+	// Get cell positions for first row or first column
+	const cellPositions = rect.map.cellsInRect({
+		left: 0,
+		top: 0,
+		right: type == 'row' ? rect.map.width : 1,
+		bottom: type == 'column' ? rect.map.height : 1
+	});
+
+	for (let i = 0; i < cellPositions.length; i++) {
+		const cell = rect.table.nodeAt(cellPositions[i]);
+		if (cell && cell.type !== types.header_cell) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+export type ToggleHeaderType = 'column' | 'row' | 'cell';
+
+export function toggleHeader(
+	type: ToggleHeaderType,
+	options?: { useDeprecatedLogic: boolean } | undefined
+): Command {
+	options = options || { useDeprecatedLogic: false };
+
+	// if (options.useDeprecatedLogic) return deprecated_toggleHeader(type);
+
+	return function (state, dispatch) {
+		if (!isInTable(state)) return false;
+		if (dispatch) {
+			const types = tableNodeTypes(state.schema);
+			const rect = selectedRect(state),
+				tr = state.tr;
+
+			const isHeaderRowEnabled = isHeaderEnabledByType('row', rect, types);
+			const isHeaderColumnEnabled = isHeaderEnabledByType(
+				'column',
+				rect,
+				types
+			);
+
+			const isHeaderEnabled =
+				type === 'column'
+					? isHeaderRowEnabled
+					: type === 'row'
+						? isHeaderColumnEnabled
+						: false;
+
+			const selectionStartsAt = isHeaderEnabled ? 1 : 0;
+
+			const cellsRect =
+				type == 'column'
+					? {
+							left: 0,
+							top: selectionStartsAt,
+							right: 1,
+							bottom: rect.map.height
+						}
+					: type == 'row'
+						? {
+								left: selectionStartsAt,
+								top: 0,
+								right: rect.map.width,
+								bottom: 1
+							}
+						: rect;
+
+			const newType =
+				type == 'column'
+					? isHeaderColumnEnabled
+						? types.cell
+						: types.headerCell
+					: type == 'row'
+						? isHeaderRowEnabled
+							? types.cell
+							: types.headerCell
+						: types.cell;
+
+			rect.map.cellsInRect(cellsRect).forEach((relativeCellPos) => {
+				const cellPos = relativeCellPos + rect.tableStart;
+				const cell = tr.doc.nodeAt(cellPos);
+
+				if (cell) {
+					tr.setNodeMarkup(cellPos, newType, cell.attrs);
+				}
+			});
+
+			dispatch(tr);
+		}
+		return true;
+	};
+}
+
+function findNextCell($cell: ResolvedPos, dir: Direction): number | null {
+	if (dir < 0) {
+		const before = $cell.nodeBefore;
+		if (before) return $cell.pos - before.nodeSize;
+		for (
+			let row = $cell.index(-1) - 1, rowEnd = $cell.before();
+			row >= 0;
+			row--
+		) {
+			const rowNode = $cell.node(-1).child(row);
+			const lastChild = rowNode.lastChild;
+			if (lastChild) return rowEnd - 1 - lastChild.nodeSize;
+			return (rowEnd -= rowNode.nodeSize);
+		}
+	} else {
+		if ($cell.index() < $cell.parent.childCount - 1)
+			return $cell.pos + $cell.nodeAfter!.nodeSize;
+		const table = $cell.node(-1);
+		for (
+			let row = $cell.indexAfter(-1), rowStart = $cell.after();
+			row < table.childCount;
+			row++
+		) {
+			const rowNode = table.child(row);
+			if (rowNode.childCount) return rowStart + 1;
+			rowStart += rowNode.nodeSize;
+		}
+	}
+
+	return null;
+}
+
+export const goToNextCell =
+	(direction: Direction): Command =>
+	(state, dispatch) => {
+		if (!isInTable(state)) return false;
+		const cell = findNextCell(selectionCell(state), direction);
+		if (cell == null) return false;
+		if (dispatch) {
+			const $cell = state.doc.resolve(cell);
+			dispatch(
+				state.tr
+					.setSelection(TextSelection.between($cell, moveCellForward($cell)))
+					.scrollIntoView()
+			);
+		}
+		return true;
+	};
+
+export const deleteTable: Command = (state, dispatch) => {
+	const $pos = state.selection.$anchor;
+	for (let d = $pos.depth; d > 0; d--) {
+		const node = $pos.node(d);
+		if (node.type.spec.tableRole == 'table') {
+			if (dispatch) {
+				dispatch(
+					state.tr.delete($pos.before(d), $pos.after(d)).scrollIntoView()
+				);
+				return true;
+			}
+		}
+	}
+	return false;
 };

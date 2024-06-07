@@ -34,6 +34,9 @@ export class TableView implements NodeView {
 		this.dom = createElement('div', {
 			class: tableClassName
 		});
+		this.dom.appendChild(
+			createElement('div', { tabindex: '0', class: 'hiddenfocus' })
+		);
 		this.table = this.dom.appendChild(
 			createElement(
 				'table'

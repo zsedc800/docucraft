@@ -62,7 +62,6 @@
 
 .ProseMirror .tableWrapper {
   overflow-x: auto;
-  user-select: none;
 }
 .ProseMirror .tableWrapper table {
   position: relative;

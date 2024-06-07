@@ -6,13 +6,13 @@ var prosemirrorView = require('prosemirror-view');
 var prosemirrorState = require('prosemirror-state');
 var prosemirrorModel = require('prosemirror-model');
 var prosemirrorKeymap = require('prosemirror-keymap');
+var prosemirrorTransform = require('prosemirror-transform');
 var prosemirrorHistory = require('prosemirror-history');
 var ReactDOM = require('react-dom/client');
 var React = require('react');
 var hljs = require('highlight.js');
 var prosemirrorInputrules = require('prosemirror-inputrules');
 var prosemirrorCommands = require('prosemirror-commands');
-var prosemirrorTransform = require('prosemirror-transform');
 
 function _callSuper(t, o, e) {
   return o = _getPrototypeOf(o), _possibleConstructorReturn(t, _isNativeReflectConstruct() ? Reflect.construct(o, e || [], _getPrototypeOf(t).constructor) : o.apply(t, e));
@@ -410,205 +410,6 @@ var TaskItemViewConstructor = function TaskItemViewConstructor() {
   return _construct(TaskItemView, args);
 };
 
-var getCellAttrs = function getCellAttrs(dom, extraAttrs) {
-  if (typeof dom === 'string') return {};
-  var widthAttr = dom.getAttribute('data-colwidth');
-  var widths = widthAttr && /^\d+(,\d+)*$/.test(widthAttr) ? widthAttr.split(',').map(Number) : null;
-  var colspan = Number(dom.getAttribute('colspan') || 1);
-  var rowspan = Number(dom.getAttribute('rowspan') || 1);
-  var result = {
-    colspan: colspan,
-    rowspan: rowspan,
-    colwidth: widths && widths.length == colspan ? widths : null
-  };
-  for (var _i = 0, _Object$keys = Object.keys(extraAttrs); _i < _Object$keys.length; _i++) {
-    var prop = _Object$keys[_i];
-    var getter = extraAttrs[prop].getFromDOM;
-    var value = getter && getter(dom);
-    if (value !== null) result[prop] = value;
-  }
-  return result;
-};
-var setCellAttrs = function setCellAttrs(node, extraAttrs) {
-  var attrs = {};
-  if (node.attrs.colspan != 1) attrs.colspan = node.attrs.colspan;
-  if (node.attrs.rowspan != 1) attrs.rowspan = node.attrs.rowspan;
-  if (node.attrs.colwidth) attrs['data-colwidth'] = node.attrs.colwidth.join(',');
-  for (var prop in extraAttrs) {
-    var setter = extraAttrs[prop].setDOMAttr;
-    if (setter) setter(node.attrs[prop], attrs);
-  }
-  return attrs;
-};
-var tableNodes = function tableNodes(options) {
-  var extraAttrs = options.cellAttributes || {};
-  var cellAttrs = {
-    colspan: {
-      "default": 1
-    },
-    rowspan: {
-      "default": 1
-    },
-    colwidth: {
-      "default": null
-    }
-  };
-  for (var _i2 = 0, _Object$keys2 = Object.keys(extraAttrs); _i2 < _Object$keys2.length; _i2++) {
-    var prop = _Object$keys2[_i2];
-    cellAttrs[prop] = {
-      "default": extraAttrs[prop]["default"]
-    };
-  }
-  return {
-    table: {
-      attrs: {
-        "class": {
-          "default": ''
-        }
-      },
-      content: 'tableRow+',
-      tableRole: 'table',
-      isolating: true,
-      group: options.tableGroup,
-      parseDOM: [{
-        tag: 'table',
-        getAttrs: function getAttrs(dom) {
-          return {
-            "class": dom.getAttribute('class')
-          };
-        }
-      }],
-      toDOM: function toDOM(node) {
-        return ['table', {
-          "class": node.attrs["class"]
-        }, ['tbody', 0]];
-      }
-    },
-    tableRow: {
-      content: '(tableCell | tableHeader)*',
-      tableRole: 'row',
-      parseDOM: [{
-        tag: 'tr'
-      }],
-      toDOM: function toDOM() {
-        return ['tr', 0];
-      }
-    },
-    tableCell: {
-      content: options.cellContent,
-      attrs: cellAttrs,
-      tableRow: 'cell',
-      isolating: true,
-      parseDOM: [{
-        tag: 'td',
-        getAttrs: function getAttrs(dom) {
-          return getCellAttrs(dom, extraAttrs);
-        }
-      }],
-      toDOM: function toDOM(node) {
-        return ['td', setCellAttrs(node, extraAttrs), 0];
-      }
-    },
-    tableHeader: {
-      content: options.cellContent,
-      attrs: cellAttrs,
-      tableRole: 'headerCell',
-      isolating: true,
-      parseDOM: [{
-        tag: 'th',
-        getAttrs: function getAttrs(dom) {
-          return getCellAttrs(dom, extraAttrs);
-        }
-      }],
-      toDOM: function toDOM(node) {
-        return ['th', setCellAttrs(node, extraAttrs), 0];
-      }
-    }
-  };
-};
-function tableNodeTypes(schema) {
-  var result = schema.cached.tableNodeTypes;
-  if (!result) {
-    result = schema.cached.tableNodeTypes = {};
-    for (var name in schema.nodes) {
-      var type = schema.nodes[name];
-      var role = type.spec.tableRole;
-      if (role) result[role] = type;
-    }
-  }
-  return result;
-}
-
-var tableEditingKey = new prosemirrorState.PluginKey('selectingCells');
-var addColspan = function addColspan(attrs, pos) {
-  var n = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
-  var result = _objectSpread2(_objectSpread2({}, attrs), {}, {
-    colspan: attrs.colspan + n
-  });
-  if (result.colwidth) {
-    result.colwidth = result.colwidth.slice();
-    for (var i = 0; i < n; i++) result.colwidth.splice(pos, 0, 0);
-  }
-  return result;
-};
-function columnIsHeader(map, table, col) {
-  var headerCell = tableNodeTypes(table.type.schema).headerCell;
-  for (var row = 0; row < map.height; row++) {
-    if (table.nodeAt(map.map[col + row * map.width]).type != headerCell) return false;
-  }
-  return true;
-}
-function pointsAtCell($pos) {
-  return $pos.parent.type.spec.tableRole == 'row' && !!$pos.nodeAfter;
-}
-function inSameTable($cellA, $cellB) {
-  return $cellA.depth == $cellB.depth && $cellA.pos >= $cellB.start(-1) && $cellA.pos <= $cellB.end(-1);
-}
-function removeColSpan(attrs, pos) {
-  var n = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
-  var result = _objectSpread2(_objectSpread2({}, attrs), {}, {
-    colspan: attrs.colspan - n
-  });
-  if (result.colwidth) {
-    result.colwidth = result.colwidth.slice();
-    result.colwidth.splice(pos, n);
-    if (!result.colwidth.some(function (w) {
-      return w > 0;
-    })) result.colwidth = null;
-  }
-  return result;
-}
-function cellAround($pos) {
-  for (var d = $pos.depth - 1; d > 0; d--) if ($pos.node(d).type.spec.tableRole == 'row') return $pos.node(0).resolve($pos.before(d + 1));
-  return null;
-}
-function cellNear($pos) {
-  for (var after = $pos.nodeAfter, pos = $pos.pos; after; after = after.firstChild, pos++) {
-    var role = after.type.spec.tableRole;
-    if (role == 'cell' || role == 'headerCell') return $pos.doc.resolve(pos);
-  }
-  for (var before = $pos.nodeBefore, _pos = $pos.pos; before; before = before.lastChild, _pos--) {
-    var _role = before.type.spec.tableRole;
-    if (_role == 'cell' || _role == 'headerCell') {
-      return $pos.doc.resolve(_pos - before.nodeSize);
-    }
-  }
-}
-function selectionCell(state) {
-  var sel = state.selection;
-  if ('$anchorCell' in sel && sel.$anchorCell) {
-    return sel.$anchorCell.pos > sel.$headCell.pos ? sel.$anchorCell : sel.$headCell;
-  } else if ('node' in sel && sel.node && sel.node.type.spec.tableRole == 'cell') {
-    return sel.$anchor;
-  }
-  var $cell = cellAround(sel.$head) || cellNear(sel.$head);
-  if ($cell) return $cell;
-  throw new RangeError("No cell found around position ".concat(sel.head));
-}
-var isEmpty$1 = function isEmpty(val) {
-  return val === null || val === undefined || Number.isNaN(val);
-};
-
 var readFromCache;
 var addToCache;
 if (typeof WeakMap !== 'undefined') {
@@ -755,6 +556,7 @@ function computeMap(table) {
     height = table.childCount;
   var map = Array(width * height).fill(0);
   var mapPos = 0;
+  var problems;
   var colWidths = [];
   for (var row = 0, pos = 0; row < height; row++) {
     var rowNode = table.child(row);
@@ -769,11 +571,23 @@ function computeMap(table) {
         colwidth = _cellNode$attrs.colwidth;
       for (var h = 0; h < rowspan; h++) {
         if (h + row >= height) {
+          (problems || (problems = [])).push({
+            type: 'overlong_rowspan',
+            pos: pos,
+            n: rowspan - h
+          });
           break;
         }
         var start = mapPos + h * width;
         for (var w = 0; w < colspan; w++) {
-          if (map[start + w] == 0) map[start + w] = pos;
+          if (map[start + w] == 0) map[start + w] = pos;else {
+            (problems || (problems = [])).push({
+              type: 'collision',
+              row: row,
+              pos: pos,
+              n: colspan - w
+            });
+          }
           var colW = colwidth && colwidth[w];
           if (colW) {
             var widthIndex = (start + w) % width * 2,
@@ -791,7 +605,15 @@ function computeMap(table) {
       pos += cellNode.nodeSize;
     }
     var expectedPos = (row + 1) * width;
-    while (mapPos < expectedPos) if (map[mapPos++] == 0) ;
+    var missing = 0;
+    while (mapPos < expectedPos) if (map[mapPos++] == 0) missing++;
+    if (missing) {
+      (problems || (problems = [])).push({
+        type: 'missing',
+        row: row,
+        n: missing
+      });
+    }
     pos++;
   }
   var tableMap = new TableMap(width, height, map);
@@ -854,6 +676,217 @@ function freshColWidth(attrs) {
   for (var i = 0; i < attrs.colspan; i++) result.push(0);
   return result;
 }
+
+var getCellAttrs = function getCellAttrs(dom, extraAttrs) {
+  if (typeof dom === 'string') return {};
+  var widthAttr = dom.getAttribute('data-colwidth');
+  var widths = widthAttr && /^\d+(,\d+)*$/.test(widthAttr) ? widthAttr.split(',').map(Number) : null;
+  var colspan = Number(dom.getAttribute('colspan') || 1);
+  var rowspan = Number(dom.getAttribute('rowspan') || 1);
+  var result = {
+    colspan: colspan,
+    rowspan: rowspan,
+    colwidth: widths && widths.length == colspan ? widths : null
+  };
+  for (var _i = 0, _Object$keys = Object.keys(extraAttrs); _i < _Object$keys.length; _i++) {
+    var prop = _Object$keys[_i];
+    var getter = extraAttrs[prop].getFromDOM;
+    var value = getter && getter(dom);
+    if (value !== null) result[prop] = value;
+  }
+  return result;
+};
+var setCellAttrs = function setCellAttrs(node, extraAttrs) {
+  var attrs = {};
+  if (node.attrs.colspan != 1) attrs.colspan = node.attrs.colspan;
+  if (node.attrs.rowspan != 1) attrs.rowspan = node.attrs.rowspan;
+  if (node.attrs.colwidth) attrs['data-colwidth'] = node.attrs.colwidth.join(',');
+  for (var prop in extraAttrs) {
+    var setter = extraAttrs[prop].setDOMAttr;
+    if (setter) setter(node.attrs[prop], attrs);
+  }
+  return attrs;
+};
+var tableNodes = function tableNodes(options) {
+  var extraAttrs = options.cellAttributes || {};
+  var cellAttrs = {
+    colspan: {
+      "default": 1
+    },
+    rowspan: {
+      "default": 1
+    },
+    colwidth: {
+      "default": null
+    }
+  };
+  for (var _i2 = 0, _Object$keys2 = Object.keys(extraAttrs); _i2 < _Object$keys2.length; _i2++) {
+    var prop = _Object$keys2[_i2];
+    cellAttrs[prop] = {
+      "default": extraAttrs[prop]["default"]
+    };
+  }
+  return {
+    table: {
+      attrs: {
+        "class": {
+          "default": ''
+        }
+      },
+      content: 'tableRow+',
+      tableRole: 'table',
+      isolating: true,
+      group: options.tableGroup,
+      parseDOM: [{
+        tag: 'table',
+        getAttrs: function getAttrs(dom) {
+          return {
+            "class": dom.getAttribute('class')
+          };
+        }
+      }],
+      toDOM: function toDOM(node) {
+        return ['table', {
+          "class": node.attrs["class"]
+        }, ['tbody', 0]];
+      }
+    },
+    tableRow: {
+      content: '(tableCell | tableHeader)*',
+      tableRole: 'row',
+      parseDOM: [{
+        tag: 'tr'
+      }],
+      toDOM: function toDOM() {
+        return ['tr', 0];
+      }
+    },
+    tableCell: {
+      content: options.cellContent,
+      attrs: cellAttrs,
+      tableRole: 'cell',
+      isolating: true,
+      parseDOM: [{
+        tag: 'td',
+        getAttrs: function getAttrs(dom) {
+          return getCellAttrs(dom, extraAttrs);
+        }
+      }],
+      toDOM: function toDOM(node) {
+        return ['td', setCellAttrs(node, extraAttrs), 0];
+      }
+    },
+    tableHeader: {
+      content: options.cellContent,
+      attrs: cellAttrs,
+      tableRole: 'headerCell',
+      isolating: true,
+      parseDOM: [{
+        tag: 'th',
+        getAttrs: function getAttrs(dom) {
+          return getCellAttrs(dom, extraAttrs);
+        }
+      }],
+      toDOM: function toDOM(node) {
+        return ['th', setCellAttrs(node, extraAttrs), 0];
+      }
+    }
+  };
+};
+function tableNodeTypes(schema) {
+  var result = schema.cached.tableNodeTypes;
+  if (!result) {
+    result = schema.cached.tableNodeTypes = {};
+    for (var name in schema.nodes) {
+      var type = schema.nodes[name];
+      var role = type.spec.tableRole;
+      if (role) result[role] = type;
+    }
+  }
+  return result;
+}
+
+var tableEditingKey = new prosemirrorState.PluginKey('selectingCells');
+var addColspan = function addColspan(attrs, pos) {
+  var n = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+  var result = _objectSpread2(_objectSpread2({}, attrs), {}, {
+    colspan: attrs.colspan + n
+  });
+  if (result.colwidth) {
+    result.colwidth = result.colwidth.slice();
+    for (var i = 0; i < n; i++) result.colwidth.splice(pos, 0, 0);
+  }
+  return result;
+};
+function columnIsHeader(map, table, col) {
+  var headerCell = tableNodeTypes(table.type.schema).headerCell;
+  for (var row = 0; row < map.height; row++) {
+    if (table.nodeAt(map.map[col + row * map.width]).type != headerCell) return false;
+  }
+  return true;
+}
+function isInTable(state) {
+  var $head = state.selection.$head;
+  for (var d = $head.depth; d > 0; d--) if ($head.node(d).type.spec.tableRole == 'row') return true;
+  return false;
+}
+function pointsAtCell($pos) {
+  return $pos.parent.type.spec.tableRole == 'row' && !!$pos.nodeAfter;
+}
+function inSameTable($cellA, $cellB) {
+  return $cellA.depth == $cellB.depth && $cellA.pos >= $cellB.start(-1) && $cellA.pos <= $cellB.end(-1);
+}
+function nextCell($pos, axis, dir) {
+  var table = $pos.node(-1);
+  var map = TableMap.get(table);
+  var tableStart = $pos.start(-1);
+  var moved = map.nextCell($pos.pos - tableStart, axis, dir);
+  return moved == null ? null : $pos.node(0).resolve(tableStart + moved);
+}
+function removeColSpan(attrs, pos) {
+  var n = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : 1;
+  var result = _objectSpread2(_objectSpread2({}, attrs), {}, {
+    colspan: attrs.colspan - n
+  });
+  if (result.colwidth) {
+    result.colwidth = result.colwidth.slice();
+    result.colwidth.splice(pos, n);
+    if (!result.colwidth.some(function (w) {
+      return w > 0;
+    })) result.colwidth = null;
+  }
+  return result;
+}
+function cellAround($pos) {
+  for (var d = $pos.depth - 1; d > 0; d--) if ($pos.node(d).type.spec.tableRole == 'row') return $pos.node(0).resolve($pos.before(d + 1));
+  return null;
+}
+function cellNear($pos) {
+  for (var after = $pos.nodeAfter, pos = $pos.pos; after; after = after.firstChild, pos++) {
+    var role = after.type.spec.tableRole;
+    if (role == 'cell' || role == 'headerCell') return $pos.doc.resolve(pos);
+  }
+  for (var before = $pos.nodeBefore, _pos = $pos.pos; before; before = before.lastChild, _pos--) {
+    var _role = before.type.spec.tableRole;
+    if (_role == 'cell' || _role == 'headerCell') {
+      return $pos.doc.resolve(_pos - before.nodeSize);
+    }
+  }
+}
+function selectionCell(state) {
+  var sel = state.selection;
+  if ('$anchorCell' in sel && sel.$anchorCell) {
+    return sel.$anchorCell.pos > sel.$headCell.pos ? sel.$anchorCell : sel.$headCell;
+  } else if ('node' in sel && sel.node && sel.node.type.spec.tableRole == 'cell') {
+    return sel.$anchor;
+  }
+  var $cell = cellAround(sel.$head) || cellNear(sel.$head);
+  if ($cell) return $cell;
+  throw new RangeError("No cell found around position ".concat(sel.head));
+}
+var isEmpty$1 = function isEmpty(val) {
+  return val === null || val === undefined || Number.isNaN(val);
+};
 
 var CellSelection = /*#__PURE__*/function (_Selection) {
   function CellSelection($anchorCell) {
@@ -1084,7 +1117,6 @@ function drawCellSelection(state) {
       "class": 'selectedCell'
     }));
   });
-  console.log(cells, 'cell');
   return cells;
 }
 function isCellBoundarySelection(_ref) {
@@ -1550,6 +1582,10 @@ var TableView = /*#__PURE__*/function () {
     this.dom = createElement('div', {
       "class": tableClassName
     });
+    this.dom.appendChild(createElement('div', {
+      tabindex: '0',
+      "class": 'hiddenfocus'
+    }));
     this.table = this.dom.appendChild(createElement('table'
     // {},
     // createElement('div', { class: 'rowBar' }),
@@ -1700,26 +1736,597 @@ var addToolkit = function addToolkit(table, start) {
   return result;
 };
 
+/**
+ * @public
+ */
+var columnResizingPluginKey = new prosemirrorState.PluginKey('tableColumnResizing');
+/**
+ * @public
+ */
+function columnResizing() {
+  var _ref = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : {},
+    _ref$handleWidth = _ref.handleWidth,
+    handleWidth = _ref$handleWidth === void 0 ? 5 : _ref$handleWidth,
+    _ref$cellMinWidth = _ref.cellMinWidth,
+    cellMinWidth = _ref$cellMinWidth === void 0 ? 25 : _ref$cellMinWidth,
+    _ref$View = _ref.View,
+    View = _ref$View === void 0 ? TableView : _ref$View,
+    _ref$lastColumnResiza = _ref.lastColumnResizable,
+    lastColumnResizable = _ref$lastColumnResiza === void 0 ? true : _ref$lastColumnResiza;
+  var plugin = new prosemirrorState.Plugin({
+    key: columnResizingPluginKey,
+    state: {
+      init: function init(_, state) {
+        plugin.spec.props.nodeViews[tableNodeTypes(state.schema).table.name] = function (node, view, getPos) {
+          return new View(node, view, getPos, cellMinWidth);
+        };
+        return new ResizeState(-1, false);
+      },
+      apply: function apply(tr, prev) {
+        return prev.apply(tr);
+      }
+    },
+    props: {
+      attributes: function attributes(state) {
+        var pluginState = columnResizingPluginKey.getState(state);
+        return pluginState && pluginState.activeHandle > -1 ? {
+          "class": 'resize-cursor'
+        } : {};
+      },
+      handleDOMEvents: {
+        mousemove: function mousemove(view, event) {
+          handleMouseMove(view, event, handleWidth, cellMinWidth, lastColumnResizable);
+        },
+        mouseleave: function mouseleave(view) {
+          handleMouseLeave(view);
+        },
+        mousedown: function mousedown(view, event) {
+          handleMouseDown$1(view, event, cellMinWidth);
+        }
+      },
+      decorations: function decorations(state) {
+        var pluginState = columnResizingPluginKey.getState(state);
+        if (pluginState && pluginState.activeHandle > -1) {
+          return handleDecorations(state, pluginState.activeHandle);
+        }
+      },
+      nodeViews: {}
+    }
+  });
+  return plugin;
+}
+/**
+ * @public
+ */
+var ResizeState = /*#__PURE__*/function () {
+  function ResizeState(activeHandle, dragging) {
+    _classCallCheck(this, ResizeState);
+    this.activeHandle = activeHandle;
+    this.dragging = dragging;
+  }
+  return _createClass(ResizeState, [{
+    key: "apply",
+    value: function apply(tr) {
+      // eslint-disable-next-line @typescript-eslint/no-this-alias
+      var state = this;
+      var action = tr.getMeta(columnResizingPluginKey);
+      if (action && action.setHandle != null) return new ResizeState(action.setHandle, false);
+      if (action && action.setDragging !== undefined) return new ResizeState(state.activeHandle, action.setDragging);
+      if (state.activeHandle > -1 && tr.docChanged) {
+        var handle = tr.mapping.map(state.activeHandle, -1);
+        if (!pointsAtCell(tr.doc.resolve(handle))) {
+          handle = -1;
+        }
+        return new ResizeState(handle, state.dragging);
+      }
+      return state;
+    }
+  }]);
+}();
+function handleMouseMove(view, event, handleWidth, cellMinWidth, lastColumnResizable) {
+  var pluginState = columnResizingPluginKey.getState(view.state);
+  if (!pluginState) return;
+  if (!pluginState.dragging) {
+    var target = domCellAround(event.target);
+    var cell = -1;
+    if (target) {
+      var _target$getBoundingCl = target.getBoundingClientRect(),
+        left = _target$getBoundingCl.left,
+        right = _target$getBoundingCl.right;
+      if (event.clientX - left <= handleWidth) cell = edgeCell(view, event, 'left', handleWidth);else if (right - event.clientX <= handleWidth) cell = edgeCell(view, event, 'right', handleWidth);
+    }
+    if (cell != pluginState.activeHandle) {
+      if (!lastColumnResizable && cell !== -1) {
+        var $cell = view.state.doc.resolve(cell);
+        var table = $cell.node(-1);
+        var map = TableMap.get(table);
+        var tableStart = $cell.start(-1);
+        var col = map.colCount($cell.pos - tableStart) + $cell.nodeAfter.attrs.colspan - 1;
+        if (col == map.width - 1) {
+          return;
+        }
+      }
+      updateHandle(view, cell);
+    }
+  }
+}
+function handleMouseLeave(view) {
+  var pluginState = columnResizingPluginKey.getState(view.state);
+  if (pluginState && pluginState.activeHandle > -1 && !pluginState.dragging) updateHandle(view, -1);
+}
+function handleMouseDown$1(view, event, cellMinWidth) {
+  var _view$dom$ownerDocume;
+  var win = (_view$dom$ownerDocume = view.dom.ownerDocument.defaultView) !== null && _view$dom$ownerDocume !== void 0 ? _view$dom$ownerDocume : window;
+  var pluginState = columnResizingPluginKey.getState(view.state);
+  if (!pluginState || pluginState.activeHandle == -1 || pluginState.dragging) return false;
+  var cell = view.state.doc.nodeAt(pluginState.activeHandle);
+  var width = currentColWidth(view, pluginState.activeHandle, cell.attrs);
+  view.dispatch(view.state.tr.setMeta(columnResizingPluginKey, {
+    setDragging: {
+      startX: event.clientX,
+      startWidth: width
+    }
+  }));
+  function finish(event) {
+    win.removeEventListener('mouseup', finish);
+    win.removeEventListener('mousemove', move);
+    var pluginState = columnResizingPluginKey.getState(view.state);
+    if (pluginState !== null && pluginState !== void 0 && pluginState.dragging) {
+      updateColumnWidth(view, pluginState.activeHandle, draggedWidth(pluginState.dragging, event, cellMinWidth));
+      view.dispatch(view.state.tr.setMeta(columnResizingPluginKey, {
+        setDragging: null
+      }));
+    }
+  }
+  function move(event) {
+    if (!event.which) return finish(event);
+    var pluginState = columnResizingPluginKey.getState(view.state);
+    if (!pluginState) return;
+    if (pluginState.dragging) {
+      var dragged = draggedWidth(pluginState.dragging, event, cellMinWidth);
+      displayColumnWidth(view, pluginState.activeHandle, dragged, cellMinWidth);
+    }
+  }
+  win.addEventListener('mouseup', finish);
+  win.addEventListener('mousemove', move);
+  event.preventDefault();
+  return true;
+}
+function currentColWidth(view, cellPos, _ref2) {
+  var colspan = _ref2.colspan,
+    colwidth = _ref2.colwidth;
+  var width = colwidth && colwidth[colwidth.length - 1];
+  if (width) return width;
+  var dom = view.domAtPos(cellPos);
+  var node = dom.node.childNodes[dom.offset];
+  var domWidth = node.offsetWidth,
+    parts = colspan;
+  if (colwidth) for (var i = 0; i < colspan; i++) if (colwidth[i]) {
+    domWidth -= colwidth[i];
+    parts--;
+  }
+  return domWidth / parts;
+}
+function domCellAround(target) {
+  while (target && target.nodeName != 'TD' && target.nodeName != 'TH') target = target.classList && target.classList.contains('ProseMirror') ? null : target.parentNode;
+  return target;
+}
+function edgeCell(view, event, side, handleWidth) {
+  // posAtCoords returns inconsistent positions when cursor is moving
+  // across a collapsed table border. Use an offset to adjust the
+  // target viewport coordinates away from the table border.
+  var offset = side == 'right' ? -handleWidth : handleWidth;
+  var found = view.posAtCoords({
+    left: event.clientX + offset,
+    top: event.clientY
+  });
+  if (!found) return -1;
+  var pos = found.pos;
+  var $cell = cellAround(view.state.doc.resolve(pos));
+  if (!$cell) return -1;
+  if (side == 'right') return $cell.pos;
+  var map = TableMap.get($cell.node(-1)),
+    start = $cell.start(-1);
+  var index = map.map.indexOf($cell.pos - start);
+  return index % map.width == 0 ? -1 : start + map.map[index - 1];
+}
+function draggedWidth(dragging, event, cellMinWidth) {
+  var offset = event.clientX - dragging.startX;
+  return Math.max(cellMinWidth, dragging.startWidth + offset);
+}
+function updateHandle(view, value) {
+  view.dispatch(view.state.tr.setMeta(columnResizingPluginKey, {
+    setHandle: value
+  }));
+}
+function updateColumnWidth(view, cell, width) {
+  var $cell = view.state.doc.resolve(cell);
+  var table = $cell.node(-1),
+    map = TableMap.get(table),
+    start = $cell.start(-1);
+  var col = map.colCount($cell.pos - start) + $cell.nodeAfter.attrs.colspan - 1;
+  var tr = view.state.tr;
+  for (var row = 0; row < map.height; row++) {
+    var mapIndex = row * map.width + col;
+    // Rowspanning cell that has already been handled
+    if (row && map.map[mapIndex] == map.map[mapIndex - map.width]) continue;
+    var pos = map.map[mapIndex];
+    var attrs = table.nodeAt(pos).attrs;
+    var index = attrs.colspan == 1 ? 0 : col - map.colCount(pos);
+    if (attrs.colwidth && attrs.colwidth[index] == width) continue;
+    var colwidth = attrs.colwidth ? attrs.colwidth.slice() : zeroes(attrs.colspan);
+    colwidth[index] = width;
+    tr.setNodeMarkup(start + pos, null, _objectSpread2(_objectSpread2({}, attrs), {}, {
+      colwidth: colwidth
+    }));
+  }
+  if (tr.docChanged) view.dispatch(tr);
+}
+function displayColumnWidth(view, cell, width, cellMinWidth) {
+  var $cell = view.state.doc.resolve(cell);
+  var table = $cell.node(-1),
+    start = $cell.start(-1);
+  var col = TableMap.get(table).colCount($cell.pos - start) + $cell.nodeAfter.attrs.colspan - 1;
+  var dom = view.domAtPos($cell.start(-1)).node;
+  while (dom && dom.nodeName != 'TABLE') {
+    dom = dom.parentNode;
+  }
+  if (!dom) return;
+  updateColumnsOnResize(table, dom.firstChild, dom, cellMinWidth, col, width);
+}
+function zeroes(n) {
+  return Array(n).fill(0);
+}
+function handleDecorations(state, cell) {
+  var decorations = [];
+  var $cell = state.doc.resolve(cell);
+  var table = $cell.node(-1);
+  if (!table) {
+    return prosemirrorView.DecorationSet.empty;
+  }
+  var map = TableMap.get(table);
+  var start = $cell.start(-1);
+  var col = map.colCount($cell.pos - start) + $cell.nodeAfter.attrs.colspan;
+  for (var row = 0; row < map.height; row++) {
+    var index = col + row * map.width - 1;
+    // For positions that have either a different cell or the end
+    // of the table to their right, and either the top of the table or
+    // a different cell above them, add a decoration
+    if ((col == map.width || map.map[index] != map.map[index + 1]) && (row == 0 || map.map[index] != map.map[index - map.width])) {
+      var cellPos = map.map[index];
+      var pos = start + cellPos + table.nodeAt(cellPos).nodeSize - 1;
+      var dom = document.createElement('div');
+      dom.className = 'column-resize-handle';
+      decorations.push(prosemirrorView.Decoration.widget(pos, dom));
+    }
+  }
+  return prosemirrorView.DecorationSet.create(state.doc, decorations);
+}
+
+var pastedCells = function pastedCells(slice) {
+  if (!slice.size) return null;
+  var content = slice.content,
+    openStart = slice.openStart,
+    openEnd = slice.openEnd;
+  while (content.childCount == 1 && (openStart > 0 && openEnd > 0 || content.child(0).type.spec.tableRole == 'table')) {
+    openStart--;
+    openEnd--;
+    content = content.child(0).content;
+  }
+  var first = content.child(0);
+  var role = first.type.spec.tableRole;
+  var schema = first.type.schema,
+    rows = [];
+  if (role == 'row') {
+    for (var i = 0; i < content.childCount; i++) {
+      var cells = content.child(i).content;
+      var left = i ? 0 : Math.max(0, openStart - 1);
+      var right = i < content.childCount - 1 ? 0 : Math.max(0, openEnd - 1);
+      if (left || right) cells = fitSlice(tableNodeTypes(schema).row, new prosemirrorModel.Slice(cells, left, right)).content;
+      rows.push(cells);
+    }
+  } else if (role == 'cell' || role == 'headerCell') {
+    rows.push(openStart || openEnd ? fitSlice(tableNodeTypes(schema).row, new prosemirrorModel.Slice(content, openStart, openEnd)).content : content);
+  } else {
+    return null;
+  }
+  return ensureRectangular(schema, rows);
+};
+function ensureRectangular(schema, rows) {
+  var widths = [];
+  for (var i = 0; i < rows.length; i++) {
+    var row = rows[i];
+    for (var j = row.childCount - 1; j >= 0; j--) {
+      var _row$child$attrs = row.child(j).attrs,
+        rowspan = _row$child$attrs.rowspan,
+        colspan = _row$child$attrs.colspan;
+      for (var r = i; r < i + rowspan; r++) widths[r] = (widths[r] || 0) + colspan;
+    }
+  }
+  var width = 0;
+  for (var _r = 0; _r < widths.length; _r++) width = Math.max(width, widths[_r]);
+  for (var _r2 = 0; _r2 < widths.length; _r2++) {
+    if (_r2 > rows.length) rows.push(prosemirrorModel.Fragment.empty);
+    if (widths[_r2] < width) {
+      var empty = tableNodeTypes(schema).cell.createAndFill();
+      var cells = [];
+      for (var _i = widths[_r2]; _i < width; _i++) {
+        cells.push(empty);
+      }
+      rows[_r2] = rows[_r2].append(prosemirrorModel.Fragment.from(cells));
+    }
+  }
+  return {
+    height: rows.length,
+    width: width,
+    rows: rows
+  };
+}
+var fitSlice = function fitSlice(nodeType, slice) {
+  var node = nodeType.createAndFill();
+  var tr = new prosemirrorTransform.Transform(node).replace(0, node.content.size, slice);
+  return tr.doc;
+};
+var clipCells = function clipCells(_ref, newWidth, newHeight) {
+  var width = _ref.width,
+    height = _ref.height,
+    rows = _ref.rows;
+  if (width != newWidth) {
+    var added = [];
+    var newRows = [];
+    for (var row = 0; row < rows.length; row++) {
+      var frag = rows[row],
+        cells = [];
+      for (var col = added[row] || 0, i = 0; col < newWidth; i++) {
+        var cell = frag.child(i % frag.childCount);
+        if (col + cell.attrs.colspan > newWidth) cell = cell.type.createChecked(removeColSpan(cell.attrs, cell.attrs.colspan, col + cell.attrs.colspan - newWidth), cell.content);
+        cells.push(cell);
+        col += cell.attrs.colspan;
+        for (var j = 1; j < cell.attrs.rowspan; j++) added[row + j] = (added[row + j] || 0) + cell.attrs.colspan;
+      }
+      newRows.push(prosemirrorModel.Fragment.from(cells));
+    }
+    rows = newRows;
+    width = newWidth;
+  }
+  if (height != newHeight) {
+    var _newRows = [];
+    for (var _row = 0, _i2 = 0; _row < newHeight; _row++, _i2++) {
+      var _cells = [],
+        source = rows[_i2 % height];
+      for (var _j = 0; _j < source.childCount; _j++) {
+        var _cell = source.child(_j);
+        if (_row + _cell.attrs.rowspan > newHeight) _cell = _cell.type.create(_objectSpread2(_objectSpread2({}, _cell.attrs), {}, {
+          rowspan: Math.max(1, newHeight - _cell.attrs.rowspan)
+        }), _cell.content);
+        _cells.push(_cell);
+      }
+      _newRows.push(prosemirrorModel.Fragment.from(_cells));
+    }
+    rows = _newRows;
+    height = newHeight;
+  }
+  return {
+    width: width,
+    height: height,
+    rows: rows
+  };
+};
+function growTable(tr, map, table, start, width, height, mapFrom) {
+  var schema = tr.doc.type.schema;
+  var types = tableNodeTypes(schema);
+  var empty;
+  var emptyHead;
+  if (width > map.width) {
+    for (var row = 0, rowEnd = 0; row < map.height; row++) {
+      var rowNode = table.child(row);
+      rowEnd += rowNode.nodeSize;
+      var cells = [];
+      var add = void 0;
+      if (rowNode.lastChild == null || rowNode.lastChild.type == types.cell) add = empty || (empty = types.cell.createAndFill());else add = emptyHead || (emptyHead = types.headerCell.createAndFill());
+      for (var i = map.width; i < width; i++) cells.push(add);
+      tr.insert(tr.mapping.slice(mapFrom).map(rowEnd - 1 + start), cells);
+    }
+  }
+  if (height > map.height) {
+    var _cells2 = [];
+    for (var _i3 = 0, _start = (map.height - 1) * map.width; _i3 < Math.max(map.width, width); _i3++) {
+      var header = _i3 >= map.width ? false : table.nodeAt(map.map[_start + _i3]).type == types.headerCell;
+      _cells2.push(header ? emptyHead || (emptyHead = types.headerCell.createAndFill()) : empty || (empty = types.cell.createAndFill()));
+    }
+    var emptyRow = types.row.create(null, prosemirrorModel.Fragment.from(_cells2)),
+      rows = [];
+    for (var _i4 = map.height; _i4 < height; _i4++) rows.push(emptyRow);
+    tr.insert(tr.mapping.slice(mapFrom).map(start + table.nodeSize - 2), rows);
+  }
+  return !!(empty || emptyHead);
+}
+function isolateHorizontal(tr, map, table, start, left, right, top, mapFrom) {
+  if (top == 0 || top == map.height) return false;
+  var found = false;
+  for (var col = left; col < right; col++) {
+    var index = top * map.width + col,
+      pos = map.map[index];
+    if (map.map[index - map.width] == pos) {
+      found = true;
+      var cell = table.nodeAt(pos);
+      var _map$findCell = map.findCell(pos),
+        cellTop = _map$findCell.top,
+        cellLeft = _map$findCell.left;
+      tr.setNodeMarkup(tr.mapping.slice(mapFrom).map(pos + start), null, _objectSpread2(_objectSpread2({}, cell.attrs), {}, {
+        rowspan: top - cellTop
+      }));
+      tr.insert(tr.mapping.slice(mapFrom).map(map.positionAt(top, cellLeft, table)), cell.type.createAndFill(_objectSpread2(_objectSpread2({}, cell.attrs), {}, {
+        rowspan: cellTop + cell.attrs.rowspan - top
+      })));
+      col += cell.attrs.colspan - 1;
+    }
+  }
+  return found;
+}
+function isolateVertical(tr, map, table, start, top, bottom, left, mapFrom) {
+  if (left == 0 || left == map.width) return false;
+  var found = false;
+  for (var row = top; row < bottom; row++) {
+    var index = row * map.width + left,
+      pos = map.map[index];
+    if (map.map[index - 1] == pos) {
+      found = true;
+      var cell = table.nodeAt(pos);
+      var cellLeft = map.colCount(pos);
+      var updatePos = tr.mapping.slice(mapFrom).map(pos + start);
+      tr.setNodeMarkup(updatePos, null, removeColSpan(cell.attrs, left - cellLeft, cell.attrs.colspan - (left - cellLeft)));
+      tr.insert(updatePos + cell.nodeSize, cell.type.createAndFill(removeColSpan(cell.attrs, 0, left - cellLeft)));
+      row += cell.attrs.rowspan - 1;
+    }
+  }
+  return found;
+}
+var insertCells = function insertCells(state, dispatch, tableStart, rect, cells) {
+  var table = tableStart ? state.doc.nodeAt(tableStart - 1) : state.doc;
+  if (!table) throw new Error('No table found');
+  var map = TableMap.get(table);
+  var top = rect.top,
+    left = rect.left;
+  var right = left + cells.width,
+    bottom = top + cells.height;
+  var tr = state.tr;
+  var mapFrom = 0;
+  function recomp() {
+    table = tableStart ? tr.doc.nodeAt(tableStart - 1) : tr.doc;
+    if (!table) throw new Error('No table found');
+    map = TableMap.get(table);
+    mapFrom = tr.mapping.maps.length;
+  }
+  if (growTable(tr, map, table, tableStart, right, bottom, mapFrom)) recomp();
+  if (isolateHorizontal(tr, map, table, tableStart, left, right, top, mapFrom)) recomp();
+  if (isolateHorizontal(tr, map, table, tableStart, left, right, bottom, mapFrom)) recomp();
+  if (isolateVertical(tr, map, table, tableStart, top, bottom, left, mapFrom)) recomp();
+  if (isolateVertical(tr, map, table, tableStart, top, bottom, right, mapFrom)) recomp();
+  for (var row = top; row < bottom; row++) {
+    var from = map.positionAt(row, left, table),
+      to = map.positionAt(row, right, table);
+    tr.replace(tr.mapping.slice(mapFrom).map(from + tableStart), tr.mapping.slice(mapFrom).map(to + tableStart), new prosemirrorModel.Slice(cells.rows[row - top], 0, 0));
+  }
+  recomp();
+  tr.setSelection(new CellSelection(tr.doc.resolve(tableStart + map.positionAt(top, left, table)), tr.doc.resolve(tableStart + map.positionAt(bottom - 1, right - 1, table))));
+  dispatch(tr);
+};
+
+var deleteCellSelection = function deleteCellSelection(state, dispatch) {
+  var sel = state.selection;
+  if (!(sel instanceof CellSelection)) return false;
+  if (dispatch) {
+    var tr = state.tr;
+    var baseContent = tableNodeTypes(state.schema).cell.createAndFill().content;
+    sel.forEachCell(function (cell, pos) {
+      if (!cell.content.eq(baseContent)) tr.replace(tr.mapping.map(pos + 1), tr.mapping.map(pos + cell.nodeSize - 1), new prosemirrorModel.Slice(baseContent, 0, 0));
+    });
+    if (tr.docChanged) dispatch(tr);
+  }
+  return true;
+};
+var handleKeyDown = prosemirrorKeymap.keydownHandler({
+  ArrowLeft: arrow('horiz', -1),
+  ArrowRight: arrow('horiz', 1),
+  ArrowUp: arrow('vert', -1),
+  ArrowDown: arrow('vert', 1),
+  'Shift-ArrowLeft': shiftArrow('horiz', -1),
+  'Shift-ArrowRight': shiftArrow('horiz', 1),
+  'Shift-ArrowUp': shiftArrow('vert', -1),
+  'Shift-ArrowDown': shiftArrow('vert', 1),
+  Backspace: deleteCellSelection,
+  'Mod-Backspace': deleteCellSelection,
+  Delete: deleteCellSelection,
+  'Mod-Delete': deleteCellSelection
+});
+function maybeSetSelection(state, dispatch, selection) {
+  if (selection.eq(state.selection)) return false;
+  if (dispatch) dispatch(state.tr.setSelection(selection).scrollIntoView());
+  return true;
+}
+function arrow(axis, dir) {
+  return function (state, dispatch, view) {
+    if (!view) return false;
+    var sel = state.selection;
+    if (sel instanceof CellSelection) {
+      return maybeSetSelection(state, dispatch, prosemirrorState.Selection.near(sel.$headCell, dir));
+    }
+    if (axis != 'horiz' && !sel.empty) return false;
+    var end = atEndOfCell(view, axis, dir);
+    if (end == null) return false;
+    if (axis == 'horiz') {
+      return maybeSetSelection(state, dispatch, prosemirrorState.Selection.near(state.doc.resolve(sel.head + dir), dir));
+    } else {
+      var $cell = state.doc.resolve(end);
+      var $next = nextCell($cell, axis, dir);
+      var newSel;
+      if ($next) newSel = prosemirrorState.Selection.near($next, 1);else if (dir < 0) newSel = prosemirrorState.Selection.near(state.doc.resolve($cell.before(-1)), -1);else newSel = prosemirrorState.Selection.near(state.doc.resolve($cell.after(-1)), 1);
+      return maybeSetSelection(state, dispatch, newSel);
+    }
+  };
+}
+function shiftArrow(axis, dir) {
+  return function (state, dispatch, view) {
+    if (!view) return false;
+    var cellSel;
+    var sel = state.selection;
+    if (sel instanceof CellSelection) {
+      cellSel = sel;
+    } else {
+      var end = atEndOfCell(view, axis, dir);
+      if (end == null) return false;
+      cellSel = new CellSelection(state.doc.resolve(end));
+    }
+    var $head = nextCell(cellSel.$headCell, axis, dir);
+    if (!$head) return false;
+    return maybeSetSelection(state, dispatch, new CellSelection(cellSel.$anchorCell, $head));
+  };
+}
+var handlePaste = function handlePaste(view, e, slice) {
+  if (!isInTable(view.state)) return false;
+  var cells = pastedCells(slice);
+  var sel = view.state.selection;
+  if (sel instanceof CellSelection) {
+    if (!cells) cells = {
+      width: 1,
+      height: 1,
+      rows: [prosemirrorModel.Fragment.from(fitSlice(tableNodeTypes(view.state.schema).cell, slice))]
+    };
+    var table = sel.$anchorCell.node(-1);
+    var start = sel.$anchorCell.start(-1);
+    var rect = TableMap.get(table).rectBetween(sel.$anchorCell.pos - start, sel.$headCell.pos - start);
+    cells = clipCells(cells, rect.right - rect.left, rect.bottom - rect.top);
+    insertCells(view.state, view.dispatch, start, rect, cells);
+    return true;
+  } else if (cells) {
+    var $cell = selectionCell(view.state);
+    var _start = $cell.start(-1);
+    insertCells(view.state, view.dispatch, _start, TableMap.get($cell.node(-1)).findCell($cell.pos - _start), cells);
+    return true;
+  } else {
+    return false;
+  }
+};
 function handleMouseDown(view, startEvent) {
   var _cellUnderMouse;
   if (startEvent.ctrlKey || startEvent.metaKey) return;
   var startDOMCell = domInCell(view, startEvent.target);
+  var $cell = cellUnderMouse(view, startEvent);
+  if (startDOMCell) {
+    startEvent.preventDefault();
+  }
   var $anchor;
   if (startEvent.shiftKey && view.state.selection instanceof CellSelection) {
     // Adding to an existing cell selection
     setCellSelection(view.state.selection.$anchorCell, startEvent);
     startEvent.preventDefault();
   } else if (startEvent.shiftKey && startDOMCell && ($anchor = cellAround(view.state.selection.$anchor)) != null && ((_cellUnderMouse = cellUnderMouse(view, startEvent)) === null || _cellUnderMouse === void 0 ? void 0 : _cellUnderMouse.pos) != $anchor.pos) {
-    // Adding to a selection that starts in another cell (causing a
-    // cell selection to be created).
     setCellSelection($anchor, startEvent);
     startEvent.preventDefault();
   } else if (!startDOMCell) {
-    // Not in a cell, let the default behavior happen.
     return;
   }
-  // Create and dispatch a cell selection between the given anchor and
-  // the position under the mouse.
   function setCellSelection($anchor, event) {
     var _tableEditingKey$getS;
     var $head = cellUnderMouse(view, event);
@@ -1736,9 +2343,32 @@ function handleMouseDown(view, startEvent) {
       view.dispatch(tr);
     }
   }
-  // Stop listening to mouse motion events.
-  function stop() {
+  var x1 = startEvent.clientX,
+    y1 = startEvent.clientY;
+  function stop(e) {
     var _tableEditingKey$getS2;
+    if ((e === null || e === void 0 ? void 0 : e.type) == 'mouseup') {
+      var _event = e;
+      var x2 = _event.clientX,
+        y2 = _event.clientY;
+      if (Math.abs(x1 - x2) < 4 && Math.abs(y1 - y2) < 4) {
+        var pos = view.posAtCoords({
+          left: x2,
+          top: y2
+        });
+        if (pos) {
+          var newSelection = prosemirrorState.TextSelection.create(view.state.doc, pos.pos, pos.pos);
+          var tr = view.state.tr.setSelection(newSelection);
+          view.dispatch(tr);
+          view.focus();
+        }
+      } else {
+        var _tableDOM$firstChild;
+        var tableDOM = view.nodeDOM($cell.start(-2));
+        tableDOM === null || tableDOM === void 0 || (_tableDOM$firstChild = tableDOM.firstChild) === null || _tableDOM$firstChild === void 0 || _tableDOM$firstChild.focus();
+        // document.querySelector<HTMLElement>('.hiddenfocus')?.focus();
+      }
+    }
     view.root.removeEventListener('mouseup', stop);
     view.root.removeEventListener('dragstart', stop);
     view.root.removeEventListener('mousemove', move);
@@ -1746,24 +2376,27 @@ function handleMouseDown(view, startEvent) {
       set: -1
     }));
   }
-  var x1 = startEvent.clientX,
-    y1 = startEvent.clientY;
+  var startPos = view.posAtCoords({
+    left: x1,
+    top: y1
+  });
   function move(_event) {
     var _tableEditingKey$getS3;
     var event = _event;
-    var x2 = event.clientX,
-      y2 = event.clientY;
-    if (Math.abs(x1 - x2) < 4 && Math.abs(y1 - y2) < 4) return;
-    console.log('move');
     var anchor = (_tableEditingKey$getS3 = tableEditingKey.getState(view.state)) === null || _tableEditingKey$getS3 === void 0 ? void 0 : _tableEditingKey$getS3.set;
     var $anchor;
     if (anchor || anchor == 0) {
-      // Continuing an existing cross-cell selection
       $anchor = view.state.doc.resolve(anchor);
     } else if (domInCell(view, event.target) != startDOMCell) {
-      // Moving out of the initial cell -- start a new cell selection
       $anchor = cellUnderMouse(view, startEvent);
       if (!$anchor) return stop();
+      view.dom.blur();
+    } else {
+      var head = view.posAtCoords({
+        left: event.clientX,
+        top: event.clientY
+      });
+      view.dispatch(view.state.tr.setSelection(prosemirrorState.TextSelection.create(view.state.doc, startPos.pos, head.pos)));
     }
     if ($anchor) setCellSelection($anchor, event);
   }
@@ -1786,6 +2419,21 @@ function cellUnderMouse(view, event) {
   });
   if (!mousePos) return null;
   return mousePos ? cellAround(view.state.doc.resolve(mousePos.pos)) : null;
+}
+function atEndOfCell(view, axis, dir) {
+  if (!(view.state.selection instanceof prosemirrorState.TextSelection)) return null;
+  var $head = view.state.selection.$head;
+  for (var d = $head.depth - 1; d >= 0; d--) {
+    var parent = $head.node(d),
+      index = dir < 0 ? $head.index(d) : $head.indexAfter(d);
+    if (index != (dir < 0 ? 0 : parent.childCount)) return null;
+    if (parent.type.spec.tableRole == 'cell' || parent.type.spec.tableRole == 'headerCell') {
+      var cellPos = $head.before(d);
+      var dirStr = axis == 'vert' ? dir > 0 ? 'down' : 'up' : dir > 0 ? 'right' : 'left';
+      return view.endOfTextblock(dirStr) ? cellPos : null;
+    }
+  }
+  return null;
 }
 var handleTripleClick = function handleTripleClick(view, pos) {
   var doc = view.state.doc,
@@ -1820,24 +2468,19 @@ function tableEditing(_ref) {
       },
       apply: function apply(tr, value, _, state) {
         var st = tr.getMeta(tableEditingKey);
-        if (!st) return value;
-        var _st$set = st.set,
-          set = _st$set === void 0 ? null : _st$set,
-          hoverDecos = st.hoverDecos;
+        var _ref2 = st || {},
+          _ref2$set = _ref2.set,
+          set = _ref2$set === void 0 ? null : _ref2$set,
+          hoverDecos = _ref2.hoverDecos;
         var decorations = prosemirrorView.DecorationSet.create(state.doc, getDecorations(state).concat(hoverDecos ? hoverDecos : value.hoverDecos || []));
-        if (!isEmpty$1(set)) return _objectSpread2(_objectSpread2({}, value), {}, {
-          set: set == -1 ? null : set,
-          decorations: decorations
-        });
-        if (!tr.docChanged && !hoverDecos) return value;
-        if (!isEmpty$1(value.set)) {
+        if (!isEmpty$1(value.set) && isEmpty$1(set)) {
           var _tr$mapping$mapResult = tr.mapping.mapResult(value.set),
             deleted = _tr$mapping$mapResult.deleted,
             pos = _tr$mapping$mapResult.pos;
           set = deleted ? null : pos;
         }
         return {
-          set: set,
+          set: isEmpty$1(set) || set == -1 ? null : set,
           decorations: decorations,
           hoverDecos: hoverDecos
         };
@@ -1854,29 +2497,15 @@ function tableEditing(_ref) {
       handleDOMEvents: {
         mousedown: handleMouseDown
       },
+      handlePaste: handlePaste,
       handleTripleClick: handleTripleClick,
-      handleClick: function handleClick(view, pos, event) {
-        // const startDOMCell = domInCell(view, event.target as Node);
-        // console.log(pos, 'pos');
-        // const doc = view.state.doc;
-        // if (startDOMCell) {
-        //   event.preventDefault();
-        //   const $pos = doc.resolve(pos);
-        //   const $from = cellAround($pos);
-        //   const sel = new CellSelection($from!);
-        //   view.dispatch(
-        //     view.state.tr
-        //       .setSelection(sel)
-        //       .setMeta(tableEditingKey, { set: $from?.pos! })
-        //   );
-        // }
-      },
-      createSelectionBetween: function createSelectionBetween(view) {
-        var _tableEditingKey$getS;
-        var set = (_tableEditingKey$getS = tableEditingKey.getState(view.state)) === null || _tableEditingKey$getS === void 0 ? void 0 : _tableEditingKey$getS.set;
-        console.log(set, 'selection');
-        return !isEmpty$1(set) ? view.state.selection : null;
-      }
+      handleKeyDown: handleKeyDown
+      // createSelectionBetween(view) {
+      // 	console.log('cre');
+      // 	const set = tableEditingKey.getState(view.state)?.set;
+      // 	console.log(set, 'selection');
+      // 	return !isEmpty(set) ? view.state.selection : null;
+      // }
     },
     appendTransaction: function appendTransaction(_, oldState, newState) {
       return normalizeSelection(newState,
@@ -2611,7 +3240,7 @@ var setupEditor = function setupEditor(el) {
   // 根据 schema 定义，创建 editorState 数据实例
   var editorState = prosemirrorState.EditorState.create({
     schema: schema,
-    plugins: [buildInputRules(), prosemirrorKeymap.keymap(myKeymap), prosemirrorHistory.history(), toolbar.plugin, highlightCodePlugin(), tableEditing({})]
+    plugins: [buildInputRules(), prosemirrorKeymap.keymap(myKeymap), prosemirrorHistory.history(), toolbar.plugin, highlightCodePlugin(), columnResizing(), tableEditing({})]
   });
   // 创建编辑器视图实例，并挂在到 el 上
   var editorView = new prosemirrorView.EditorView(el, {

@@ -9,8 +9,15 @@ import { fixTables } from './fixtables';
 
 export { tableNodeTypes, tableNodes } from './schema';
 export { TableView } from './tableView';
+export { columnResizing } from './columnresizing';
 import './style.scss';
-import { domInCell, handleMouseDown, handleTripleClick } from './input';
+import {
+	domInCell,
+	handleKeyDown,
+	handleMouseDown,
+	handlePaste,
+	handleTripleClick
+} from './input';
 import { Decoration, DecorationSet, EditorView } from 'prosemirror-view';
 import { TableView, TableViewConstructor, addToolkit } from './tableView';
 
@@ -42,25 +49,21 @@ export function tableEditing({
 			},
 			apply(tr, value, _, state) {
 				const st = tr.getMeta(tableEditingKey);
-
-				if (!st) return value;
-				let { set = null, hoverDecos } = st;
+				let { set = null, hoverDecos } = st || {};
 				const decorations = DecorationSet.create(
 					state.doc,
 					getDecorations(state).concat(
 						hoverDecos ? hoverDecos : value.hoverDecos || []
 					)
 				);
-				if (!isEmpty(set))
-					return { ...value, set: set == -1 ? null : set, decorations };
-				if (!tr.docChanged && !hoverDecos) return value;
-				if (!isEmpty(value.set)) {
+
+				if (!isEmpty(value.set) && isEmpty(set)) {
 					const { deleted, pos } = tr.mapping.mapResult(value.set!);
 					set = deleted ? null : pos;
 				}
 
 				return {
-					set,
+					set: isEmpty(set) || set == -1 ? null : set,
 					decorations,
 					hoverDecos
 				};
@@ -76,29 +79,17 @@ export function tableEditing({
 			handleDOMEvents: {
 				mousedown: handleMouseDown
 			},
+			handlePaste,
 			handleTripleClick,
-			handleClick(view, pos, event) {
-				// const startDOMCell = domInCell(view, event.target as Node);
-				// console.log(pos, 'pos');
-				// const doc = view.state.doc;
-				// if (startDOMCell) {
-				//   event.preventDefault();
-				//   const $pos = doc.resolve(pos);
-				//   const $from = cellAround($pos);
-				//   const sel = new CellSelection($from!);
-				//   view.dispatch(
-				//     view.state.tr
-				//       .setSelection(sel)
-				//       .setMeta(tableEditingKey, { set: $from?.pos! })
-				//   );
-				// }
-			},
-			createSelectionBetween(view) {
-				const set = tableEditingKey.getState(view.state)?.set;
-				console.log(set, 'selection');
+			handleKeyDown
+			// createSelectionBetween(view) {
+			// 	console.log('cre');
 
-				return !isEmpty(set) ? view.state.selection : null;
-			}
+			// 	const set = tableEditingKey.getState(view.state)?.set;
+			// 	console.log(set, 'selection');
+
+			// 	return !isEmpty(set) ? view.state.selection : null;
+			// }
 		},
 		appendTransaction(_, oldState, newState) {
 			return normalizeSelection(

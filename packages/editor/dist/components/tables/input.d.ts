@@ -1,6 +1,12 @@
 import { EditorView } from 'prosemirror-view';
+import { Slice } from 'prosemirror-model';
+import { Command } from 'prosemirror-state';
+type Axis = 'horiz' | 'vert';
+export type Direction = -1 | 1;
+export declare const handleKeyDown: (view: EditorView, event: KeyboardEvent) => boolean;
+export declare function arrow(axis: Axis, dir: Direction): Command;
+export declare const handlePaste: (view: EditorView, e: ClipboardEvent, slice: Slice) => boolean;
 export declare function handleMouseDown(view: EditorView, startEvent: MouseEvent): void;
 export declare function domInCell(view: EditorView, dom: Node | null): Node | null;
 export declare const handleTripleClick: (view: EditorView, pos: number) => boolean;
-export declare const handleKeyDown: () => void;
-export declare const handlePaste: () => void;
+export {};

@@ -2,6 +2,7 @@ import { Command, EditorState, Transaction } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { Rect, TableMap } from './tableMap';
 import { Node } from 'prosemirror-model';
+import { Direction } from './input';
 export declare const createTable: (rows: number, columns: number) => Command;
 export declare function insertTable(state: EditorState, dispatch: EditorView['dispatch']): void;
 export interface TableCtx {
@@ -25,3 +26,10 @@ export declare const addRowAtEnd: (pos: number, view: EditorView) => void;
 export declare const removeRow: (tr: Transaction, { map, table, tableStart }: TableCtx, row: number) => Transaction;
 export declare const deleteRow: Command;
 export declare const mergeCells: Command;
+export declare const setCellAttrs: (name: string, value: unknown) => Command;
+export type ToggleHeaderType = 'column' | 'row' | 'cell';
+export declare function toggleHeader(type: ToggleHeaderType, options?: {
+    useDeprecatedLogic: boolean;
+} | undefined): Command;
+export declare const goToNextCell: (direction: Direction) => Command;
+export declare const deleteTable: Command;
