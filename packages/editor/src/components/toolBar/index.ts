@@ -10,8 +10,15 @@ import {
 	mergeCells
 } from '../tables/commands';
 import { insertMath } from '../katex';
-import { escapeLatex } from '../../utils';
-import { addLink, setBold } from './commands';
+import {
+	applyBold,
+	applyColor,
+	applyLinethrough,
+	applyUnderline,
+	applylink
+} from './commands';
+import { FloatBar } from './floatBar';
+import { Tooltip } from '../tooltip';
 
 export interface ToolBarSpec {
 	groups: MenuGroupSpec[];
@@ -57,26 +64,10 @@ export const buildToolbar = () => {
 	let toolbar: ToolBar | null;
 	const toolbarPlugin = new Plugin({
 		key: new PluginKey('toolbar'),
+
 		view(view) {
 			toolbar = new ToolBar(view, {
 				groups: [
-					{
-						name: '格式',
-						menus: [
-							{
-								label: '加粗',
-								handler({ view }) {
-									setBold(view);
-								}
-							},
-							{
-								label: '链接',
-								handler({ view }) {
-									addLink(view);
-								}
-							}
-						]
-					},
 					{
 						menus: [
 							{
@@ -117,10 +108,88 @@ export const buildToolbar = () => {
 					}
 				]
 			});
-			return toolbar;
+
+			const onMouseDown = (e: Event) => {
+				const { clientX: x1, clientY: y1 } = e as MouseEvent;
+				const onMouseup = (e: Event) => {
+					const { clientX: x2, clientY: y2 } = e as MouseEvent;
+					const sel = view.state.selection;
+					if (!sel.empty && (Math.abs(x1 - x2) > 5 || Math.abs(y1 - y2) > 5)) {
+						const from = view.coordsAtPos(sel.$from.pos);
+						const to = view.coordsAtPos(sel.$to.pos);
+						const rect = {
+							left: Math.min(from.left, to.left),
+							right: Math.max(from.right, to.right),
+							top: Math.min(from.top, to.top),
+							bottom: Math.max(from.bottom, to.bottom)
+						};
+						tooltip.showAt({
+							...rect,
+							width: Math.abs(rect.left - rect.right),
+							height: Math.abs(rect.top - rect.bottom)
+						});
+					} else if (tooltip.visible) {
+						tooltip.hide();
+					}
+					view.root.removeEventListener('mouseup', onMouseup);
+				};
+				view.root.addEventListener('mouseup', onMouseup);
+			};
+			view.root.addEventListener('mousedown', onMouseDown);
+			const floatBar = new FloatBar(view, {
+				menus: [
+					{
+						label: '加粗',
+						handler({ view }) {
+							applyBold(view);
+						}
+					},
+					{
+						label: '链接',
+						handler({ view }) {
+							applylink('www.baidu.com')(view);
+						}
+					},
+					{
+						label: '下划线',
+						handler({ view }) {
+							applyUnderline(view);
+						}
+					},
+					{
+						label: '删除线',
+						handler({ view }) {
+							applyLinethrough(view);
+						}
+					},
+					{
+						label: '颜色',
+						handler({ view }) {
+							applyColor('red')(view);
+						}
+					},
+					{
+						label: '颜色‘',
+						handler({ view }) {
+							applyColor()(view);
+						}
+					}
+				]
+			});
+			const tooltip = new Tooltip();
+			tooltip.content(floatBar.dom);
+			return {
+				dom: toolbar.dom,
+				update(view, prevState) {
+					toolbar?.update(view, prevState);
+				},
+				destroy() {
+					toolbar?.destroy();
+					view.root.removeEventListener('mousedown', onMouseDown);
+				}
+			};
 		}
 	});
-
 	return {
 		plugin: toolbarPlugin,
 		update: (view: EditorView, state: EditorState) =>

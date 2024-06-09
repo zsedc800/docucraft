@@ -1,6 +1,7 @@
 import { Attrs, MarkType, Schema } from 'prosemirror-model';
 import { TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
+import { CSSProperties } from 'react';
 
 export const setMark = (
 	view: EditorView,
@@ -15,20 +16,13 @@ export const setMark = (
 	view.dispatch(tr.addMark($from.pos, $to.pos, mark));
 	return true;
 };
-export const unSetMark = (view: EditorView, markType: MarkType) => {
-	const { selection, tr } = view.state;
+export const unSetMark = (view: EditorView, markType: MarkType | string) => {
+	const { selection, tr, schema } = view.state;
 	const { $from, $to } = selection;
 
-	view.dispatch(tr.removeMark($from.pos, $to.pos, markType));
-};
-export const setBold = (view: EditorView) => {
-	return setMark(view, view.state.schema.marks.bold);
-};
-
-export const addLink = (view: EditorView) => {
-	return setMark(view, view.state.schema.marks.link, {
-		href: 'https://www.baidu.com'
-	});
+	view.dispatch(
+		tr.removeMark($from.pos, $to.pos, getMarkType(markType, schema))
+	);
 };
 
 function getMarkType(markType: MarkType | string, schema: Schema) {
@@ -55,6 +49,42 @@ function isMarkActive(view: EditorView, markType: MarkType | string): boolean {
 }
 
 function toggleMark(view: EditorView, markType: MarkType | string) {
-	if (isMarkActive(view, markType))
-		return unSetMark(view, getMarkType(markType, view.state.schema));
+	if (isMarkActive(view, markType)) return unSetMark(view, markType);
+	else return setMark(view, markType);
 }
+
+export const applyBold = (view: EditorView) => toggleMark(view, 'bold');
+export const applyUnderline = (view: EditorView) =>
+	toggleMark(view, 'underline');
+export const applyLinethrough = (view: EditorView) =>
+	toggleMark(view, 'linethrough');
+export const applylink = (url: string) => (view: EditorView) =>
+	setMark(view, 'link', { href: url });
+
+export const applyStyle =
+	(style: CSSProperties) =>
+	({ state, dispatch }: EditorView) => {
+		const { schema, selection } = state;
+		const markType = schema.marks.style;
+		let tr = state.tr;
+		console.log(selection, 'sel');
+		const { from, to } = selection;
+		state.doc.nodesBetween(from, to, (node, pos) => {
+			if (node.isText) {
+				let existingMark = node.marks.find((mark) => mark.type === markType);
+				let attrs = existingMark ? { ...existingMark.attrs, ...style } : style;
+				tr = tr.addMark(
+					pos < from ? from : pos,
+					pos + node.nodeSize > to ? to : pos + node.nodeSize,
+					markType.create(attrs)
+				);
+			}
+		});
+		dispatch(tr);
+		return true;
+	};
+
+export const applyColor = (color?: string) => applyStyle({ color });
+
+export const applyBgColor = (backgroundColor?: string) =>
+	applyStyle({ backgroundColor });

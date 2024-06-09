@@ -3,6 +3,7 @@ import { EditorView } from 'prosemirror-view';
 export interface MenuItemSpec {
     class?: string;
     label: string;
+    content?: HTMLElement;
     handler: (props: {
         view: EditorView;
         state: EditorState;

@@ -1,6 +1,6 @@
 // model.ts 文件命名暂时还是以 mvc 模式命名，方便理解，实际中 命名为 schema.ts 更好
 import { Schema } from 'prosemirror-model';
-// import { schema as basicSchema } from 'prosemirror-schema-basic';
+import { schema as basicSchema } from 'prosemirror-schema-basic';
 import { codeBlock } from './components/codeBlock';
 import { taskItem, taskList } from './components/taskList';
 import { tableNodes } from './components/tables';
@@ -126,7 +126,44 @@ export const schema = new Schema({
 			tableGroup: 'block',
 			cellContent: 'block+',
 			cellAttributes: {}
-		})
+		}),
+		horizontalRule: {
+			group: 'block',
+			parseDOM: [{ tag: 'hr' }],
+			toDOM: () => ['hr']
+		},
+		image: {
+			inline: true,
+			attrs: {
+				src: {},
+				alt: { default: null },
+				title: { default: null }
+			},
+			group: 'inline',
+			draggable: true,
+			parseDOM: [
+				{
+					tag: 'img[src]',
+					getAttrs: (dom) => ({
+						src: dom.getAttribute('src'),
+						title: dom.getAttribute('title'),
+						alt: dom.getAttribute('alt')
+					})
+				}
+			],
+			toDOM: (node) => {
+				const { title, src, alt } = node.attrs;
+
+				return ['img', { title, src, alt }];
+			}
+		},
+		hardBreak: {
+			inline: true,
+			group: 'inline',
+			selectable: false,
+			parseDOM: [{ tag: 'br' }],
+			toDOM: () => ['br']
+		}
 	},
 	// 除了上面定义 node 节点，一些富文本样式，可以通过 marks 定义
 	marks: {
@@ -162,13 +199,58 @@ export const schema = new Schema({
 			attrs: {
 				href: { default: null },
 				ref: { default: 'noopener noreferrer nofollow' },
-				target: { default: '_blank' }
+				target: { default: '_blank' },
+				title: { default: '' }
 			},
 			toDOM: (mark) => {
-				const { href, ref, target } = mark.attrs;
-				return ['a', { href, ref, target }, 0];
+				const { href, ref, target, title } = mark.attrs;
+				return ['a', { href, ref, target, title }, 0];
 			},
 			parseDOM: [{ tag: 'a[href]:not([href *= "javascript:" i])' }]
+		},
+		underline: {
+			parseDOM: [
+				{ tag: 'u' },
+				{
+					style: 'text-decoration',
+					getAttrs: (val) => val === 'underline' && null
+				}
+			],
+			toDOM: () => ['u', 0]
+		},
+		linethrough: {
+			parseDOM: [
+				{ tag: 's' },
+				{ tag: 'strike' },
+				{
+					style: 'text-decoration',
+					getAttrs: (val) => val === 'linethrough' && null
+				}
+			],
+			toDOM: () => ['s', 0]
+		},
+		style: {
+			attrs: {
+				color: { default: null },
+				fontSize: { default: null },
+				backgroundColor: { default: null }
+			},
+			parseDOM: [
+				{ style: 'color', getAttrs: (val) => ({ color: val }) },
+				{ style: 'font-size', getAttrs: (val) => ({ fontSize: val }) },
+				{
+					style: 'background-color',
+					getAttrs: (val) => ({ backgroundColor: val })
+				}
+			],
+			toDOM: (mark) => {
+				const { color, fontSize, backgroundColor } = mark.attrs;
+				let style = '';
+				if (color) style += `color:${color}; `;
+				if (fontSize) style += `font-size:${fontSize}; `;
+				if (backgroundColor) style += `background-color:${backgroundColor}; `;
+				return ['span', { style }, 0];
+			}
 		}
 	}
 });

@@ -2569,7 +2569,7 @@ var insertMath = function insertMath(view, formula) {
 };
 
 var schema = new Schema({
-  nodes: _objectSpread2({
+  nodes: _objectSpread2(_objectSpread2({
     // 整个文档
     doc: {
       // 文档内容规定必须是 block 类型的节点（block 与 HTML 中的 block 概念差不多） `+` 号代表可以有一个或多个（规则类似正则）
@@ -2710,7 +2710,63 @@ var schema = new Schema({
     tableGroup: 'block',
     cellContent: 'block+',
     cellAttributes: {}
-  })),
+  })), {}, {
+    horizontalRule: {
+      group: 'block',
+      parseDOM: [{
+        tag: 'hr'
+      }],
+      toDOM: function toDOM() {
+        return ['hr'];
+      }
+    },
+    image: {
+      inline: true,
+      attrs: {
+        src: {},
+        alt: {
+          "default": null
+        },
+        title: {
+          "default": null
+        }
+      },
+      group: 'inline',
+      draggable: true,
+      parseDOM: [{
+        tag: 'img[src]',
+        getAttrs: function getAttrs(dom) {
+          return {
+            src: dom.getAttribute('src'),
+            title: dom.getAttribute('title'),
+            alt: dom.getAttribute('alt')
+          };
+        }
+      }],
+      toDOM: function toDOM(node) {
+        var _node$attrs = node.attrs,
+          title = _node$attrs.title,
+          src = _node$attrs.src,
+          alt = _node$attrs.alt;
+        return ['img', {
+          title: title,
+          src: src,
+          alt: alt
+        }];
+      }
+    },
+    hardBreak: {
+      inline: true,
+      group: 'inline',
+      selectable: false,
+      parseDOM: [{
+        tag: 'br'
+      }],
+      toDOM: function toDOM() {
+        return ['br'];
+      }
+    }
+  }),
   // 除了上面定义 node 节点，一些富文本样式，可以通过 marks 定义
   marks: {
     // 文本加粗
@@ -2759,22 +2815,103 @@ var schema = new Schema({
         },
         target: {
           "default": '_blank'
+        },
+        title: {
+          "default": ''
         }
       },
       toDOM: function toDOM(mark) {
         var _mark$attrs = mark.attrs,
           href = _mark$attrs.href,
           ref = _mark$attrs.ref,
-          target = _mark$attrs.target;
+          target = _mark$attrs.target,
+          title = _mark$attrs.title;
         return ['a', {
           href: href,
           ref: ref,
-          target: target
+          target: target,
+          title: title
         }, 0];
       },
       parseDOM: [{
         tag: 'a[href]:not([href *= "javascript:" i])'
       }]
+    },
+    underline: {
+      parseDOM: [{
+        tag: 'u'
+      }, {
+        style: 'text-decoration',
+        getAttrs: function getAttrs(val) {
+          return val === 'underline' && null;
+        }
+      }],
+      toDOM: function toDOM() {
+        return ['u', 0];
+      }
+    },
+    linethrough: {
+      parseDOM: [{
+        tag: 's'
+      }, {
+        tag: 'strike'
+      }, {
+        style: 'text-decoration',
+        getAttrs: function getAttrs(val) {
+          return val === 'linethrough' && null;
+        }
+      }],
+      toDOM: function toDOM() {
+        return ['s', 0];
+      }
+    },
+    style: {
+      attrs: {
+        color: {
+          "default": null
+        },
+        fontSize: {
+          "default": null
+        },
+        backgroundColor: {
+          "default": null
+        }
+      },
+      parseDOM: [{
+        style: 'color',
+        getAttrs: function getAttrs(val) {
+          return {
+            color: val
+          };
+        }
+      }, {
+        style: 'font-size',
+        getAttrs: function getAttrs(val) {
+          return {
+            fontSize: val
+          };
+        }
+      }, {
+        style: 'background-color',
+        getAttrs: function getAttrs(val) {
+          return {
+            backgroundColor: val
+          };
+        }
+      }],
+      toDOM: function toDOM(mark) {
+        var _mark$attrs2 = mark.attrs,
+          color = _mark$attrs2.color,
+          fontSize = _mark$attrs2.fontSize,
+          backgroundColor = _mark$attrs2.backgroundColor;
+        var style = '';
+        if (color) style += "color:".concat(color, "; ");
+        if (fontSize) style += "font-size:".concat(fontSize, "; ");
+        if (backgroundColor) style += "background-color:".concat(backgroundColor, "; ");
+        return ['span', {
+          style: style
+        }, 0];
+      }
     }
   }
 });
@@ -3216,9 +3353,9 @@ var MenuGroup = /*#__PURE__*/function () {
     _classCallCheck(this, MenuGroup);
     this.view = view;
     this.spec = spec;
-    var dom = document.createElement('div');
-    dom.setAttribute('class', spec["class"] || '');
-    dom.classList.add('menu-group');
+    var dom = createElement('div', {
+      "class": spec["class"] || '' + ' menu-group'
+    });
     this.dom = dom;
     this.menus = spec.menus.map(function (menuSpec) {
       return new MenuItem(_this.view, menuSpec);
@@ -3250,14 +3387,195 @@ var setMark = function setMark(view, markType) {
   view.dispatch(tr.addMark($from.pos, $to.pos, mark));
   return true;
 };
-var setBold = function setBold(view) {
-  return setMark(view, view.state.schema.marks.bold);
+var unSetMark = function unSetMark(view, markType) {
+  var _view$state2 = view.state,
+    selection = _view$state2.selection,
+    tr = _view$state2.tr,
+    schema = _view$state2.schema;
+  var $from = selection.$from,
+    $to = selection.$to;
+  view.dispatch(tr.removeMark($from.pos, $to.pos, getMarkType(markType, schema)));
 };
-var addLink = function addLink(view) {
-  return setMark(view, view.state.schema.marks.link, {
-    href: 'https://www.baidu.com'
+function getMarkType(markType, schema) {
+  return typeof markType === 'string' ? schema.marks[markType] : markType;
+}
+function isMarkActive(view, markType) {
+  var _view$state3 = view.state,
+    schema = _view$state3.schema,
+    selection = _view$state3.selection,
+    tr = _view$state3.tr;
+  if (!(selection instanceof TextSelection)) return false;
+  var $from = selection.$from,
+    $to = selection.$to;
+  var realMarkType = getMarkType(markType, schema);
+  var isActive = true;
+  tr.doc.nodesBetween($from.pos, $to.pos, function (node) {
+    if (!isActive) return false;
+    if (node.isInline) {
+      var mark = realMarkType.isInSet(node.marks);
+      if (!mark) isActive = false;
+    }
+  });
+  return isActive;
+}
+function toggleMark(view, markType) {
+  if (isMarkActive(view, markType)) return unSetMark(view, markType);else return setMark(view, markType);
+}
+var applyBold = function applyBold(view) {
+  return toggleMark(view, 'bold');
+};
+var applyUnderline = function applyUnderline(view) {
+  return toggleMark(view, 'underline');
+};
+var applyLinethrough = function applyLinethrough(view) {
+  return toggleMark(view, 'linethrough');
+};
+var applylink = function applylink(url) {
+  return function (view) {
+    return setMark(view, 'link', {
+      href: url
+    });
+  };
+};
+var applyStyle = function applyStyle(style) {
+  return function (_ref) {
+    var state = _ref.state,
+      dispatch = _ref.dispatch;
+    var schema = state.schema,
+      selection = state.selection;
+    var markType = schema.marks.style;
+    var tr = state.tr;
+    console.log(selection, 'sel');
+    var from = selection.from,
+      to = selection.to;
+    state.doc.nodesBetween(from, to, function (node, pos) {
+      if (node.isText) {
+        var existingMark = node.marks.find(function (mark) {
+          return mark.type === markType;
+        });
+        var attrs = existingMark ? _objectSpread2(_objectSpread2({}, existingMark.attrs), style) : style;
+        tr = tr.addMark(pos < from ? from : pos, pos + node.nodeSize > to ? to : pos + node.nodeSize, markType.create(attrs));
+      }
+    });
+    dispatch(tr);
+    return true;
+  };
+};
+var applyColor = function applyColor(color) {
+  return applyStyle({
+    color: color
   });
 };
+
+var FloatBar = /*#__PURE__*/function () {
+  function FloatBar(view, spec) {
+    _classCallCheck(this, FloatBar);
+    this.menus = spec.menus.map(function (menu) {
+      return new MenuItem(view, menu);
+    });
+    this.dom = createElement('div', {
+      "class": spec["class"] || 'dc-float-bar'
+    }, this.menus.map(function (menu) {
+      return menu.dom;
+    }));
+  }
+  return _createClass(FloatBar, [{
+    key: "update",
+    value: function update(view, state) {
+      this.menus.forEach(function (menu) {
+        return menu.update(view, state);
+      });
+    }
+  }, {
+    key: "destroy",
+    value: function destroy() {}
+  }]);
+}();
+
+var Tooltip = /*#__PURE__*/function () {
+  function Tooltip() {
+    _classCallCheck(this, Tooltip);
+    _defineProperty(this, "visible", false);
+    this.tooltip = createElement('div', {
+      "class": 'dc-tooltip'
+    });
+    if (!Tooltip.container) {
+      var container = createElement('div', {
+        "class": 'dc-tooltip-container'
+      });
+      Tooltip.container = container;
+      document.body.appendChild(container);
+    }
+    Tooltip.container.appendChild(this.tooltip);
+    this.tooltip.addEventListener('mouseup', function (e) {
+      e.stopPropagation();
+      e.preventDefault();
+    });
+  }
+  return _createClass(Tooltip, [{
+    key: "content",
+    value: function content(dom) {
+      this.tooltip.replaceChildren(dom);
+    }
+  }, {
+    key: "showAt",
+    value: function showAt(rect) {
+      this.tooltip.style.visibility = 'visible';
+      this.tooltip.style.opacity = '1';
+      this.visible = true;
+      var _this$tooltip$getBoun = this.tooltip.getBoundingClientRect(),
+        height = _this$tooltip$getBoun.height,
+        width = _this$tooltip$getBoun.width;
+      var top = rect.top - height - 5;
+      var left = rect.left + (rect.width - width) / 2;
+      this.tooltip.style.top = top + 'px';
+      this.tooltip.style.left = left + 'px';
+    }
+  }, {
+    key: "show",
+    value: function show(target, content) {
+      if (!this.tooltip) return;
+      if (!content) ; else if (typeof content === 'string') this.tooltip.innerHTML = content;else {
+        this.tooltip.replaceChildren(content);
+      }
+      this.tooltip.style.visibility = 'visible';
+      this.tooltip.style.opacity = '1';
+      this.visible = true;
+      var rect = target.getBoundingClientRect();
+      var _this$tooltip$getBoun2 = this.tooltip.getBoundingClientRect(),
+        height = _this$tooltip$getBoun2.height,
+        width = _this$tooltip$getBoun2.width;
+      var top = rect.top - height - 5;
+      var left = rect.left + (rect.width - width) / 2;
+      this.tooltip.style.top = top + 'px';
+      this.tooltip.style.left = left + 'px';
+    }
+  }, {
+    key: "hide",
+    value: function hide() {
+      if (!this.tooltip) return;
+      this.tooltip.style.opacity = '0';
+      this.tooltip.style.visibility = 'hidden';
+      this.visible = false;
+    }
+  }, {
+    key: "destroy",
+    value: function destroy() {
+      var _this$tooltip$parentN;
+      (_this$tooltip$parentN = this.tooltip.parentNode) === null || _this$tooltip$parentN === void 0 || _this$tooltip$parentN.removeChild(this.tooltip);
+    }
+  }], [{
+    key: "get",
+    value: function get() {
+      var instance = Tooltip.instance;
+      if (!instance) {
+        instance = new Tooltip();
+        Tooltip.instance = instance;
+      }
+      return instance;
+    }
+  }]);
+}();
 
 var ToolBar = /*#__PURE__*/function () {
   function ToolBar(view, spec) {
@@ -3307,58 +3625,43 @@ var buildToolbar = function buildToolbar() {
     view: function view(_view) {
       toolbar = new ToolBar(_view, {
         groups: [{
-          name: '格式',
-          menus: [{
-            label: '加粗',
-            handler: function handler(_ref) {
-              var view = _ref.view;
-              setBold(view);
-            }
-          }, {
-            label: '链接',
-            handler: function handler(_ref2) {
-              var view = _ref2.view;
-              addLink(view);
-            }
-          }]
-        }, {
           menus: [{
             label: '插入代码块',
-            handler: function handler(_ref3, event) {
-              var state = _ref3.state,
-                dispatch = _ref3.dispatch;
-                _ref3.view;
+            handler: function handler(_ref, event) {
+              var state = _ref.state,
+                dispatch = _ref.dispatch;
+                _ref.view;
               createCodeBlockCmd(state, dispatch);
             }
           }, {
             label: '插入tasklist',
-            handler: function handler(_ref4) {
-              var state = _ref4.state,
-                dispatch = _ref4.dispatch;
-                _ref4.view;
+            handler: function handler(_ref2) {
+              var state = _ref2.state,
+                dispatch = _ref2.dispatch;
+                _ref2.view;
               createTaskList(state, dispatch);
             }
           }, {
             label: '插入表格',
-            handler: function handler(_ref5) {
-              var state = _ref5.state,
-                dispatch = _ref5.dispatch,
-                view = _ref5.view;
+            handler: function handler(_ref3) {
+              var state = _ref3.state,
+                dispatch = _ref3.dispatch,
+                view = _ref3.view;
               createTable(3, 4)(state, dispatch, view);
               // insertTable(state, dispatch);
             }
           }, {
             label: '合并单元格',
-            handler: function handler(_ref6) {
-              var state = _ref6.state,
-                dispatch = _ref6.dispatch;
-                _ref6.view;
+            handler: function handler(_ref4) {
+              var state = _ref4.state,
+                dispatch = _ref4.dispatch;
+                _ref4.view;
               mergeCells(state, dispatch);
             }
           }, {
             label: '插入公式',
-            handler: function handler(_ref7) {
-              var view = _ref7.view;
+            handler: function handler(_ref5) {
+              var view = _ref5.view;
               var formula = prompt('输入一条 LaTex 公式: ');
               // console.log(escapeLatex(formula));
               if (formula) insertMath(view, formula);
@@ -3366,18 +3669,98 @@ var buildToolbar = function buildToolbar() {
           }]
         }]
       });
-      return toolbar;
+      var onMouseDown = function onMouseDown(e) {
+        var x1 = e.clientX,
+          y1 = e.clientY;
+        var onMouseup = function onMouseup(e) {
+          var x2 = e.clientX,
+            y2 = e.clientY;
+          var sel = _view.state.selection;
+          if (!sel.empty && (Math.abs(x1 - x2) > 5 || Math.abs(y1 - y2) > 5)) {
+            var from = _view.coordsAtPos(sel.$from.pos);
+            var to = _view.coordsAtPos(sel.$to.pos);
+            var rect = {
+              left: Math.min(from.left, to.left),
+              right: Math.max(from.right, to.right),
+              top: Math.min(from.top, to.top),
+              bottom: Math.max(from.bottom, to.bottom)
+            };
+            tooltip.showAt(_objectSpread2(_objectSpread2({}, rect), {}, {
+              width: Math.abs(rect.left - rect.right),
+              height: Math.abs(rect.top - rect.bottom)
+            }));
+          } else if (tooltip.visible) {
+            tooltip.hide();
+          }
+          _view.root.removeEventListener('mouseup', onMouseup);
+        };
+        _view.root.addEventListener('mouseup', onMouseup);
+      };
+      _view.root.addEventListener('mousedown', onMouseDown);
+      var floatBar = new FloatBar(_view, {
+        menus: [{
+          label: '加粗',
+          handler: function handler(_ref6) {
+            var view = _ref6.view;
+            applyBold(view);
+          }
+        }, {
+          label: '链接',
+          handler: function handler(_ref7) {
+            var view = _ref7.view;
+            applylink('www.baidu.com')(view);
+          }
+        }, {
+          label: '下划线',
+          handler: function handler(_ref8) {
+            var view = _ref8.view;
+            applyUnderline(view);
+          }
+        }, {
+          label: '删除线',
+          handler: function handler(_ref9) {
+            var view = _ref9.view;
+            applyLinethrough(view);
+          }
+        }, {
+          label: '颜色',
+          handler: function handler(_ref10) {
+            var view = _ref10.view;
+            applyColor('red')(view);
+          }
+        }, {
+          label: '颜色‘',
+          handler: function handler(_ref11) {
+            var view = _ref11.view;
+            applyColor()(view);
+          }
+        }]
+      });
+      var tooltip = new Tooltip();
+      tooltip.content(floatBar.dom);
+      return {
+        dom: toolbar.dom,
+        update: function update(view, prevState) {
+          var _toolbar;
+          (_toolbar = toolbar) === null || _toolbar === void 0 || _toolbar.update(view, prevState);
+        },
+        destroy: function destroy() {
+          var _toolbar2;
+          (_toolbar2 = toolbar) === null || _toolbar2 === void 0 || _toolbar2.destroy();
+          _view.root.removeEventListener('mousedown', onMouseDown);
+        }
+      };
     }
   });
   return {
     plugin: toolbarPlugin,
     update: function update(view, state) {
-      var _toolbar;
-      return (_toolbar = toolbar) === null || _toolbar === void 0 ? void 0 : _toolbar.update(view, state);
+      var _toolbar3;
+      return (_toolbar3 = toolbar) === null || _toolbar3 === void 0 ? void 0 : _toolbar3.update(view, state);
     },
     destroy: function destroy() {
-      var _toolbar2;
-      (_toolbar2 = toolbar) === null || _toolbar2 === void 0 || _toolbar2.destroy();
+      var _toolbar4;
+      (_toolbar4 = toolbar) === null || _toolbar4 === void 0 || _toolbar4.destroy();
       toolbar = null;
     }
   };
@@ -3407,10 +3790,11 @@ var setupEditor = function setupEditor(el) {
     handleClickOn: function handleClickOn(view, pos, node, nodePos, event, direct) {
       var markType = view.state.schema.marks.link;
       var $pos = view.state.doc.resolve(pos);
-      if ($pos.marks().some(function (mark) {
+      var marks = $pos.marks();
+      if (marks.some(function (mark) {
         return mark.type === markType;
       })) {
-        var linkMark = $pos.marks().find(function (mark) {
+        var linkMark = marks.find(function (mark) {
           return mark.type === markType;
         });
         var _ref = (linkMark === null || linkMark === void 0 ? void 0 : linkMark.attrs) || {},

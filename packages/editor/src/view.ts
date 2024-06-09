@@ -49,8 +49,9 @@ export const setupEditor = (el: HTMLElement | null) => {
 		handleClickOn(view, pos, node, nodePos, event, direct) {
 			const markType = view.state.schema.marks.link;
 			const $pos = view.state.doc.resolve(pos);
-			if ($pos.marks().some((mark) => mark.type === markType)) {
-				const linkMark = $pos.marks().find((mark) => mark.type === markType);
+			const marks = $pos.marks();
+			if (marks.some((mark) => mark.type === markType)) {
+				const linkMark = marks.find((mark) => mark.type === markType);
 				const { href, target } = linkMark?.attrs || {};
 				if (href) {
 					if ($pos.end() === pos) return false;
