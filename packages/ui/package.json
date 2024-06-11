@@ -1,0 +1,16 @@
+{
+	"name": "@docucraft/ui",
+	"version": "0.0.1",
+	"main": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"build": "tsc && cp ./src/style.css ./dist/",
+		"dev": "rollup -c -w"
+	},
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"devDependencies": {
+		"rollup": "^4.17.2"
+	}
+}

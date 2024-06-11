@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@docucraft/srender": "workspace:^",
     "highlight.js": "^11.9.0",
     "katex": "^0.16.10",
     "prosemirror-commands": "^1.5.2",
