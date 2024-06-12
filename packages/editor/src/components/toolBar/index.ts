@@ -3,12 +3,7 @@ import { MenuGroup, MenuGroupSpec } from './menuGroup';
 import { EditorView } from 'prosemirror-view';
 import { createCodeBlockCmd } from '../codeBlock';
 import { createTaskList } from '../taskList';
-import {
-	addColumnAfter,
-	createTable,
-	insertTable,
-	mergeCells
-} from '../tables/commands';
+import { createTable, mergeCells } from '../tables/commands';
 import { insertMath } from '../katex';
 import {
 	applyBold,
@@ -36,27 +31,8 @@ export class ToolBar implements PluginView {
 		const dom = document.createElement('div');
 		dom.setAttribute('class', this.spec.class || '');
 		dom.classList.add('toolbar');
-		console.log('toolbar');
-
-		const test = document.createElement('div');
-
 		this.dom = dom;
-		this.dom.appendChild(test);
-		const tte = () => {
-			const [tagName, setState] = useState('div');
-			useEffect(() => {
-				console.log('mount');
-				return () => {
-					console.log('unmount');
-				};
-			}, []);
 
-			return createElement(tagName, {}, 'hello');
-		};
-		render(createElement(tte, {}), test);
-		setTimeout(() => {
-			render(createElement('p', {}, 'you'), test);
-		}, 5000);
 		this.groups = this.spec.groups.map(
 			(menuGroupSpec) => new MenuGroup(this.view, menuGroupSpec)
 		);
