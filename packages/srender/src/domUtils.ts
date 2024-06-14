@@ -26,7 +26,7 @@ export function updateDomProperties(
 		.filter(isAttribute)
 		.filter(isNew(prevProps, nextProps))
 		.forEach((name) => {
-			console.log(dom, dom.setAttribute, 'dom.');
+			// console.log(dom, dom.setAttribute, 'dom.');
 
 			(dom as IState)[name] = nextProps[name];
 			// dom.setAttribute(name, nextProps[name]);
@@ -60,6 +60,7 @@ export function createDomElement(fiber: IFiber) {
 export function cloneFiber(
 	oldFiber: IFiber,
 	parent: IFiber | null | undefined,
+	index: number,
 	props?: IProps
 ): IFiber {
 	if (!props) props = oldFiber.props;
@@ -68,6 +69,7 @@ export function cloneFiber(
 		tag: oldFiber.tag,
 		stateNode: oldFiber.stateNode,
 		hooks: initHooks(oldFiber!),
+		index,
 		parent: parent,
 		alternate: oldFiber,
 		$$typeof: oldFiber.$$typeof,
@@ -78,15 +80,17 @@ export function cloneFiber(
 }
 export function createFiber(
 	element: IVNode,
-	parent: IFiber | null | undefined
+	parent: IFiber | null | undefined,
+	index: number
 ) {
 	return {
 		type: element.type,
 		$$typeof: element.$$typeof,
-		tag: getTag(element.type),
+		tag: getTag(element),
 		props: element.props,
 		hooks: initHooks(),
 		parent,
+		index,
 		effectTag: Effect.PLACEMENT
 	};
 }

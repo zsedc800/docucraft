@@ -95,9 +95,9 @@ function resetNextUnitOfWork() {
 		tag: ITag.HOST_ROOT,
 		$$typeof: ELEMENT,
 		hooks: {},
-
+		index: 0,
 		stateNode: update.dom || root.stateNode,
-
+		effectTag: Effect.NOTHING,
 		props: update.newProps || root.props,
 
 		alternate: root
@@ -139,6 +139,7 @@ function beginWork(wipFiber: IFiber) {
 			break;
 		case ITag.HOST_ROOT:
 		case ITag.HOST_COMPONENT:
+		case ITag.HOST_TEXT:
 			updateHostComponent(wipFiber);
 			break;
 	}
@@ -155,7 +156,6 @@ function updateHostComponent(wipFiber: IFiber) {
 	if (!wipFiber.stateNode) {
 		wipFiber.stateNode = createDomElement(wipFiber) as Element;
 	}
-
 	const newChildElements = wipFiber.props.children;
 	reconcileChildrenArray(wipFiber, newChildElements);
 }
@@ -170,87 +170,56 @@ function reconcileChildrenArray(wipFiber: IFiber, newChildElements: any) {
 	let index = 0;
 	let oldFiber = wipFiber.alternate ? wipFiber.alternate.child : null;
 	let newFiber: IFiber | null | undefined = null;
-	let isList = true;
-	const oldList: IFiber[] = [];
-	const map = new Map<any, { node: IFiber; index: number }>();
+	const map = new Map<any, IFiber>();
 	for (let node = oldFiber, i = 0; node; node = node.sibling, i++) {
-		oldList.push(node);
 		const key = node.props.key || i;
-		map.set(key, { node, index: i });
+		map.set(key, node);
 		// if (!key) {
 		// 	isList = false;
 		// 	break;
 		// }
 	}
-	if (isList) {
-		wipFiber.effects = wipFiber.effects || [];
-		while (index < elements.length) {
-			const preFiber = newFiber;
-			const element = elements[index];
-			const key = element.props.key || index;
-			const val = map.get(key);
-			if (val) {
-				const { node: oldFiber, index: i } = val;
-				if (oldFiber.type === element.type) {
-					newFiber = cloneFiber(oldFiber, wipFiber, element.props);
-					if (index !== i) newFiber.effectTag! |= Effect.MOVE;
-				} else {
-					newFiber = createFiber(element, wipFiber);
-					oldFiber.effectTag = Effect.DELETION;
-					wipFiber.effects.push(oldFiber);
-				}
-				newFiber.place = {
-					to: index,
-					from: i
-				};
-				map.delete(key);
-			} else {
-				newFiber = createFiber(element, wipFiber);
-				// newFiber.place = { from: -1, to: index };
+
+	while (index < elements.length || oldFiber) {
+		const prevFiber = newFiber;
+		const element = index < elements.length && elements[index];
+
+		const sameType = oldFiber && element && element.type === oldFiber.type;
+		if (sameType)
+			newFiber = cloneFiber(oldFiber!, wipFiber, index, element.props);
+		else {
+			if (element) {
+				newFiber = createFiber(element, wipFiber, index);
 			}
 
-			if (index === 0) wipFiber.child = newFiber;
-			else if (preFiber) preFiber.sibling = newFiber;
-			index++;
-		}
-
-		for (const { node } of map.values()) {
-			node.effectTag = Effect.DELETION;
-			wipFiber.effects.push(node);
-		}
-	} else
-		while (index < elements.length || oldFiber) {
-			const prevFiber = newFiber;
-			const element = index < elements.length && elements[index];
-			const sameType = oldFiber && element && element.type === oldFiber.type;
-
-			if (sameType) newFiber = cloneFiber(oldFiber!, wipFiber, element.props);
-			else {
-				if (element) {
-					newFiber = createFiber(element, wipFiber);
-					newFiber.place = { from: -1, to: index };
-				}
-
-				if (oldFiber) {
-					oldFiber.effectTag = Effect.DELETION;
-					wipFiber.effects = wipFiber.effects || [];
-					wipFiber.effects.push(oldFiber);
-				}
+			if (oldFiber) {
+				deleteChild(oldFiber);
 			}
-
-			if (oldFiber) oldFiber = oldFiber.sibling;
-
-			if (index === 0) wipFiber.child = newFiber;
-			else if (prevFiber && element) prevFiber.sibling = newFiber;
-
-			index++;
 		}
+
+		if (oldFiber) oldFiber = oldFiber.sibling;
+
+		if (index === 0) wipFiber.child = newFiber;
+		else if (prevFiber && element) prevFiber.sibling = newFiber;
+
+		index++;
+	}
+}
+
+function deleteChild(fiber: IFiber) {
+	fiber.effectTag |= Effect.DELETION;
+
+	const parent = fiber.parent;
+	if (parent) {
+		parent.effects = parent.effects || [];
+		parent.effects.push(fiber);
+	}
 }
 
 function completeWork(fiber: IFiber) {
 	if (fiber.parent) {
 		const childEffects = fiber.effects || [];
-		const thisEffect = fiber.effectTag != null ? [fiber] : [];
+		const thisEffect = fiber.effectTag ? [fiber] : [];
 		const parentEffects = fiber.parent.effects || [];
 		fiber.parent.effects = parentEffects.concat(childEffects, thisEffect);
 	} else {
@@ -273,7 +242,7 @@ function commitWork(fiber: IFiber) {
 	let domParentFiber: IFiber = fiber.parent!;
 	while (
 		domParentFiber.tag === ITag.FUNCTION_COMPONENT ||
-		domParentFiber.tag === ITag.UNKNOWN
+		domParentFiber.tag === ITag.FRAGMENT
 	) {
 		domParentFiber = domParentFiber.parent!;
 	}
@@ -283,28 +252,37 @@ function commitWork(fiber: IFiber) {
 	if (fiber.effectTag & Effect.UPDATE) commitUpdate(fiber);
 
 	if (fiber.effectTag & Effect.DELETION) commitDeletion(fiber, domParent);
-
-	if (fiber.effectTag & Effect.MOVE) commitMove(fiber, domParent);
 }
 
-function commitMove(fiber: IFiber, domParent: Element) {
-	const { to } = fiber.place!;
-	const node = fiber.stateNode as Element;
-	domParent.removeChild(node);
-	const before = domParent.children[to];
-	before ? domParent.insertBefore(node, before) : domParent.appendChild(node);
+function getHostSibling(fiber: IFiber): Element | null {
+	let node: IFiber = fiber;
+	siblings: while (true) {
+		while (!node.sibling) {
+			if (!node.parent || node.parent.tag === ITag.HOST_COMPONENT) return null;
+			node = node.parent;
+		}
+		node.sibling.parent = node.parent;
+		node = node.sibling;
+
+		while (node.tag !== ITag.HOST_COMPONENT && node.tag !== ITag.HOST_TEXT) {
+			if (node.effectTag & Effect.PLACEMENT || !node.child) continue siblings;
+			node.child.parent = node;
+			node = node.child;
+		}
+
+		if (!(node.effectTag & Effect.PLACEMENT)) {
+			return node.stateNode as Element;
+		}
+	}
 }
 
 function commitPlacement(fiber: IFiber, domParent: Element) {
-	if (fiber.tag === ITag.HOST_COMPONENT) {
-		if (fiber.place) {
-			const { to } = fiber.place;
-			const before = domParent.children[to];
-			before
-				? domParent.insertBefore(fiber.stateNode as Element, before)
-				: domParent.appendChild(fiber.stateNode as Element);
-		} else domParent.appendChild(fiber.stateNode as Element);
-		domMap.set(fiber.stateNode as HTMLElement, fiber);
+	if (fiber.tag === ITag.HOST_COMPONENT || fiber.tag === ITag.HOST_TEXT) {
+		const before = getHostSibling(fiber);
+		const node = fiber.stateNode as Element;
+		domMap.set(node as HTMLElement, fiber);
+		if (before) domParent.insertBefore(node, before);
+		else domParent.appendChild(node);
 		if (fiber.props.ref) fiber.props.ref.current = fiber.stateNode;
 	} else if (fiber.tag === ITag.FUNCTION_COMPONENT) {
 		let { effects, layoutEffects, destroy } = fiber.hooks;
@@ -322,6 +300,7 @@ function commitPlacement(fiber: IFiber, domParent: Element) {
 			}
 		});
 	}
+	fiber.effectTag! &= ~Effect.PLACEMENT;
 }
 
 function commitUpdate(fiber: IFiber) {
@@ -340,12 +319,13 @@ function commitUpdate(fiber: IFiber) {
 			if (canRun) callback();
 		});
 	}
+	fiber.effectTag! &= ~Effect.UPDATE;
 }
 
 function commitDeletion(fiber: IFiber, domParent: Element) {
 	let node: IFiber | null | undefined = fiber;
 	while (true) {
-		if (node?.tag === ITag.FUNCTION_COMPONENT || node?.$$typeof === FRAGMENT) {
+		if (node?.tag === ITag.FUNCTION_COMPONENT || node?.tag === ITag.FRAGMENT) {
 			node = node?.child;
 			continue;
 		}
@@ -365,4 +345,5 @@ function commitDeletion(fiber: IFiber, domParent: Element) {
 		}
 	};
 	while (node) node = goStep(node);
+	fiber.effectTag! &= ~Effect.DELETION;
 }

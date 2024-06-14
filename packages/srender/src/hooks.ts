@@ -37,13 +37,18 @@ export const useRef: <T = any>(initValue?: T) => { current: T | null } = (
 
 export const useState = <T = any>(initalState: T) => {
 	const wip = getCurrentFiber();
+	const currentFiber = useRef<IFiber>(wip);
+	currentFiber.current = wip;
 	let { states } = wip.hooks;
 	if (!states) wip.hooks.states = states = { index: 0, values: [] };
 	if (states.index >= states.values.length) states.values.push(initalState);
 	const index = states.index;
 	const setState = (st: T) => {
 		states.values[index] = st;
-		batchUpdate({ from: ITag.FUNCTION_COMPONENT, fiber: wip });
+		batchUpdate({
+			from: ITag.FUNCTION_COMPONENT,
+			fiber: currentFiber.current!
+		});
 	};
 	return [states.values[states.index++], setState];
 };

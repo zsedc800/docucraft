@@ -1,8 +1,10 @@
 export enum ITag {
 	HOST_COMPONENT = 'host',
+	HOST_TEXT = 'host_text',
 	CLASS_COMPONENT = 'class',
 	FUNCTION_COMPONENT = 'function',
 	HOST_ROOT = 'root',
+	FRAGMENT = 'fragment',
 	UNKNOWN = 'unknown'
 }
 
@@ -11,10 +13,10 @@ export interface Ref<T = any> {
 }
 
 export enum Effect {
+	NOTHING = 0,
 	PLACEMENT = 1,
 	DELETION = 2,
-	UPDATE = 4,
-	MOVE = 8
+	UPDATE = 4
 }
 
 export interface IdleDeadline {
@@ -54,6 +56,7 @@ export interface IFiber {
 	type?: ComponentType;
 
 	$$typeof: Symbol;
+	index: number;
 
 	parent?: IFiber | null;
 	child?: IFiber | null;
@@ -88,7 +91,7 @@ export interface IFiber {
 
 	props: IProps;
 	partialState?: IState | null;
-	effectTag?: Effect;
+	effectTag: Effect;
 	effects?: IFiber[];
 }
 

@@ -17,7 +17,7 @@
     const List = () => {
       const [list, setState] = useState([{ id: 1, value: 1 }, { id: 2, value: 2 }, { id: 3, value: 3 }, { id: 4, value: 4 }]);
 
-      return createElement('div', null, createElement('button', {
+      return createElement('p', null, createElement('button', {
         onClick: () => {
           setState([{ id: 4, value: 4 }, { id: 3, value: 3 }, { id: 1, value: 1 }, { id: 2, value: 2 }, { id: 5, value: 10 }])
         }
@@ -44,7 +44,7 @@
         createElement('div', { className: 'page', ref: $dom, onClick: () => console.log('hi') }, createElement('div', { style: { height: '500px', backgroundColor: 'red' } }), 'hi',)
       )
     }
-    render(createElement(App), container);
+    render(createElement(List), container);
     // setTimeout(() => render(createElement('h1', '你好'), container), 3000)
   </script>
   <script>

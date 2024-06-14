@@ -4,9 +4,11 @@ export const TEXT_ELEMENT = 'TEXT ELEMENT';
 export const FRAGMENT = Symbol.for('srender.fragment');
 export const ELEMENT = Symbol.for('srender.element');
 
-export const getTag = (type?: ComponentType) => {
-	if (typeof type === 'string') return ITag.HOST_COMPONENT;
+export const getTag = ({ type, $$typeof }: IVNode) => {
+	if (typeof type === 'string')
+		return type === TEXT_ELEMENT ? ITag.HOST_TEXT : ITag.HOST_COMPONENT;
 	else if (typeof type === 'function') return ITag.FUNCTION_COMPONENT;
+	else if ($$typeof === FRAGMENT) return ITag.FRAGMENT;
 	else return ITag.UNKNOWN;
 };
 
