@@ -22,7 +22,7 @@ export function setCurrentFiber(wip: IFiber) {
 function getCurrentFiber(): IFiber {
 	return currentFiber.current!;
 }
-export const useRef: <T>(initValue?: T) => { current: T | null } = (
+export const useRef: <T = any>(initValue?: T) => { current: T | null } = (
 	initValue
 ) => {
 	const wip = getCurrentFiber();
@@ -40,8 +40,9 @@ export const useState = <T = any>(initalState: T) => {
 	let { states } = wip.hooks;
 	if (!states) wip.hooks.states = states = { index: 0, values: [] };
 	if (states.index >= states.values.length) states.values.push(initalState);
+	const index = states.index;
 	const setState = (st: T) => {
-		states.values[states.index] = st;
+		states.values[index] = st;
 		batchUpdate({ from: ITag.FUNCTION_COMPONENT, fiber: wip });
 	};
 	return [states.values[states.index++], setState];
@@ -85,9 +86,22 @@ export const useEffect = (
 	if (!effects) wip.hooks.effects = effects = { index: 0, values: [] };
 	if (effects.index >= effects.values.length)
 		effects.values.push({ callback, canRun: true });
-	else if (areDependenciesEqual($deps.current, deps)) {
+	else if (!areDependenciesEqual($deps.current, deps)) {
 		effects.values[effects.index] = { callback, canRun: true };
 	} else {
 		effects.values[effects.index].canRun = false;
 	}
+};
+
+export const useMemo = (callback: () => any, deps?: any[]) => {
+	const cachedValue = useRef();
+	const cachedDeps = useRef(deps);
+
+	if (cachedValue.current) {
+		if (!areDependenciesEqual(cachedDeps.current, deps))
+			cachedValue.current = callback();
+	} else {
+		cachedValue.current = callback();
+	}
+	return cachedValue.current;
 };

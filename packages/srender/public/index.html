@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>srender</title>
+</head>
+
+<body>
+  <main>
+    <div id="container"></div>
+  </main>
+  <script type="module">
+    import { render, createElement, useState, Fragment, useEffect, useRef } from './index.mjs';
+    const container = document.getElementById('container');
+    const List = () => {
+      const [list, setState] = useState([{ id: 1, value: 1 }, { id: 2, value: 2 }, { id: 3, value: 3 }, { id: 4, value: 4 }]);
+
+      return createElement('div', null, createElement('button', {
+        onClick: () => {
+          setState([{ id: 4, value: 4 }, { id: 3, value: 3 }, { id: 1, value: 1 }, { id: 2, value: 2 }, { id: 5, value: 10 }])
+        }
+      }, 'btn'), createElement('ul', null, list.map(item => createElement('li', { key: item.id }, item.value))))
+    }
+    const App = () => {
+      const $dom = useRef();
+      const [tagName, setState] = useState('div')
+      useEffect(() => {
+        console.log($dom, 'dom');
+        setTimeout(() => {
+          console.log('time');
+          setState('p')
+        }, 4000)
+        return () => {
+          console.log('destroy');
+        }
+      }, []);
+      return createElement(
+        Fragment,
+        createElement('h1', {}, 'hello world'),
+        createElement(List, null),
+        createElement(tagName, 'loves'),
+        createElement('div', { className: 'page', ref: $dom, onClick: () => console.log('hi') }, createElement('div', { style: { height: '500px', backgroundColor: 'red' } }), 'hi',)
+      )
+    }
+    render(createElement(App), container);
+    // setTimeout(() => render(createElement('h1', '你好'), container), 3000)
+  </script>
+  <script>
+    // 新顺序数组，表示节点 ID 的顺序
+    const newOrder = [2, 1, 3];
+    // 当前顺序数组，表示节点 ID 的顺序
+    const currentOrder = [1, 2, 3];
+
+    // 找到最长递增子序列（LIS）
+    function longestIncreasingSubsequence(arr) {
+      const dp = Array(arr.length).fill(1);
+      const prev = Array(arr.length).fill(-1);
+
+      for (let i = 1; i < arr.length; i++) {
+        for (let j = 0; j < i; j++) {
+          if (arr[i] > arr[j] && dp[i] < dp[j] + 1) {
+            dp[i] = dp[j] + 1;
+            prev[i] = j;
+          }
+        }
+      }
+
+      let maxIndex = 0;
+      for (let i = 1; i < dp.length; i++) {
+        if (dp[i] > dp[maxIndex]) {
+          maxIndex = i;
+        }
+      }
+
+      const lis = [];
+      while (maxIndex !== -1) {
+        lis.unshift(arr[maxIndex]);
+        maxIndex = prev[maxIndex];
+      }
+
+      return lis;
+    }
+
+    // 计算最小移动策略
+    function calculateMinMoves(currentOrder, newOrder) {
+      // 构建新顺序数组的索引映射
+      const indexMap = new Map();
+      newOrder.forEach((item, index) => indexMap.set(item, index));
+
+      // 将当前顺序转换为索引顺序
+      const currentIndexOrder = currentOrder.map(item => indexMap.get(item));
+
+      // 找到最长递增子序列（LIS）
+      const lis = longestIncreasingSubsequence(currentIndexOrder);
+
+      // 计算最小移动策略
+      const moves = [];
+      let lisIndex = 0;
+      for (let i = 0; i < currentIndexOrder.length; i++) {
+        if (lisIndex < lis.length && currentIndexOrder[i] === lis[lisIndex]) {
+          lisIndex++;
+        } else {
+          moves.push({
+            item: currentOrder[i],
+            toIndex: indexMap.get(currentOrder[i])
+          });
+        }
+      }
+
+      return moves;
+    }
+
+    // 示例：计算最小移动策略
+    const moves = calculateMinMoves(currentOrder, newOrder);
+    console.log(moves);
+
+  </script>
+</body>
+
+</html>

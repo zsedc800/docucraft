@@ -3,6 +3,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import postcss from 'rollup-plugin-postcss';
 import typescript from 'rollup-plugin-typescript2';
+import serve from 'rollup-plugin-serve';
 
 const createBabelConfig = (targets) => ({
 	babelHelpers: 'bundled',
@@ -23,7 +24,13 @@ const common = {
 			rootDir: 'src'
 		}),
 		commonjs(),
-		postcss({ extract: 'style.css', extensions: ['.css', '.scss', 'sass'] })
+		postcss({ extract: 'style.css', extensions: ['.css', '.scss', 'sass'] }),
+		serve({
+			open: true,
+			contentBase: ['dist', 'public'],
+			port: 3010,
+			host: '0.0.0.0'
+		})
 	],
 	external: (id) => /node_modules/.test(id)
 };

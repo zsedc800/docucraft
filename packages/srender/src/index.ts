@@ -1,12 +1,11 @@
-import { Component } from './component';
-import { createElement } from './element';
+import { createElement, FRAGMENT as Fragment } from './element';
 import { render } from './reconciler';
 export * from './hooks';
 
 export default {
-	Component,
 	createElement,
-	render
+	render,
+	Fragment
 };
 
-export { Component, createElement, render };
+export { createElement, render, Fragment };

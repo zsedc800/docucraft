@@ -14,7 +14,6 @@ import {
 } from './commands';
 import { FloatBar } from './floatBar';
 import { Tooltip } from '../tooltip';
-import { createElement, render, useEffect, useState } from '@docucraft/srender';
 
 export interface ToolBarSpec {
 	groups: MenuGroupSpec[];

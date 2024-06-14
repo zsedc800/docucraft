@@ -1,5 +1,7 @@
 export function isSubclassOf(subClass: Function, superClass: Function) {
-	let prototype = Object.getPrototypeOf(subClass.prototype);
+	let prototype = subClass.prototype
+		? Object.getPrototypeOf(subClass.prototype)
+		: void 0;
 
 	while (prototype) {
 		if (prototype === superClass.prototype) {

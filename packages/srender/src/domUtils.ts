@@ -1,5 +1,6 @@
-import { TEXT_ELEMENT } from './element';
-import { IFiber, IProps, IState } from './interface';
+import { TEXT_ELEMENT, getTag } from './element';
+import { initHooks } from './hooks';
+import { Effect, IFiber, IProps, IState, IVNode } from './interface';
 
 const isEvent = (name: string) => name.startsWith('on');
 const isAttribute = (name: string) =>
@@ -14,33 +15,21 @@ export function updateDomProperties(
 	nextProps: IProps
 ) {
 	Object.keys(prevProps)
-		.filter(isEvent)
-		.filter((key) => !(key in nextProps) || isNew(prevProps, nextProps)(key))
-		.forEach((name) => {
-			const eventType = name.toLowerCase().substring(2);
-			dom.removeEventListener(eventType, prevProps[name]);
-		});
-
-	Object.keys(prevProps)
 		.filter(isAttribute)
 		.filter(isGone(nextProps))
 		.forEach((name) => {
 			(dom as IState)[name] = null;
+			// dom.removeAttribute(name);
 		});
 
 	Object.keys(nextProps)
 		.filter(isAttribute)
 		.filter(isNew(prevProps, nextProps))
 		.forEach((name) => {
-			(dom as IState)[name] = nextProps[name];
-		});
+			console.log(dom, dom.setAttribute, 'dom.');
 
-	Object.keys(nextProps)
-		.filter(isEvent)
-		.filter(isNew(prevProps, nextProps))
-		.forEach((name) => {
-			const eventType = name.toLowerCase().substring(2);
-			dom.addEventListener(eventType, nextProps[name]);
+			(dom as IState)[name] = nextProps[name];
+			// dom.setAttribute(name, nextProps[name]);
 		});
 
 	prevProps.style = prevProps.style || {};
@@ -59,10 +48,6 @@ export function updateDomProperties(
 		});
 }
 
-/**
- * 创建对应的 DOM 元素，并根据 props 设置相应属性
- * @param fiber 目标 fiber
- */
 export function createDomElement(fiber: IFiber) {
 	const isTextElement = fiber.type === TEXT_ELEMENT;
 	const dom = isTextElement
@@ -70,4 +55,38 @@ export function createDomElement(fiber: IFiber) {
 		: document.createElement(fiber.type as string);
 	updateDomProperties(dom as HTMLElement, [], fiber.props);
 	return dom;
+}
+
+export function cloneFiber(
+	oldFiber: IFiber,
+	parent: IFiber | null | undefined,
+	props?: IProps
+): IFiber {
+	if (!props) props = oldFiber.props;
+	return {
+		type: oldFiber.type,
+		tag: oldFiber.tag,
+		stateNode: oldFiber.stateNode,
+		hooks: initHooks(oldFiber!),
+		parent: parent,
+		alternate: oldFiber,
+		$$typeof: oldFiber.$$typeof,
+		props,
+		partialState: oldFiber.partialState,
+		effectTag: Effect.UPDATE
+	};
+}
+export function createFiber(
+	element: IVNode,
+	parent: IFiber | null | undefined
+) {
+	return {
+		type: element.type,
+		$$typeof: element.$$typeof,
+		tag: getTag(element.type),
+		props: element.props,
+		hooks: initHooks(),
+		parent,
+		effectTag: Effect.PLACEMENT
+	};
 }

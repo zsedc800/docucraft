@@ -1,7 +1,13 @@
-import { Component, createInstance } from './component';
-import { createDomElement, updateDomProperties } from './domUtils';
-import { getTag } from './element';
+import {
+	cloneFiber,
+	createDomElement,
+	createFiber,
+	updateDomProperties
+} from './domUtils';
+import { ELEMENT, FRAGMENT, getTag, TEXT_ELEMENT } from './element';
+import { domMap, registerEvent } from './events';
 import { initHooks, setCurrentFiber } from './hooks';
+
 import {
 	Effect,
 	FunctionComponent,
@@ -21,36 +27,32 @@ const ENOUGH_TIME = 1;
 const updateQueue: IUpdate[] = [];
 let nextUnitOfWork: IFiber | null | undefined = null;
 let pendingCommit: IFiber | null = null;
+const cacheMap = new Map<any, Element>();
 
-/**
- * 把 virtual DOM tree（可以是数组）渲染到对应的容器 DOM
- * @param elements VNode elements to render
- * @param containerDom container dom element
- */
-export function render(elements: any, containerDom: HTMLElement) {
+export function render(
+	elements: any,
+	containerDom?: HTMLElement,
+	sync = false
+) {
+	if (!containerDom) containerDom = document.createElement('div');
 	updateQueue.push({
 		from: ITag.HOST_ROOT,
 		dom: containerDom,
 		newProps: { children: elements }
 	});
-	requestIdleCallback(performWork);
+	if (!(containerDom as any)._rootContainerFiber) registerEvent(containerDom);
+	if (sync)
+		performWork({ timeRemaining: () => 1000 as any, didTimeout: false });
+	else requestIdleCallback(performWork);
+
+	return containerDom;
 }
 
-/**
- * 安排更新，通常是由 setState 调用。
- * @param instance 组件实例
- * @param partialState state，通常是对象
- */
-export function scheduleUpdate(instance: Component, partialState: any) {
-	updateQueue.push({
-		from: ITag.CLASS_COMPONENT,
-
-		instance,
-
-		partialState
-	});
-
-	requestIdleCallback(performWork);
+export function unMountComponentsAtNode(dom: HTMLElement) {
+	const rootFiber: IFiber = (dom as any)._rootContainerFiber;
+	const fiber = rootFiber ? rootFiber.child : void 0;
+	if (fiber) commitDeletion(fiber, dom);
+	delete (dom as any)._rootContainerFiber;
 }
 
 export function batchUpdate(update: IUpdate) {
@@ -58,10 +60,6 @@ export function batchUpdate(update: IUpdate) {
 	requestIdleCallback(performWork);
 }
 
-/**
- * 执行渲染/更新工作
- * @param {IdleDeadline} deadline requestIdleCallback 传来，用于检测空闲时间
- */
 function performWork(deadline: IdleDeadline) {
 	workLoop(deadline);
 	if (nextUnitOfWork || updateQueue.length > 0) {
@@ -69,14 +67,6 @@ function performWork(deadline: IdleDeadline) {
 	}
 }
 
-/**
- * 核心功能，把更新工作分片处理（可打断）；处理结束后进入提交阶段（不可打断）。
- *
- * 1. 通过 deadline 去查看剩余可执行时间，时间不够时暂停处理；
- * 2. 把 wip fiber tree 的创建工作分片处理（可分片/暂停，因为没有操作DOM）；
- * 3. 一旦 wip fiber tree 创建完毕，同步执行 DOM 更新。
- * @param {IdleDeadline} deadline requestIdleCallback() 的参数
- */
 function workLoop(deadline: IdleDeadline) {
 	if (!nextUnitOfWork) {
 		resetNextUnitOfWork();
@@ -90,30 +80,20 @@ function workLoop(deadline: IdleDeadline) {
 	}
 }
 
-/**
- * 重新开始分片工作 （next unit of work），设置reconciler的起点。
- */
 function resetNextUnitOfWork() {
 	const update = updateQueue.shift();
 	if (!update) {
 		return;
 	}
 
-	if (update.partialState) {
-		((update.instance as Component).__fiber as IFiber).partialState =
-			update.partialState;
-	}
-
 	const root =
 		update.from === ITag.HOST_ROOT
 			? (update.dom as any)._rootContainerFiber
-			: getRoot(
-					update.fiber || ((update.instance as Component).__fiber as IFiber)
-				);
+			: getRoot(update.fiber!);
 
 	nextUnitOfWork = {
 		tag: ITag.HOST_ROOT,
-
+		$$typeof: ELEMENT,
 		hooks: {},
 
 		stateNode: update.dom || root.stateNode,
@@ -124,10 +104,6 @@ function resetNextUnitOfWork() {
 	};
 }
 
-/**
- * 对当前 fiber 取 root （通过 fiber 的 parent 属性）
- * @param {IFiber} fiber fiber 对象
- */
 function getRoot(fiber: IFiber): IFiber {
 	let node = fiber;
 	while (node.parent) {
@@ -136,10 +112,6 @@ function getRoot(fiber: IFiber): IFiber {
 	return node;
 }
 
-/**
- * 迭代创建 work-in-progress fiber
- * @param wipFiber work-in-progress fiber
- */
 function performUnitOfWork(wipFiber: IFiber) {
 	beginWork(wipFiber);
 
@@ -159,19 +131,9 @@ function performUnitOfWork(wipFiber: IFiber) {
 	}
 }
 
-/**
- * 为 fiber 创建 children fibers
- *
- * 1. 创建 stateNode 如果 wipFiber 没有的话；
- * 2. 对 wipFiber 的 children 执行 reconcileChildrenArray。
- * @param {IFiber} wipFiber 当前 work-in-progress fiber
- */
 function beginWork(wipFiber: IFiber) {
 	setCurrentFiber(wipFiber);
 	switch (wipFiber.tag) {
-		case ITag.CLASS_COMPONENT:
-			updateClassComponent(wipFiber);
-			break;
 		case ITag.FUNCTION_COMPONENT:
 			updateFunctionComponent(wipFiber);
 			break;
@@ -180,6 +142,8 @@ function beginWork(wipFiber: IFiber) {
 			updateHostComponent(wipFiber);
 			break;
 	}
+	if (wipFiber.$$typeof === FRAGMENT)
+		reconcileChildrenArray(wipFiber, wipFiber.props.children);
 }
 
 function updateFunctionComponent(wipFiber: IFiber) {
@@ -187,10 +151,6 @@ function updateFunctionComponent(wipFiber: IFiber) {
 	reconcileChildrenArray(wipFiber, newChildElements);
 }
 
-/**
- * 处理 host component 和 root component（即都 host/原生 组件）。
- * @param wipFiber 当前 work-in-progress fiber
- */
 function updateHostComponent(wipFiber: IFiber) {
 	if (!wipFiber.stateNode) {
 		wipFiber.stateNode = createDomElement(wipFiber) as Element;
@@ -200,141 +160,94 @@ function updateHostComponent(wipFiber: IFiber) {
 	reconcileChildrenArray(wipFiber, newChildElements);
 }
 
-/**
- * 处理 class component（即用户自定义的组件）。
- * @param wipFiber 当前 work-in-progress fiber
- */
-function updateClassComponent(wipFiber: IFiber) {
-	let instance = wipFiber.stateNode as Component;
-
-	if (instance == null) {
-		instance = wipFiber.stateNode = createInstance(wipFiber);
-	} else if (wipFiber.props === instance.props && !wipFiber.partialState) {
-		cloneChildFibers(wipFiber);
-		return;
-	}
-
-	instance.props = wipFiber.props;
-	instance.state = Object.assign({}, instance.state, wipFiber.partialState);
-	wipFiber.partialState = null;
-
-	const newChildElements = instance.render();
-	reconcileChildrenArray(wipFiber, newChildElements);
-}
-
 function arrify(val: any) {
 	return val == null ? [] : Array.isArray(val) ? val : [val];
 }
 
-/**
- * 核心函数，逐步创建 work-in-progress tree，决定提交阶段 （commit phase）需要
- * 做的 DOM 操作（怎么更新 DOM）。
- * 这里主要是比较 alternate 的 children filbers 和 newChildElements （virtual nodes）。
- * @param wipFiber work-in-progress fiber
- * @param newChildElements 要处理的 virtual dom tree(s)，用于创建 children fibers。
- */
 function reconcileChildrenArray(wipFiber: IFiber, newChildElements: any) {
 	const elements = arrify(newChildElements) as IVNode[];
 
 	let index = 0;
 	let oldFiber = wipFiber.alternate ? wipFiber.alternate.child : null;
-	let newFiber: IFiber | null = null;
-	while (index < elements.length || oldFiber != null) {
-		const prevFiber = newFiber;
-		const element = index < elements.length && elements[index];
-		const sameType = oldFiber && element && element.type === oldFiber.type;
-
-		if (sameType) {
-			newFiber = {
-				type: (oldFiber as IFiber).type,
-				tag: (oldFiber as IFiber).tag,
-				stateNode: (oldFiber as IFiber).stateNode,
-				hooks: initHooks(oldFiber!),
-				parent: wipFiber,
-				alternate: oldFiber,
-
-				props: (element as IVNode).props,
-				partialState: (oldFiber as IFiber).partialState,
-
-				effectTag: Effect.UPDATE
-			};
-		} else {
-			if (element) {
-				newFiber = {
-					type: element.type,
-					tag: getTag(element.type),
-					props: element.props,
-					hooks: initHooks(),
-					parent: wipFiber,
-					effectTag: Effect.PLACEMENT
+	let newFiber: IFiber | null | undefined = null;
+	let isList = true;
+	const oldList: IFiber[] = [];
+	const map = new Map<any, { node: IFiber; index: number }>();
+	for (let node = oldFiber, i = 0; node; node = node.sibling, i++) {
+		oldList.push(node);
+		const key = node.props.key || i;
+		map.set(key, { node, index: i });
+		// if (!key) {
+		// 	isList = false;
+		// 	break;
+		// }
+	}
+	if (isList) {
+		wipFiber.effects = wipFiber.effects || [];
+		while (index < elements.length) {
+			const preFiber = newFiber;
+			const element = elements[index];
+			const key = element.props.key || index;
+			const val = map.get(key);
+			if (val) {
+				const { node: oldFiber, index: i } = val;
+				if (oldFiber.type === element.type) {
+					newFiber = cloneFiber(oldFiber, wipFiber, element.props);
+					if (index !== i) newFiber.effectTag! |= Effect.MOVE;
+				} else {
+					newFiber = createFiber(element, wipFiber);
+					oldFiber.effectTag = Effect.DELETION;
+					wipFiber.effects.push(oldFiber);
+				}
+				newFiber.place = {
+					to: index,
+					from: i
 				};
+				map.delete(key);
+			} else {
+				newFiber = createFiber(element, wipFiber);
+				// newFiber.place = { from: -1, to: index };
 			}
 
-			if (oldFiber) {
-				oldFiber.effectTag = Effect.DELETION;
-				wipFiber.effects = wipFiber.effects || [];
-				wipFiber.effects.push(oldFiber);
+			if (index === 0) wipFiber.child = newFiber;
+			else if (preFiber) preFiber.sibling = newFiber;
+			index++;
+		}
+
+		for (const { node } of map.values()) {
+			node.effectTag = Effect.DELETION;
+			wipFiber.effects.push(node);
+		}
+	} else
+		while (index < elements.length || oldFiber) {
+			const prevFiber = newFiber;
+			const element = index < elements.length && elements[index];
+			const sameType = oldFiber && element && element.type === oldFiber.type;
+
+			if (sameType) newFiber = cloneFiber(oldFiber!, wipFiber, element.props);
+			else {
+				if (element) {
+					newFiber = createFiber(element, wipFiber);
+					newFiber.place = { from: -1, to: index };
+				}
+
+				if (oldFiber) {
+					oldFiber.effectTag = Effect.DELETION;
+					wipFiber.effects = wipFiber.effects || [];
+					wipFiber.effects.push(oldFiber);
+				}
 			}
-		}
 
-		if (oldFiber) {
-			oldFiber = oldFiber.sibling;
-		}
+			if (oldFiber) oldFiber = oldFiber.sibling;
 
-		if (index === 0) {
-			wipFiber.child = newFiber;
-		} else if (prevFiber && element) {
-			prevFiber.sibling = newFiber;
-		}
+			if (index === 0) wipFiber.child = newFiber;
+			else if (prevFiber && element) prevFiber.sibling = newFiber;
 
-		index++;
-	}
+			index++;
+		}
 }
 
-/**
- * 直接复制对应 old fiber 的 children fibers 到 work-in-progress fiber
- * 由于我们确信没有更新，所以只需要复制就好。
- * @param parentFiber work-in-progress fiber
- */
-function cloneChildFibers(parentFiber: IFiber) {
-	const oldFiber = parentFiber.alternate as IFiber;
-	if (!oldFiber.child) {
-		return;
-	}
-
-	let oldChild: IFiber | null | undefined = oldFiber.child;
-	let prevChild: IFiber | null = null;
-
-	while (oldChild) {
-		const newChild = {
-			type: oldChild.type,
-			tag: oldChild.tag,
-			stateNode: oldChild.stateNode,
-			props: oldChild.props,
-			partialState: oldChild.partialState,
-			alternate: oldChild,
-			parent: parentFiber,
-			hooks: initHooks(oldChild)
-		};
-		if (prevChild) {
-			prevChild.sibling = newChild;
-		} else {
-			parentFiber.child = newChild;
-		}
-		prevChild = newChild;
-		oldChild = oldChild.sibling;
-	}
-}
-
-/**
- * 设置 CLASS_COMPONENT fiber 的 __fiber，为 parent fiber 建立 effects。
- * @param fiber 叶子fiber（没有children）或者子fiber已执行过 completework 的fiber
- */
 function completeWork(fiber: IFiber) {
-	if (fiber.tag === ITag.CLASS_COMPONENT) {
-		(fiber.stateNode as Component).__fiber = fiber;
-	}
-
 	if (fiber.parent) {
 		const childEffects = fiber.effects || [];
 		const thisEffect = fiber.effectTag != null ? [fiber] : [];
@@ -345,14 +258,8 @@ function completeWork(fiber: IFiber) {
 	}
 }
 
-/**
- * 遍历root fiber的 effects （通过 completeWork 已收集所有变更），执行更新。
- * @param fiber root fiber
- */
 function commitAllWork(fiber: IFiber) {
-	((fiber.effects as IFiber[]) || []).forEach((f) => {
-		commitWork(f);
-	});
+	(fiber.effects || []).forEach((f) => commitWork(f));
 
 	(fiber.stateNode as any)._rootContainerFiber = fiber;
 
@@ -360,98 +267,102 @@ function commitAllWork(fiber: IFiber) {
 	pendingCommit = null;
 }
 
-/**
- * 检查 fiber 的 effectTag 并做对应的更新。
- * @param fiber 需要处理的 fiber
- */
 function commitWork(fiber: IFiber) {
-	if (fiber.tag === ITag.HOST_ROOT) {
-		return;
-	}
+	if (fiber.tag === ITag.HOST_ROOT || !fiber.effectTag) return;
 
-	let domParentFiber: IFiber = fiber.parent as IFiber;
-
+	let domParentFiber: IFiber = fiber.parent!;
 	while (
-		domParentFiber.tag === ITag.CLASS_COMPONENT ||
-		domParentFiber.tag === ITag.FUNCTION_COMPONENT
+		domParentFiber.tag === ITag.FUNCTION_COMPONENT ||
+		domParentFiber.tag === ITag.UNKNOWN
 	) {
-		domParentFiber = domParentFiber.parent as IFiber;
+		domParentFiber = domParentFiber.parent!;
 	}
 	const domParent = domParentFiber.stateNode as Element;
-	let { effects, layoutEffects, destroy } = fiber.hooks;
-	if (!destroy) fiber.hooks.destroy = destroy = [];
-	const onEffect = async (onMount = true) => {
-		for (const { callback, canRun } of effects?.values || []) {
+	if (fiber.effectTag & Effect.PLACEMENT) commitPlacement(fiber, domParent);
+
+	if (fiber.effectTag & Effect.UPDATE) commitUpdate(fiber);
+
+	if (fiber.effectTag & Effect.DELETION) commitDeletion(fiber, domParent);
+
+	if (fiber.effectTag & Effect.MOVE) commitMove(fiber, domParent);
+}
+
+function commitMove(fiber: IFiber, domParent: Element) {
+	const { to } = fiber.place!;
+	const node = fiber.stateNode as Element;
+	domParent.removeChild(node);
+	const before = domParent.children[to];
+	before ? domParent.insertBefore(node, before) : domParent.appendChild(node);
+}
+
+function commitPlacement(fiber: IFiber, domParent: Element) {
+	if (fiber.tag === ITag.HOST_COMPONENT) {
+		if (fiber.place) {
+			const { to } = fiber.place;
+			const before = domParent.children[to];
+			before
+				? domParent.insertBefore(fiber.stateNode as Element, before)
+				: domParent.appendChild(fiber.stateNode as Element);
+		} else domParent.appendChild(fiber.stateNode as Element);
+		domMap.set(fiber.stateNode as HTMLElement, fiber);
+		if (fiber.props.ref) fiber.props.ref.current = fiber.stateNode;
+	} else if (fiber.tag === ITag.FUNCTION_COMPONENT) {
+		let { effects, layoutEffects, destroy } = fiber.hooks;
+		if (!destroy) fiber.hooks.destroy = destroy = [];
+		effects?.values.forEach(async ({ callback, canRun }) => {
 			if (canRun) {
 				const unMount = await wait(callback, 17)();
-				if (unMount && onMount) destroy!.push(unMount);
+				if (unMount) destroy!.push(unMount);
 			}
-		}
-	};
-	const onLayoutEffect = (onMount = true) => {
-		for (const { callback, canRun } of layoutEffects?.values || []) {
+		});
+		layoutEffects?.values.forEach(({ callback, canRun }) => {
 			if (canRun) {
 				const unMount = callback();
-				if (unMount && onMount) destroy!.push(unMount);
+				if (unMount) destroy!.push(unMount);
 			}
-		}
-	};
-	if (fiber.effectTag === Effect.PLACEMENT) {
-		if (fiber.tag === ITag.HOST_COMPONENT)
-			domParent.appendChild(fiber.stateNode as Element);
-		// else if (fiber.tag === ITag.CLASS_COMPONENT)
-		// 	// fiber.stateNode.componentDidMount()
-		else if (fiber.tag === ITag.FUNCTION_COMPONENT) {
-			onEffect();
-			onLayoutEffect();
-		}
-	} else if (fiber.effectTag === Effect.UPDATE) {
-		if (fiber.tag === ITag.HOST_COMPONENT)
-			updateDomProperties(
-				fiber.stateNode as HTMLElement,
-				(fiber.alternate as IFiber).props,
-				fiber.props
-			);
-		else if (fiber.tag === ITag.FUNCTION_COMPONENT) {
-			fiber.hooks.destroy = destroy = [];
-			onEffect(false);
-			onLayoutEffect(false);
-		}
-	} else if (fiber.effectTag === Effect.DELETION) {
-		commitDeletion(fiber, domParent);
-		if (fiber.tag === ITag.FUNCTION_COMPONENT) {
-			const { destroy } = fiber.hooks;
-			for (const unMount of destroy || []) unMount();
-		}
+		});
 	}
 }
 
-/**
- * 删除 fiber 对应的 DOM。
- * @param fiber 要执行删除的目标 fiber
- * @param domParent fiber 所包含的 DOM 的 parent DOM
- */
+function commitUpdate(fiber: IFiber) {
+	if (fiber.tag === ITag.HOST_COMPONENT) {
+		updateDomProperties(
+			fiber.stateNode as HTMLElement,
+			(fiber.alternate as IFiber).props,
+			fiber.props
+		);
+	} else if (fiber.tag === ITag.FUNCTION_COMPONENT) {
+		const { effects, layoutEffects } = fiber.hooks;
+		effects?.values.forEach(async ({ callback, canRun }) => {
+			if (canRun) await wait(callback, 17)();
+		});
+		layoutEffects?.values.forEach(({ callback, canRun }) => {
+			if (canRun) callback();
+		});
+	}
+}
+
 function commitDeletion(fiber: IFiber, domParent: Element) {
-	let node = fiber;
+	let node: IFiber | null | undefined = fiber;
 	while (true) {
-		if (
-			node.tag === ITag.CLASS_COMPONENT ||
-			node.tag === ITag.FUNCTION_COMPONENT
-		) {
-			node = node.child as IFiber;
+		if (node?.tag === ITag.FUNCTION_COMPONENT || node?.$$typeof === FRAGMENT) {
+			node = node?.child;
 			continue;
 		}
-
-		domParent.removeChild(node.stateNode as Element);
-
-		while (node !== fiber && !node.sibling) {
-			node = node.parent as IFiber;
-		}
-
-		if (node === fiber) {
-			return;
-		}
-
-		node = node.sibling as IFiber;
+		domParent.removeChild(node?.stateNode!);
+		while (node !== fiber && !node?.sibling) node = node?.parent;
+		if (node === fiber) break;
+		node = node.sibling;
 	}
+
+	const goStep = (node: IFiber): IFiber | undefined => {
+		if (node.child) return node.child;
+		let cursor: IFiber | null | undefined = node;
+		while (cursor && cursor != fiber) {
+			if (cursor.hooks.destroy) cursor.hooks.destroy.forEach((f) => f());
+			if (cursor.sibling) return cursor.sibling;
+			cursor = cursor.parent;
+		}
+	};
+	while (node) node = goStep(node);
 }
