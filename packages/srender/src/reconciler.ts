@@ -4,9 +4,9 @@ import {
 	createFiber,
 	updateDomProperties
 } from './domUtils';
-import { ELEMENT, FRAGMENT, getTag, TEXT_ELEMENT } from './element';
+import { ELEMENT, FRAGMENT } from './element';
 import { domMap, registerEvent } from './events';
-import { initHooks, setCurrentFiber } from './hooks';
+import { setCurrentFiber } from './hooks';
 
 import {
 	Effect,
@@ -27,7 +27,6 @@ const ENOUGH_TIME = 1;
 const updateQueue: IUpdate[] = [];
 let nextUnitOfWork: IFiber | null | undefined = null;
 let pendingCommit: IFiber | null = null;
-const cacheMap = new Map<any, Element>();
 
 export function render(
 	elements: any,
@@ -51,7 +50,7 @@ export function render(
 export function unMountComponentsAtNode(dom: HTMLElement) {
 	const rootFiber: IFiber = (dom as any)._rootContainerFiber;
 	const fiber = rootFiber ? rootFiber.child : void 0;
-	if (fiber) commitDeletion(fiber, dom);
+	if (fiber) commitDeletion(fiber);
 	delete (dom as any)._rootContainerFiber;
 }
 
@@ -166,50 +165,38 @@ function arrify(val: any) {
 
 function reconcileChildrenArray(wipFiber: IFiber, newChildElements: any) {
 	const elements = arrify(newChildElements) as IVNode[];
-
-	let index = 0;
 	let oldFiber = wipFiber.alternate ? wipFiber.alternate.child : null;
 	let newFiber: IFiber | null | undefined = null;
 	const map = new Map<any, IFiber>();
 	for (let node = oldFiber, i = 0; node; node = node.sibling, i++) {
-		const key = node.props.key || i;
+		const key = node.props.key || node.index;
 		map.set(key, node);
-		// if (!key) {
-		// 	isList = false;
-		// 	break;
-		// }
 	}
 
-	while (index < elements.length || oldFiber) {
+	for (let index = 0; index < elements.length; index++) {
 		const prevFiber = newFiber;
-		const element = index < elements.length && elements[index];
-
-		const sameType = oldFiber && element && element.type === oldFiber.type;
-		if (sameType)
-			newFiber = cloneFiber(oldFiber!, wipFiber, index, element.props);
-		else {
-			if (element) {
-				newFiber = createFiber(element, wipFiber, index);
-			}
-
-			if (oldFiber) {
-				deleteChild(oldFiber);
-			}
+		const element = elements[index];
+		const key = element ? element.props.key || index : null;
+		const oldFiber = map.get(key);
+		if (oldFiber && oldFiber.type === element.type) {
+			newFiber = cloneFiber(oldFiber, wipFiber, index, element.props);
+			map.delete(key);
+		} else {
+			newFiber = createFiber(element, wipFiber, index);
 		}
-
-		if (oldFiber) oldFiber = oldFiber.sibling;
-
-		if (index === 0) wipFiber.child = newFiber;
-		else if (prevFiber && element) prevFiber.sibling = newFiber;
-
-		index++;
+		if (index === 0) {
+			wipFiber.child = newFiber;
+		} else if (prevFiber) prevFiber.sibling = newFiber;
 	}
+
+	for (const node of map.values()) deleteChild(node, wipFiber);
+
+	map.clear();
 }
 
-function deleteChild(fiber: IFiber) {
+function deleteChild(fiber: IFiber, parent?: IFiber | null) {
 	fiber.effectTag |= Effect.DELETION;
-
-	const parent = fiber.parent;
+	parent = parent || fiber.parent;
 	if (parent) {
 		parent.effects = parent.effects || [];
 		parent.effects.push(fiber);
@@ -239,19 +226,23 @@ function commitAllWork(fiber: IFiber) {
 function commitWork(fiber: IFiber) {
 	if (fiber.tag === ITag.HOST_ROOT || !fiber.effectTag) return;
 
-	let domParentFiber: IFiber = fiber.parent!;
+	if (fiber.effectTag & Effect.PLACEMENT) commitPlacement(fiber);
+
+	if (fiber.effectTag & Effect.UPDATE) commitUpdate(fiber);
+
+	if (fiber.effectTag & Effect.DELETION) commitDeletion(fiber);
+}
+
+function getHostParent(fiber: IFiber): HTMLElement {
+	let domParentFiber = fiber.parent;
+	if (!domParentFiber) return fiber.stateNode as HTMLElement;
 	while (
 		domParentFiber.tag === ITag.FUNCTION_COMPONENT ||
 		domParentFiber.tag === ITag.FRAGMENT
 	) {
 		domParentFiber = domParentFiber.parent!;
 	}
-	const domParent = domParentFiber.stateNode as Element;
-	if (fiber.effectTag & Effect.PLACEMENT) commitPlacement(fiber, domParent);
-
-	if (fiber.effectTag & Effect.UPDATE) commitUpdate(fiber);
-
-	if (fiber.effectTag & Effect.DELETION) commitDeletion(fiber, domParent);
+	return domParentFiber.stateNode as HTMLElement;
 }
 
 function getHostSibling(fiber: IFiber): Element | null {
@@ -276,7 +267,8 @@ function getHostSibling(fiber: IFiber): Element | null {
 	}
 }
 
-function commitPlacement(fiber: IFiber, domParent: Element) {
+function commitPlacement(fiber: IFiber) {
+	const domParent = getHostParent(fiber);
 	if (fiber.tag === ITag.HOST_COMPONENT || fiber.tag === ITag.HOST_TEXT) {
 		const before = getHostSibling(fiber);
 		const node = fiber.stateNode as Element;
@@ -322,8 +314,9 @@ function commitUpdate(fiber: IFiber) {
 	fiber.effectTag! &= ~Effect.UPDATE;
 }
 
-function commitDeletion(fiber: IFiber, domParent: Element) {
+function commitDeletion(fiber: IFiber) {
 	let node: IFiber | null | undefined = fiber;
+	const domParent = getHostParent(fiber);
 	while (true) {
 		if (node?.tag === ITag.FUNCTION_COMPONENT || node?.tag === ITag.FRAGMENT) {
 			node = node?.child;

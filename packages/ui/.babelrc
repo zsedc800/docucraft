@@ -4,7 +4,8 @@
 		[
 			"@babel/plugin-transform-react-jsx",
 			{
-				"pragma": "h" // 可以更改为其他库的 JSX pragma，比如 preact 是 h
+				"pragma": "Srender.createElement", // 可以更改为其他库的 JSX pragma，比如 preact 是 h
+				"pragmaFrag": "Srender.Fragment"
 			}
 		]
 	]
