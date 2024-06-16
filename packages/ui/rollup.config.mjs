@@ -4,13 +4,22 @@ import commonjs from '@rollup/plugin-commonjs';
 import postcss from 'rollup-plugin-postcss';
 import typescript from 'rollup-plugin-typescript2';
 import serve from 'rollup-plugin-serve';
-import copy from 'rollup-plugin-copy';
 
 const createBabelConfig = (targets) => ({
 	babelHelpers: 'bundled',
 	extensions: ['.js', '.jsx', '.ts', '.tsx'],
 	include: ['src/**/*'],
-	presets: [['@babel/preset-env', { targets }]],
+	presets: [
+		['@babel/preset-env', { targets }],
+		'@babel/preset-typescript',
+		'@babel/preset-react'
+	],
+	plugins: [
+		[
+			'@babel/plugin-transform-react-jsx',
+			{ runtime: 'automatic', importSource: '@docucraft/srender' }
+		]
+	],
 	exclude: 'node_modules/**'
 });
 
@@ -22,12 +31,7 @@ const common = {
 			tsconfig: './tsconfig.json',
 			declaration: true,
 			declarationDir: 'dist',
-			rootDir: 'src'
-		}),
-		copy({
-			targets: [
-				{ src: 'node_modules/material-icons/iconfont/*.woff2', dest: 'dist' }
-			]
+			rootDir: './'
 		}),
 		commonjs(),
 		postcss({ extract: 'style.css', extensions: ['.css', '.scss', 'sass'] }),
@@ -37,8 +41,8 @@ const common = {
 			port: 3011,
 			host: '0.0.0.0'
 		})
-	]
-	// external: (id) => /node_modules/.test(id)
+	],
+	external: (id) => /node_modules/.test(id)
 };
 
 const esmConfig = {

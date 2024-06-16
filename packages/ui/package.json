@@ -14,6 +14,7 @@
 		"rollup": "^4.17.2"
 	},
 	"dependencies": {
+		"@docucraft/icons": "workspace:^",
 		"@docucraft/srender": "workspace:^",
 		"material-icons": "^1.13.12"
 	}

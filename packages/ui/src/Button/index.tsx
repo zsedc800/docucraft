@@ -1,6 +1,7 @@
-import Srender from '@docucraft/srender';
+// import Srender from '@docucraft/srender';
+import Icon from '@docucraft/icons';
 export default () => (
 	<div className="dui-button">
-		<span className="material-icons">pie_chart</span>
+		<Icon name="search"></Icon>
 	</div>
 );

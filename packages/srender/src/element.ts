@@ -29,6 +29,7 @@ export function createElement(
 	} else {
 		children = [...args];
 	}
+	if (config && config.children) children = children.concat(config.children);
 	const props: IProps = Object.assign({}, config);
 
 	props.children = children

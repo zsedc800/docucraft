@@ -4,6 +4,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import postcss from 'rollup-plugin-postcss';
 import typescript from 'rollup-plugin-typescript2';
 import serve from 'rollup-plugin-serve';
+import copy from 'rollup-plugin-copy';
 
 const createBabelConfig = (targets) => ({
 	babelHelpers: 'bundled',
@@ -31,6 +32,7 @@ const common = {
 			port: 3010,
 			host: '0.0.0.0'
 		})
+		// copy({ targets: [{ src: 'src/jsx.d.ts', dest: 'dist' }] })
 	],
 	external: (id) => /node_modules/.test(id)
 };
@@ -59,4 +61,16 @@ const cjsConfig = {
 	]
 };
 
+const jsxConfig = {
+	...common,
+	input: 'jsx-runtime/index.ts',
+	output: {
+		file: 'jsx-runtime/index.js',
+		format: 'cjs',
+		sourcemap: true
+	},
+	plugins: []
+};
+
 export default [esmConfig, cjsConfig];
+// export default jsxConfig;

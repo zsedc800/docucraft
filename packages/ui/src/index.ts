@@ -1,6 +1,6 @@
 import { render as h, createElement } from '@docucraft/srender';
 import { ComponentType } from '@docucraft/srender/dist/interface';
-import 'material-icons/iconfont/material-icons.css';
+import '@docucraft/icons/styles/round';
 export default () => {};
 
 export { default as Button } from './Button';

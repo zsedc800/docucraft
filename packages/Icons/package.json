@@ -1,0 +1,24 @@
+{
+	"name": "@docucraft/icons",
+	"version": "1.0.0",
+	"description": "",
+	"main": "index.jsx",
+	"types": "index.d.ts",
+	"module": "./index.tsx",
+	"scripts": {
+		"dev": "tsc -w"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"devDependencies": {
+		"@docucraft/srender": "workspace:^",
+		"typescript": "^5"
+	},
+	"dependencies": {
+		"material-icons": "^1.13.12"
+	},
+	"peerDependencies": {
+		"@docucraft/srender": "workspace:^"
+	}
+}

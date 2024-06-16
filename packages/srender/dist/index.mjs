@@ -43,6 +43,7 @@ function createElement(type) {
   } else {
     children = [...args];
   }
+  if (config && config.children) children = children.concat(config.children);
   const props = Object.assign({}, config);
   props.children = children.filter(c => c != undefined && c != null && c !== false).map(c => c?.$$typeof ? c : createTextElement(c));
   let node = {
@@ -560,6 +561,7 @@ function commitDeletion(fiber) {
   fiber.effectTag &= ~Effect.DELETION;
 }
 
+// export type * from './jsx';
 var index = {
   createElement,
   render,
