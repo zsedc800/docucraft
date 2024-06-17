@@ -28,7 +28,7 @@ export type IdleRequestCallback = (deadline: IdleDeadline) => any;
 
 export type FunctionComponent = <T = Record<any, any>>(
 	props: T
-) => IVNode | IVNode[] | null;
+) => IVNode | IVNode[] | null | ((props: any) => JSX.Element);
 
 export type ComponentType = string | FunctionComponent;
 

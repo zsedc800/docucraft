@@ -3,17 +3,12 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import postcss from 'rollup-plugin-postcss';
 import typescript from 'rollup-plugin-typescript2';
-import serve from 'rollup-plugin-serve';
 
 const createBabelConfig = (targets) => ({
 	babelHelpers: 'bundled',
 	extensions: ['.js', '.jsx', '.ts', '.tsx'],
 	include: ['src/**/*'],
-	presets: [
-		['@babel/preset-env', { targets }],
-		'@babel/preset-typescript',
-		'@babel/preset-react'
-	],
+	presets: [['@babel/preset-env', { targets }], '@babel/preset-typescript'],
 	plugins: [
 		[
 			'@babel/plugin-transform-react-jsx',
@@ -28,21 +23,12 @@ const common = {
 	plugins: [
 		resolve({ extensions: ['.js', '.jsx', '.ts', '.tsx'] }),
 		typescript({
-			tsconfig: './tsconfig.json',
-			declaration: true,
-			declarationDir: 'dist',
-			rootDir: './'
+			tsconfig: './tsconfig.json'
 		}),
 		commonjs(),
-		postcss({ extract: 'style.css', extensions: ['.css', '.scss', 'sass'] }),
-		serve({
-			open: true,
-			contentBase: ['dist', 'public'],
-			port: 3011,
-			host: '0.0.0.0'
-		})
+		postcss({ extract: 'style.css', extensions: ['.css', '.scss', 'sass'] })
 	],
-	external: (id) => /node_modules/.test(id)
+	external: (id) => /node_modules/.test(id) || /\@docucraft/.test(id)
 };
 
 const esmConfig = {

@@ -11,7 +11,8 @@
 	"license": "ISC",
 	"description": "",
 	"devDependencies": {
-		"rollup": "^4.17.2"
+		"rollup": "^4.17.2",
+		"typescript": "^5"
 	},
 	"dependencies": {
 		"@docucraft/icons": "workspace:^",

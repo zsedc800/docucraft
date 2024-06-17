@@ -561,12 +561,11 @@ function commitDeletion(fiber) {
   fiber.effectTag &= ~Effect.DELETION;
 }
 
-// export type * from './jsx';
 var index = {
   createElement,
   render,
   Fragment: FRAGMENT
 };
 
-export { FRAGMENT as Fragment, createElement, index as default, initHooks, render, setCurrentFiber, useEffect, useLayoutEffect, useMemo, useRef, useState };
+export { Effect, FRAGMENT as Fragment, ITag, createElement, index as default, initHooks, render, setCurrentFiber, useEffect, useLayoutEffect, useMemo, useRef, useState };
 //# sourceMappingURL=index.mjs.map

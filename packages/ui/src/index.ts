@@ -1,5 +1,5 @@
 import { render as h, createElement } from '@docucraft/srender';
-import { ComponentType } from '@docucraft/srender/dist/interface';
+import { ComponentType } from '@docucraft/srender';
 import '@docucraft/icons/styles/round';
 export default () => {};
 
