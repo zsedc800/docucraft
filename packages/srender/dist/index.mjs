@@ -284,6 +284,7 @@ const ENOUGH_TIME = 1;
 const updateQueue = [];
 let nextUnitOfWork = null;
 let pendingCommit = null;
+registerEvent(document.body);
 function render(elements, containerDom) {
   let sync = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : false;
   if (!containerDom) containerDom = document.createElement('div');
@@ -294,7 +295,7 @@ function render(elements, containerDom) {
       children: elements
     }
   });
-  if (!containerDom._rootContainerFiber) registerEvent(containerDom);
+  // if (!(containerDom as any)._rootContainerFiber) registerEvent(containerDom);
   if (sync) performWork({
     timeRemaining: () => 1000,
     didTimeout: false

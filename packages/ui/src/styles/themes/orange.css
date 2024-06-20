@@ -1,0 +1,37 @@
+:root {
+	--dUI-theme-primary: #ff9800;
+	--dUI-theme-secondary: #ffb74d;
+	--dUI-theme-tertiary: #f57c00;
+	--dUI-theme-background: #ffffff;
+	--dUI-theme-surface: #f5f5f5;
+	--dUI-theme-error: #b00020;
+	--dUI-theme-on-primary: #ffffff;
+	--dUI-theme-on-secondary: #ffffff;
+	--dUI-theme-on-surface: #000000;
+	--dUI-theme-on-error: #ffffff;
+	--dUI-shadow-color: rgba(0, 0, 0, 0.2);
+	--dUI-outline-color: rgba(0, 0, 0, 0.12);
+	--dUI-button-hover: #fb8c00;
+	--dUI-button-active: #f57c00;
+	--dUI-button-outline-hover: rgba(255, 152, 0, 0.1);
+	--dUI-button-outline-active: rgba(255, 152, 0, 0.2);
+}
+
+.dark-mode {
+	--dUI-theme-primary: #ff9800;
+	--dUI-theme-secondary: #ffb74d;
+	--dUI-theme-tertiary: #f57c00;
+	--dUI-theme-background: #121212;
+	--dUI-theme-surface: #1e1e1e;
+	--dUI-theme-error: #cf6679;
+	--dUI-theme-on-primary: #000000;
+	--dUI-theme-on-secondary: #000000;
+	--dUI-theme-on-surface: #ffffff;
+	--dUI-theme-on-error: #000000;
+	--dUI-shadow-color: rgba(0, 0, 0, 0.2);
+	--dUI-outline-color: rgba(255, 255, 255, 0.12);
+	--dUI-button-hover: #fb8c00;
+	--dUI-button-active: #f57c00;
+	--dUI-button-outline-hover: rgba(255, 152, 0, 0.1);
+	--dUI-button-outline-active: rgba(255, 152, 0, 0.2);
+}

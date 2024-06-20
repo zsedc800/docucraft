@@ -5,10 +5,15 @@ module.exports = {
 	entry: {
 		main: './src/index.ts'
 	},
+	resolve: {
+		mainFiles: ['index'],
+		extensions: ['.js', '.mjs', '.jsx', '.ts', '.tsx']
+		// modules: [__dirname + 'node_modules', 'node_modules']
+	},
 	module: {
 		rules: [
 			{
-				test: /\.tsx?$/,
+				test: /\.(t|j)sx?$/,
 				use: 'babel-loader'
 			},
 			{
@@ -34,7 +39,10 @@ module.exports = {
 	},
 	devServer: {
 		port: 3200,
-		host: '0.0.0.0'
+		host: '0.0.0.0',
+		client: {
+			overlay: false
+		}
 	},
 	plugins: [
 		new HtmlWebpackPlugin({

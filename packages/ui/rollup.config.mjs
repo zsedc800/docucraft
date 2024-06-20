@@ -1,22 +1,8 @@
-import babel from '@rollup/plugin-babel';
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import postcss from 'rollup-plugin-postcss';
 import typescript from 'rollup-plugin-typescript2';
-
-const createBabelConfig = (targets) => ({
-	babelHelpers: 'bundled',
-	extensions: ['.js', '.jsx', '.ts', '.tsx'],
-	include: ['src/**/*'],
-	presets: [['@babel/preset-env', { targets }], '@babel/preset-typescript'],
-	plugins: [
-		[
-			'@babel/plugin-transform-react-jsx',
-			{ runtime: 'automatic', importSource: '@docucraft/srender' }
-		]
-	],
-	exclude: 'node_modules/**'
-});
+import typescriptPlugin from './typescriptPlugin.mjs';
 
 const common = {
 	input: 'src/index.ts',
@@ -25,34 +11,22 @@ const common = {
 		typescript({
 			tsconfig: './tsconfig.json'
 		}),
-		commonjs(),
+		commonjs({
+			include: 'node_modules/**'
+		}),
 		postcss({ extract: 'style.css', extensions: ['.css', '.scss', 'sass'] })
 	],
 	external: (id) => /node_modules/.test(id) || /\@docucraft/.test(id)
 };
 
-const esmConfig = {
-	...common,
-	output: {
-		file: 'dist/index.mjs',
-		format: 'esm',
-		sourcemap: true
-	},
-	plugins: [...common.plugins, babel(createBabelConfig('defaults'))]
-};
-
 const cjsConfig = {
 	...common,
 	output: {
-		file: 'dist/index.js',
-		format: 'umd',
-		name: 'dUI',
-		sourcemap: true
+		dir: 'dist',
+		format: 'cjs',
+		preserveModules: true
 	},
-	plugins: [
-		...common.plugins,
-		babel(createBabelConfig({ browsers: ['last 2 versions', 'ie 11'] }))
-	]
+	plugins: [...common.plugins, typescriptPlugin()]
 };
 
-export default [esmConfig, cjsConfig];
+export default [cjsConfig];

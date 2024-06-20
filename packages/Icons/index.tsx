@@ -5,7 +5,7 @@ export interface Props {
 	name: MaterialIcon;
 	type?: IconType;
 }
-
+export type IconName = MaterialIcon;
 export const SVGIcon = () => null;
 
 export default ({ name, type }: Props) => {

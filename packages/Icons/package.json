@@ -16,7 +16,8 @@
 		"typescript": "^5"
 	},
 	"dependencies": {
-		"material-icons": "^1.13.12"
+		"material-icons": "^1.13.12",
+		"material-symbols": "^0.20.0"
 	},
 	"peerDependencies": {
 		"@docucraft/srender": "workspace:^"

@@ -1,0 +1,14 @@
+.dUI-tooltip {
+	position: absolute;
+	background-color: black;
+	color: #fff;
+	text-align: center;
+	border-radius: 4px;
+	padding: 5px;
+	z-index: 1000;
+	visibility: hidden;
+	opacity: 0;
+	transition:
+		opacity 0.3s,
+		visibility 0.3s;
+}

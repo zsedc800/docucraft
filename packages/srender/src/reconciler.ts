@@ -28,6 +28,8 @@ const updateQueue: IUpdate[] = [];
 let nextUnitOfWork: IFiber | null | undefined = null;
 let pendingCommit: IFiber | null = null;
 
+registerEvent(document.body);
+
 export function render(
 	elements: any,
 	containerDom?: HTMLElement,
@@ -39,7 +41,7 @@ export function render(
 		dom: containerDom,
 		newProps: { children: elements }
 	});
-	if (!(containerDom as any)._rootContainerFiber) registerEvent(containerDom);
+	// if (!(containerDom as any)._rootContainerFiber) registerEvent(containerDom);
 	if (sync)
 		performWork({ timeRemaining: () => 1000 as any, didTimeout: false });
 	else requestIdleCallback(performWork);

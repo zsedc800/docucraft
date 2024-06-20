@@ -2,14 +2,14 @@
 	"compilerOptions": {
 		"jsx": "preserve",
 		"declaration": true,
-		"emitDeclarationOnly": true,
 		"outDir": "dist",
 		"rootDir": "./src",
 		"module": "ESNext",
 		"target": "ESNext",
 		"moduleResolution": "node",
-		"strict": true,
-		"baseUrl": "."
+		"emitDeclarationOnly": true,
+		"esModuleInterop": true,
+		"strict": true
 	},
 	"include": ["src/**/*"]
 }

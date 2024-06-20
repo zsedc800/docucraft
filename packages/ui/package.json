@@ -7,10 +7,11 @@
 		"build": "tsc && cp ./src/style.css ./dist/",
 		"dev": "rollup -c -w"
 	},
-	"author": "",
+	"author": "joezhou",
 	"license": "ISC",
 	"description": "",
 	"devDependencies": {
+		"@babel/preset-typescript": "^7.24.1",
 		"rollup": "^4.17.2",
 		"typescript": "^5"
 	},

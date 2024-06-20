@@ -1,0 +1,43 @@
+:root {
+	/* 清新蓝绿色方案 */
+	--dUI-theme-primary: #4db6ac; /* 蓝绿色 */
+	--dUI-theme-on-primary: #ffffff;
+	--dUI-theme-primary-container: #b2dfdb; /* 调整后的淡蓝绿色，使对比度更明显 */
+	--dUI-theme-on-primary-container: #004d40; /* 深蓝绿色，提高对比度 */
+
+	--dUI-theme-secondary: #80cbc4;
+	--dUI-theme-on-secondary: #ffffff;
+	--dUI-theme-secondary-container: #e0f2f1; /* 调整后的淡蓝绿色 */
+	--dUI-theme-on-secondary-container: #004d40; /* 深蓝绿色，提高对比度 */
+
+	--dUI-theme-tertiary: #b2dfdb;
+	--dUI-theme-on-tertiary: #ffffff;
+	--dUI-theme-tertiary-container: #e0f2f1;
+	--dUI-theme-on-tertiary-container: #004d40;
+
+	--dUI-theme-error: #d32f2f;
+	--dUI-theme-on-error: #ffffff;
+	--dUI-theme-error-container: #ffcdd2;
+	--dUI-theme-on-error-container: #b71c1c;
+
+	--dUI-theme-background: #f1f8e9;
+	--dUI-theme-on-background: #000000;
+	--dUI-theme-surface: #ffffff;
+	--dUI-theme-on-surface: #000000;
+
+	--dUI-theme-surface-variant: #c8e6c9;
+	--dUI-theme-on-surface-variant: #2e7d32;
+	--dUI-theme-outline: #81c784;
+
+	/* 阴影 */
+	--dUI-theme-shadow-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.12),
+		0 1px 2px rgba(0, 0, 0, 0.24);
+	--dUI-theme-shadow-elevation-2: 0 3px 6px rgba(0, 0, 0, 0.16),
+		0 3px 6px rgba(0, 0, 0, 0.23);
+	--dUI-theme-shadow-fab: 0 6px 10px rgba(0, 0, 0, 0.14),
+		0 1px 18px rgba(0, 0, 0, 0.12), 0 3px 5px rgba(0, 0, 0, 0.2);
+
+	/* 按钮悬停状态 */
+	--dUI-theme-hover-bg: #81cbc4; /* 适度的中间色，悬停时按钮的背景色 */
+	--dUI-theme-hover-text: #ffffff; /* 悬停时按钮的文本颜色 */
+}

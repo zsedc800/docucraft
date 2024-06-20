@@ -5,6 +5,7 @@ export interface Props {
     name: MaterialIcon;
     type?: IconType;
 }
+export type IconName = MaterialIcon;
 export declare const SVGIcon: () => null;
 declare const _default: ({ name, type }: Props) => import("react").JSX.Element;
 export default _default;

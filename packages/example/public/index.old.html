@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Material Design 3 Components</title>
+		<style>
+			:root {
+				/* 清新蓝绿色方案 */
+				--primary: #4db6ac; /* 蓝绿色 */
+				--on-primary: #ffffff;
+				--primary-container: #e0f2f1; /* 淡蓝绿色 */
+				--on-primary-container: #00695c;
+
+				--secondary: #80cbc4;
+				--on-secondary: #ffffff;
+				--secondary-container: #b2dfdb;
+				--on-secondary-container: #00796b;
+
+				--tertiary: #b2dfdb;
+				--on-tertiary: #ffffff;
+				--tertiary-container: #e0f2f1;
+				--on-tertiary-container: #004d40;
+
+				--error: #d32f2f;
+				--on-error: #ffffff;
+				--error-container: #ffcdd2;
+				--on-error-container: #b71c1c;
+
+				--background: #f1f8e9;
+				--on-background: #000000;
+				--surface: #ffffff;
+				--on-surface: #000000;
+
+				--surface-variant: #c8e6c9;
+				--on-surface-variant: #2e7d32;
+				--outline: #81c784;
+
+				/* 阴影 */
+				--shadow-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.12),
+					0 1px 2px rgba(0, 0, 0, 0.24);
+				--shadow-elevation-2: 0 3px 6px rgba(0, 0, 0, 0.16),
+					0 3px 6px rgba(0, 0, 0, 0.23);
+				--shadow-fab: 0 6px 10px rgba(0, 0, 0, 0.14),
+					0 1px 18px rgba(0, 0, 0, 0.12), 0 3px 5px rgba(0, 0, 0, 0.2);
+			}
+
+			body {
+				font-family: 'Roboto', sans-serif;
+				background-color: var(--background);
+				color: var(--on-background);
+				padding: 20px;
+			}
+
+			.section {
+				margin-bottom: 40px;
+			}
+
+			.button {
+				border: none;
+				border-radius: 4px;
+				padding: 10px 20px;
+				cursor: pointer;
+				font-size: 16px;
+				margin: 5px;
+				display: inline-block;
+			}
+
+			/* Elevated Button */
+			.button.elevated {
+				background-color: var(--surface);
+				color: var(--on-surface);
+				box-shadow: var(--shadow-elevation-1);
+			}
+
+			/* Filled Button */
+			.button.filled {
+				background-color: var(--primary);
+				color: var(--on-primary);
+			}
+
+			/* Filled Tonal Button */
+			.button.filled-tonal {
+				background-color: var(--primary-container);
+				color: var(--on-primary-container);
+			}
+
+			/* Outlined Button */
+			.button.outlined {
+				background-color: transparent;
+				color: var(--primary);
+				border: 2px solid var(--primary);
+			}
+
+			/* Text Button */
+			.button.text {
+				background-color: transparent;
+				color: var(--primary);
+			}
+
+			/* Icon Button */
+			.button.icon {
+				background-color: var(--primary);
+				color: var(--on-primary);
+				border-radius: 50%;
+				padding: 10px;
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+			}
+
+			/* FAB */
+			.button.fab {
+				background-color: var(--secondary);
+				color: var(--on-secondary);
+				border-radius: 50%;
+				padding: 20px;
+				font-size: 24px;
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				box-shadow: var(--shadow-fab);
+			}
+
+			/* Extended FAB */
+			.button.extended-fab {
+				background-color: var(--secondary);
+				color: var(--on-secondary);
+				border-radius: 24px;
+				padding: 12px 24px;
+				font-size: 16px;
+				display: inline-flex;
+				align-items: center;
+				justify-content: center;
+				box-shadow: var(--shadow-fab);
+			}
+
+			/* Toggle Button */
+			.button.toggle {
+				background-color: var(--tertiary);
+				color: var(--on-tertiary);
+				padding: 10px;
+				border-radius: 4px;
+			}
+
+			/* Segment Button */
+			.segment-button-container {
+				display: inline-flex;
+				border: 2px solid var(--outline);
+				border-radius: 8px;
+				overflow: hidden;
+			}
+
+			.segment-button {
+				background-color: var(--surface);
+				color: var(--on-surface);
+				border: none;
+				padding: 10px 20px;
+				cursor: pointer;
+				font-size: 16px;
+			}
+
+			.segment-button.selected {
+				background-color: var(--primary-container);
+				color: var(--on-primary-container);
+			}
+
+			/* 卡片 */
+			.card {
+				background-color: var(--surface);
+				color: var(--on-surface);
+				padding: 20px;
+				border-radius: 8px;
+				box-shadow: var(--shadow-elevation-1);
+				margin-bottom: 20px;
+			}
+
+			.dialog {
+				background-color: var(--surface);
+				box-shadow: var(--shadow-elevation-2);
+				border-radius: 8px;
+				max-width: 400px;
+				padding: 20px;
+				margin: 20px auto;
+				text-align: center;
+			}
+			/* 文本字段 */
+			.text-field {
+				display: flex;
+				flex-direction: column;
+				margin-bottom: 20px;
+			}
+
+			.text-field label {
+				margin-bottom: 5px;
+				color: var(--on-surface);
+			}
+
+			.text-field input {
+				padding: 10px;
+				border: 2px solid var(--outline);
+				border-radius: 4px;
+				font-size: 16px;
+				color: var(--on-surface);
+			}
+
+			.text-field input:focus {
+				border-color: var(--primary);
+				outline: none;
+			}
+
+			/* 开关 */
+			.switch {
+				position: relative;
+				display: inline-block;
+				width: 60px;
+				height: 34px;
+			}
+
+			.switch input {
+				opacity: 0;
+				width: 0;
+				height: 0;
+			}
+
+			.slider {
+				position: absolute;
+				cursor: pointer;
+				top: 0;
+				left: 0;
+				right: 0;
+				bottom: 0;
+				background-color: var(--surface-variant);
+				transition: 0.4s;
+				border-radius: 34px;
+			}
+
+			.slider:before {
+				position: absolute;
+				content: '';
+				height: 26px;
+				width: 26px;
+				left: 4px;
+				bottom: 4px;
+				background-color: var(--surface);
+				transition: 0.4s;
+				border-radius: 50%;
+				box-shadow: var(--shadow-elevation-1);
+			}
+
+			input:checked + .slider {
+				background-color: var(--primary);
+			}
+
+			input:checked + .slider:before {
+				transform: translateX(26px);
+			}
+
+			/* 滑块 */
+			.slider-container {
+				display: flex;
+				flex-direction: column;
+				margin-bottom: 20px;
+			}
+
+			.slider-container label {
+				margin-bottom: 5px;
+				color: var(--on-surface);
+			}
+
+			.slider-container input[type='range'] {
+				-webkit-appearance: none;
+				width: 100%;
+				height: 8px;
+				background: var(--surface-variant);
+				outline: none;
+				opacity: 0.7;
+				transition: opacity 0.2s;
+				border-radius: 4px;
+			}
+
+			.slider-container input[type='range']::-webkit-slider-thumb {
+				-webkit-appearance: none;
+				appearance: none;
+				width: 24px;
+				height: 24px;
+				background: var(--primary);
+				cursor: pointer;
+				border-radius: 50%;
+				box-shadow: var(--shadow-elevation-1);
+			}
+
+			.slider-container input[type='range']::-moz-range-thumb {
+				width: 24px;
+				height: 24px;
+				background: var(--primary);
+				cursor: pointer;
+				border-radius: 50%;
+				box-shadow: var(--shadow-elevation-1);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="section">
+			<h2>Buttons</h2>
+			<button class="button elevated">Elevated Button</button>
+			<button class="button filled">Filled Button</button>
+			<button class="button filled-tonal">Filled Tonal Button</button>
+			<button class="button outlined">Outlined Button</button>
+			<button class="button text">Text Button</button>
+			<button class="button icon">&#9733;</button>
+			<button class="button fab">+</button>
+			<button class="button extended-fab">Extended FAB</button>
+			<button class="button toggle">Toggle Button</button>
+
+			<div class="segment-button-container">
+				<button class="segment-button selected">Selected</button>
+				<button class="segment-button">Unselected</button>
+				<button class="segment-button">Unselected</button>
+			</div>
+		</div>
+
+		<div class="section">
+			<h2>Card</h2>
+			<div class="card">
+				<h3>Card Title</h3>
+				<p>
+					This is a card with some text content. It follows the Material Design
+					3 guidelines.
+				</p>
+			</div>
+		</div>
+
+		<div class="section">
+			<h2>Text Field</h2>
+			<div class="text-field">
+				<label for="textfield">Label</label>
+				<input type="text" id="textfield" placeholder="Enter text" />
+			</div>
+		</div>
+
+		<div class="dialog">
+			<div class="dialog-header">Dialog Title</div>
+			<p>This is a simple dialog message.</p>
+			<div class="dialog-footer">
+				<button class="button filled">Cancel</button>
+				<button class="button filled">OK</button>
+			</div>
+		</div>
+
+		<div class="section">
+			<h2>Switch</h2>
+			<label class="switch">
+				<input type="checkbox" />
+				<span class="slider"></span>
+			</label>
+		</div>
+
+		<div class="section">
+			<h2>Slider</h2>
+			<div class="slider-container">
+				<label for="slider">Volume</label>
+				<input type="range" id="slider" min="0" max="100" />
+			</div>
+		</div>
+	</body>
+</html>
