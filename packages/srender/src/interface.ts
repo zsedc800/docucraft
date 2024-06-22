@@ -1,3 +1,5 @@
+import { Component } from './component';
+
 export enum ITag {
 	HOST_COMPONENT = 'host',
 	HOST_TEXT = 'host_text',
@@ -10,6 +12,27 @@ export enum ITag {
 
 export interface Ref<T = any> {
 	current: T;
+}
+
+export type ComponentChild =
+	| IVNode
+	| IVNode[]
+	| string
+	| null
+	| boolean
+	| bigint
+	| number
+	| undefined;
+
+export type ComponentChildren = ComponentChild | ComponentChild[];
+export interface BaseProps {
+	children: ComponentChildren | ((v: any) => ComponentChildren);
+}
+
+export interface Context<T = any> {
+	currentValue: T;
+	Provider: FunctionComponent<{ value: T } & BaseProps>;
+	Consumer: FunctionComponent<{ children: (v: T) => ComponentChildren }>;
 }
 
 export enum Effect {
@@ -26,11 +49,20 @@ export interface IdleDeadline {
 
 export type IdleRequestCallback = (deadline: IdleDeadline) => any;
 
-export type FunctionComponent = <T = Record<any, any>>(
-	props: T
-) => IVNode | IVNode[] | null | ((props: any) => JSX.Element);
+export interface FunctionComponent<P = {}> {
+	(props: P, context?: any): ComponentChildren | ((props: any) => JSX.Element);
+	displayName?: string;
+	defaultProps?: Partial<P> | undefined;
+}
 
-export type ComponentType = string | FunctionComponent;
+export interface ClassComponent<P = IProps> {
+	new (props: P | null): Component<P>;
+}
+
+export type ComponentType<P = {}> =
+	| string
+	| FunctionComponent<P>
+	| ClassComponent<P>;
 
 export interface IState {
 	[key: string]: any;
@@ -64,7 +96,7 @@ export interface IFiber {
 
 	alternate?: IFiber | null;
 
-	stateNode?: Element;
+	stateNode?: Element | Component;
 	place?: {
 		from: number;
 		to: number;

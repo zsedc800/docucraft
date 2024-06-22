@@ -190,6 +190,10 @@ const useMemo = (callback, deps) => {
   }
   return cachedValue.current;
 };
+const useCallback = (callback, deps) => useMemo(() => callback, deps);
+const useContext = context => {
+  return context.currentValue;
+};
 
 const isEvent = name => name.startsWith('on');
 const isAttribute = name => !isEvent(name) && name !== 'children' && name !== 'style';
@@ -562,11 +566,33 @@ function commitDeletion(fiber) {
   fiber.effectTag &= ~Effect.DELETION;
 }
 
+const createContext = initialValue => {
+  let currentValue = initialValue;
+  return {
+    currentValue,
+    Provider: _ref => {
+      let {
+        value,
+        children
+      } = _ref;
+      currentValue = value;
+      return children;
+    },
+    Consumer: _ref2 => {
+      let {
+        children
+      } = _ref2;
+      return children(currentValue);
+    }
+  };
+};
+
+const forwardRef = render => props => render(props, props.ref);
 var index = {
   createElement,
   render,
   Fragment: FRAGMENT
 };
 
-export { Effect, FRAGMENT as Fragment, ITag, createElement, index as default, initHooks, render, setCurrentFiber, useEffect, useLayoutEffect, useMemo, useRef, useState };
+export { Effect, FRAGMENT as Fragment, ITag, createContext, createElement, index as default, forwardRef, initHooks, render, setCurrentFiber, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState };
 //# sourceMappingURL=index.mjs.map

@@ -1,14 +1,15 @@
 import Icon from '@docucraft/icons';
-import Buttons from './sections/Buttons';
+import { Route, BrowserRouter as Router } from 'react-router-dom';
 import './style.css';
+import Example from './Example';
+import Editor from './Editor';
+import { Button } from '@docucraft/ui';
 export default () => (
-	<>
-		<h1>
-			<Icon name="search" />
-			hello world
-		</h1>
-		<div className="sections">
-			<Buttons />
-		</div>
-	</>
+	<div className="">
+		<Router>
+			<h1>xdf</h1>
+			<Route path="/" Component={Editor}></Route>
+			<Route path="/example" Component={Example} />
+		</Router>
+	</div>
 );

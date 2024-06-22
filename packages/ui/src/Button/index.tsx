@@ -1,7 +1,10 @@
 import Icon, { IconName } from '@docucraft/icons';
 import './style';
-import { CSSProperties, ReactNode } from 'react';
-interface Props {
+import { BasicType, ElementProps, Option } from '../interfaces';
+import { useEffect, useState } from '@docucraft/srender';
+import { MouseEvent } from 'react';
+interface Props extends ElementProps {
+	disabled?: boolean;
 	text?: string;
 	type?:
 		| 'elevated'
@@ -12,28 +15,72 @@ interface Props {
 		| 'segment'
 		| 'fab'
 		| 'extended-fab';
-	children?: ReactNode;
 	icon?: IconName;
-	style?: CSSProperties;
-	className?: string;
+	onClick?: (e: MouseEvent) => void;
 }
-// console.log(Icon);
 
-export default ({
+const Button = ({
 	text,
 	children,
 	type,
-	icon = 'home',
+	icon,
 	style,
-	className
+	className,
+	disabled,
+	onClick
 }: Props) => {
 	return (
 		<button
+			onClick={(e) => {
+				!disabled && onClick && onClick(e);
+			}}
 			style={style}
-			className={`dUI-button${type ? ' dUI-button--' + type : ''}${className ? ' ' + className : ''}`}
+			className={`dUI-button${type ? ' dUI-button--' + type : ''}${className ? ' ' + className : ''}${disabled ? ' disabled' : ''}`}
 		>
 			{icon ? <Icon name={icon} /> : null}
 			<span className="dUI-button__label">{text || children}</span>
 		</button>
 	);
 };
+
+export const Group = ({ children, style, className }: ElementProps) => {
+	return (
+		<div style={style} className={`dUI-button-group ${className}`}>
+			{children}
+		</div>
+	);
+};
+
+export const SegmentButton = ({
+	options = [],
+	value,
+	onChange
+}: {
+	options?: Option[];
+	value?: BasicType;
+	onChange?: (v: BasicType, opt?: Option) => void;
+}) => {
+	const [checkedValue, setState] = useState(value);
+	useEffect(() => {
+		if (value !== checkedValue) setState(value);
+	}, [value]);
+	return (
+		<Group className="segment">
+			{options.map((item) => (
+				<Button
+					type="segment"
+					className={checkedValue === item.value ? 'active' : ''}
+					onClick={() =>
+						onChange ? onChange(checkedValue, item) : setState(item.value)
+					}
+				>
+					{item.label}
+				</Button>
+			))}
+		</Group>
+	);
+};
+
+Button.Group = Group;
+
+export default Button;

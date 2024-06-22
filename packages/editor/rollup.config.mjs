@@ -24,12 +24,12 @@ const common = {
 		}),
 		commonjs(),
 		postcss({ extract: 'style.css', extensions: ['.css', '.scss', 'sass'] })
-	],
-	external: (id) => /node_modules/.test(id)
+	]
 };
 
 const esmConfig = {
 	...common,
+	external: (id) => /node_modules/.test(id),
 	output: {
 		file: 'dist/index.mjs',
 		format: 'esm',
@@ -43,8 +43,8 @@ const cjsConfig = {
 	output: {
 		file: 'dist/index.js',
 		format: 'umd',
-		name: 'srender',
-		sourcemap: true
+		sourcemap: true,
+		name: 'DocucraftEditor'
 	},
 	plugins: [
 		...common.plugins,

@@ -1,4 +1,4 @@
-import { Button } from '@docucraft/ui';
+import { Button, SegmentButton } from '@docucraft/ui';
 export default () => {
 	return (
 		<section className="section">
@@ -11,6 +11,14 @@ export default () => {
 			<Button type="text">text</Button>
 			<Button type="fab">fab</Button>
 			<Button type="extended-fab">extended-fab</Button>
+			<SegmentButton
+				options={[
+					{ label: 'Selected', value: 1 },
+					{ label: 'Unselected', value: 2 },
+					{ label: 'Unselected', value: 3 }
+				]}
+				value={1}
+			/>
 		</section>
 	);
 };

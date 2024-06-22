@@ -1,3 +1,4 @@
+import { Component, createInstance } from './component';
 import {
 	cloneFiber,
 	createDomElement,
@@ -138,6 +139,9 @@ function beginWork(wipFiber: IFiber) {
 		case ITag.FUNCTION_COMPONENT:
 			updateFunctionComponent(wipFiber);
 			break;
+		case ITag.CLASS_COMPONENT:
+			updateClassComponent(wipFiber);
+			break;
 		case ITag.HOST_ROOT:
 		case ITag.HOST_COMPONENT:
 		case ITag.HOST_TEXT:
@@ -151,6 +155,19 @@ function beginWork(wipFiber: IFiber) {
 function updateFunctionComponent(wipFiber: IFiber) {
 	const newChildElements = (wipFiber.type as FunctionComponent)(wipFiber.props);
 	reconcileChildrenArray(wipFiber, newChildElements);
+}
+
+function updateClassComponent(wipFiber: IFiber) {
+	let instance: Component = wipFiber.stateNode as Component;
+	if (!instance) {
+		instance = wipFiber.stateNode = createInstance(wipFiber);
+	}
+
+	instance.props = wipFiber.props;
+	instance.state = Object.assign({}, instance.state, wipFiber.partialState);
+	wipFiber.partialState = null;
+
+	reconcileChildrenArray(wipFiber, instance.render());
 }
 
 function updateHostComponent(wipFiber: IFiber) {
@@ -240,6 +257,7 @@ function getHostParent(fiber: IFiber): HTMLElement {
 	if (!domParentFiber) return fiber.stateNode as HTMLElement;
 	while (
 		domParentFiber.tag === ITag.FUNCTION_COMPONENT ||
+		domParentFiber.tag === ITag.CLASS_COMPONENT ||
 		domParentFiber.tag === ITag.FRAGMENT
 	) {
 		domParentFiber = domParentFiber.parent!;
@@ -278,6 +296,8 @@ function commitPlacement(fiber: IFiber) {
 		if (before) domParent.insertBefore(node, before);
 		else domParent.appendChild(node);
 		if (fiber.props.ref) fiber.props.ref.current = fiber.stateNode;
+	} else if (fiber.tag === ITag.CLASS_COMPONENT) {
+		(fiber.stateNode as Component).componentDidMount(fiber.props);
 	} else if (fiber.tag === ITag.FUNCTION_COMPONENT) {
 		let { effects, layoutEffects, destroy } = fiber.hooks;
 		if (!destroy) fiber.hooks.destroy = destroy = [];
@@ -324,7 +344,7 @@ function commitDeletion(fiber: IFiber) {
 			node = node?.child;
 			continue;
 		}
-		domParent.removeChild(node?.stateNode!);
+		domParent.removeChild(node?.stateNode as Element);
 		while (node !== fiber && !node?.sibling) node = node?.parent;
 		if (node === fiber) break;
 		node = node.sibling;

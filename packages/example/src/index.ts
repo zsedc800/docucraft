@@ -1,5 +1,5 @@
 import { createElement, render } from '@docucraft/srender';
-import '@docucraft/icons/styles/round/index.ts';
+import '@docucraft/icons/styles';
 import '@docucraft/ui/dist/style.css';
 import App from './App';
 

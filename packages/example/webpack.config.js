@@ -1,14 +1,18 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-
-module.exports = {
-	mode: 'development',
+const path = require('path');
+module.exports = (env) => ({
+	mode: env.production ? 'production' : 'development',
 	entry: {
 		main: './src/index.ts'
 	},
+
 	resolve: {
 		mainFiles: ['index'],
-		extensions: ['.js', '.mjs', '.jsx', '.ts', '.tsx']
-		// modules: [__dirname + 'node_modules', 'node_modules']
+		extensions: ['.js', '.mjs', '.jsx', '.ts', '.tsx'],
+		alias: {
+			react: '@docucraft/srender',
+			'react-dom': '@docucraft/srender'
+		}
 	},
 	module: {
 		rules: [
@@ -29,9 +33,6 @@ module.exports = {
 			}
 		]
 	},
-	resolve: {
-		extensions: ['.tsx', '.ts', '.js', '.jsx']
-	},
 	output: {
 		path: __dirname + '/dist',
 		publicPath: '/',
@@ -42,6 +43,9 @@ module.exports = {
 		host: '0.0.0.0',
 		client: {
 			overlay: false
+		},
+		static: {
+			directory: path.join(__dirname, 'public')
 		}
 	},
 	plugins: [
@@ -52,4 +56,4 @@ module.exports = {
 			inject: true
 		})
 	]
-};
+});

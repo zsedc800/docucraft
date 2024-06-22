@@ -1,4 +1,4 @@
-import { IFiber, ITag, Ref } from './interface';
+import { Context, IFiber, ITag, Ref } from './interface';
 import { batchUpdate } from './reconciler';
 
 let currentFiber: Ref<IFiber | null> = { current: null };
@@ -109,4 +109,11 @@ export const useMemo = (callback: () => any, deps?: any[]) => {
 		cachedValue.current = callback();
 	}
 	return cachedValue.current;
+};
+
+export const useCallback = (callback: (...args: any[]) => any, deps?: any[]) =>
+	useMemo(() => callback, deps);
+
+export const useContext = <T>(context: Context<T>): T => {
+	return context.currentValue;
 };

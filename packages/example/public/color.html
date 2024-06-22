@@ -1,0 +1,126 @@
+<!doctype html>
+<html lang="en">
+	<head>
+		<meta charset="UTF-8" />
+		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<title>Material Design 3 示例</title>
+		<style>
+			:root {
+				--dUI-theme-primary: #4db6ac;
+				--dUI-theme-on-primary: #ffffff;
+				--dUI-theme-primary-container: #b2dfdb;
+				--dUI-theme-on-primary-container: #004d40;
+
+				--dUI-theme-secondary: #80cbc4;
+				--dUI-theme-on-secondary: #ffffff;
+				--dUI-theme-secondary-container: #e0f2f1;
+				--dUI-theme-on-secondary-container: #004d40;
+
+				--dUI-theme-tertiary: #b2dfdb;
+				--dUI-theme-on-tertiary: #ffffff;
+				--dUI-theme-tertiary-container: #e0f2f1;
+				--dUI-theme-on-tertiary-container: #004d40;
+
+				--dUI-theme-background: #f1f8e9;
+				--dUI-theme-on-background: #000000;
+				--dUI-theme-surface: #ffffff;
+				--dUI-theme-on-surface: #000000;
+
+				--dUI-theme-surface-variant: #c8e6c9;
+				--dUI-theme-on-surface-variant: #2e7d32;
+				--dUI-theme-outline: #81c784;
+
+				--dUI-theme-shadow-elevation-1: 0 1px 3px rgba(0, 0, 0, 0.12),
+					0 1px 2px rgba(0, 0, 0, 0.24);
+				--dUI-theme-shadow-elevation-2: 0 3px 6px rgba(0, 0, 0, 0.16),
+					0 3px 6px rgba(0, 0, 0, 0.23);
+				--dUI-theme-shadow-fab: 0 6px 10px rgba(0, 0, 0, 0.14),
+					0 1px 18px rgba(0, 0, 0, 0.12), 0 3px 5px rgba(0, 0, 0, 0.2);
+
+				--dUI-button-hover-bg: #81cbc4;
+				--dUI-button-hover-text: #ffffff;
+			}
+
+			body {
+				background-color: var(--dUI-theme-background);
+				color: var(--dUI-theme-on-background);
+				font-family: Arial, sans-serif;
+				margin: 0;
+				padding: 20px;
+			}
+
+			.btn-primary {
+				background-color: var(--dUI-theme-primary);
+				color: var(--dUI-theme-on-primary);
+				border: none;
+				padding: 10px 20px;
+				font-size: 16px;
+				cursor: pointer;
+			}
+			.btn-primary:hover {
+				background-color: var(--dUI-button-hover-bg);
+				color: var(--dUI-button-hover-text);
+			}
+
+			.btn-secondary {
+				background-color: var(--dUI-theme-secondary);
+				color: var(--dUI-theme-on-secondary);
+				border: none;
+				padding: 10px 20px;
+				font-size: 16px;
+				cursor: pointer;
+			}
+			.btn-secondary:hover {
+				background-color: var(--dUI-theme-secondary-container);
+				color: var(--dUI-theme-on-secondary-container);
+			}
+
+			.btn-tertiary {
+				background-color: var(--dUI-theme-tertiary);
+				color: var(--dUI-theme-on-tertiary);
+				border: none;
+				padding: 10px 20px;
+				font-size: 16px;
+				cursor: pointer;
+			}
+			.btn-tertiary:hover {
+				background-color: var(--dUI-theme-tertiary-container);
+				color: var(--dUI-theme-on-tertiary-container);
+			}
+
+			.card {
+				background-color: var(--dUI-theme-surface);
+				color: var(--dUI-theme-on-surface);
+				border-radius: 8px;
+				padding: 20px;
+				box-shadow: var(--dUI-theme-shadow-elevation-1);
+				margin-bottom: 20px;
+			}
+
+			.card h3 {
+				margin-top: 0;
+			}
+		</style>
+	</head>
+	<body>
+		<h1>Material Design 3 示例</h1>
+
+		<div class="card">
+			<h3>用户信息</h3>
+			<p>姓名：张三</p>
+			<button class="btn-primary">编辑</button>
+		</div>
+
+		<div class="card">
+			<h3>设置</h3>
+			<p>通知：已启用</p>
+			<button class="btn-secondary">更改</button>
+		</div>
+
+		<div class="card">
+			<h3>帮助</h3>
+			<p>需要帮助？</p>
+			<button class="btn-tertiary">更多信息</button>
+		</div>
+	</body>
+</html>
