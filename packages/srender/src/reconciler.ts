@@ -1,3 +1,4 @@
+import { catchError } from './catchError';
 import { Component, createInstance } from './component';
 import {
 	cloneFiber,
@@ -5,11 +6,12 @@ import {
 	createFiber,
 	updateDomProperties
 } from './domUtils';
-import { ELEMENT, FRAGMENT } from './element';
+import { arrify, ELEMENT, FRAGMENT } from './element';
 import { domMap, registerEvent } from './events';
 import { setCurrentFiber } from './hooks';
 
 import {
+	ClassComponent,
 	Effect,
 	FunctionComponent,
 	IdleDeadline,
@@ -135,21 +137,25 @@ function performUnitOfWork(wipFiber: IFiber) {
 
 function beginWork(wipFiber: IFiber) {
 	setCurrentFiber(wipFiber);
-	switch (wipFiber.tag) {
-		case ITag.FUNCTION_COMPONENT:
-			updateFunctionComponent(wipFiber);
-			break;
-		case ITag.CLASS_COMPONENT:
-			updateClassComponent(wipFiber);
-			break;
-		case ITag.HOST_ROOT:
-		case ITag.HOST_COMPONENT:
-		case ITag.HOST_TEXT:
-			updateHostComponent(wipFiber);
-			break;
+	try {
+		switch (wipFiber.tag) {
+			case ITag.FUNCTION_COMPONENT:
+				updateFunctionComponent(wipFiber);
+				break;
+			case ITag.CLASS_COMPONENT:
+				updateClassComponent(wipFiber);
+				break;
+			case ITag.HOST_ROOT:
+			case ITag.HOST_COMPONENT:
+			case ITag.HOST_TEXT:
+				updateHostComponent(wipFiber);
+				break;
+		}
+		if (wipFiber.$$typeof === FRAGMENT)
+			reconcileChildrenArray(wipFiber, wipFiber.props.children);
+	} catch (error) {
+		catchError(error, wipFiber);
 	}
-	if (wipFiber.$$typeof === FRAGMENT)
-		reconcileChildrenArray(wipFiber, wipFiber.props.children);
 }
 
 function updateFunctionComponent(wipFiber: IFiber) {
@@ -162,12 +168,34 @@ function updateClassComponent(wipFiber: IFiber) {
 	if (!instance) {
 		instance = wipFiber.stateNode = createInstance(wipFiber);
 	}
+	const Ctor = wipFiber.type as ClassComponent;
+	let nextState = Object.assign({}, instance.state, wipFiber.partialState);
+	const nextContext = Ctor.contextType?.currentValue;
+	if (!instance.shouldComponentUpdate(wipFiber.props, nextState, nextContext)) {
+		return cloneChildren(wipFiber);
+	}
 
+	if (Ctor.getDerivedStateFromProps) {
+		nextState = Ctor.getDerivedStateFromProps(wipFiber.props, nextState);
+	}
+
+	const prevState = instance.state;
+	const prevProps = instance.props;
+
+	instance.context = nextContext;
 	instance.props = wipFiber.props;
-	instance.state = Object.assign({}, instance.state, wipFiber.partialState);
+	instance.state = nextState;
 	wipFiber.partialState = null;
 
+	const oldFiber = wipFiber.alternate;
+
 	reconcileChildrenArray(wipFiber, instance.render());
+	if (instance.getSnapshotBeforeUpdate && oldFiber) {
+		instance._snapshot = instance.getSnapshotBeforeUpdate(
+			prevProps,
+			prevState!
+		);
+	}
 }
 
 function updateHostComponent(wipFiber: IFiber) {
@@ -178,8 +206,17 @@ function updateHostComponent(wipFiber: IFiber) {
 	reconcileChildrenArray(wipFiber, newChildElements);
 }
 
-function arrify(val: any) {
-	return val == null ? [] : Array.isArray(val) ? val : [val];
+function cloneChildren(wipFiber: IFiber) {
+	const oldFiber = wipFiber.alternate!;
+	if (!oldFiber.child) return;
+	let oldChild: IFiber | null | undefined = oldFiber.child;
+	let prevChild: IFiber | null = null;
+	for (let i = 0; oldChild; i++, oldChild = oldChild.sibling) {
+		const newChild = cloneFiber(oldChild, wipFiber, i);
+		if (prevChild) prevChild.sibling = newChild;
+		else wipFiber.child = newChild;
+		prevChild = newChild;
+	}
 }
 
 function reconcileChildrenArray(wipFiber: IFiber, newChildElements: any) {
@@ -234,7 +271,13 @@ function completeWork(fiber: IFiber) {
 }
 
 function commitAllWork(fiber: IFiber) {
-	(fiber.effects || []).forEach((f) => commitWork(f));
+	(fiber.effects || []).forEach((f) => {
+		try {
+			commitWork(f);
+		} catch (error) {
+			catchError(error, fiber);
+		}
+	});
 
 	(fiber.stateNode as any)._rootContainerFiber = fiber;
 
@@ -297,7 +340,7 @@ function commitPlacement(fiber: IFiber) {
 		else domParent.appendChild(node);
 		if (fiber.props.ref) fiber.props.ref.current = fiber.stateNode;
 	} else if (fiber.tag === ITag.CLASS_COMPONENT) {
-		(fiber.stateNode as Component).componentDidMount(fiber.props);
+		(fiber.stateNode as Component).componentDidMount();
 	} else if (fiber.tag === ITag.FUNCTION_COMPONENT) {
 		let { effects, layoutEffects, destroy } = fiber.hooks;
 		if (!destroy) fiber.hooks.destroy = destroy = [];
@@ -332,6 +375,17 @@ function commitUpdate(fiber: IFiber) {
 		layoutEffects?.values.forEach(({ callback, canRun }) => {
 			if (canRun) callback();
 		});
+	} else if (
+		fiber.tag === ITag.CLASS_COMPONENT &&
+		fiber.stateNode instanceof Component
+	) {
+		const oldFiber = fiber.alternate;
+		if (oldFiber) {
+			fiber.stateNode.componentDidUpdate(
+				oldFiber.props,
+				(oldFiber.stateNode as Component).state!
+			);
+		}
 	}
 	fiber.effectTag! &= ~Effect.UPDATE;
 }
@@ -354,7 +408,12 @@ function commitDeletion(fiber: IFiber) {
 		if (node.child) return node.child;
 		let cursor: IFiber | null | undefined = node;
 		while (cursor && cursor != fiber) {
-			if (cursor.hooks.destroy) cursor.hooks.destroy.forEach((f) => f());
+			try {
+				if (cursor.hooks.destroy) cursor.hooks.destroy.forEach((f) => f());
+				if (cursor.stateNode instanceof Component) cursor.stateNode.destory();
+			} catch (error) {
+				catchError(error, cursor);
+			}
 			if (cursor.sibling) return cursor.sibling;
 			cursor = cursor.parent;
 		}

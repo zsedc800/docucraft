@@ -55,8 +55,11 @@ export interface FunctionComponent<P = {}> {
 	defaultProps?: Partial<P> | undefined;
 }
 
-export interface ClassComponent<P = IProps> {
-	new (props: P | null): Component<P>;
+export interface ClassComponent<P = IProps, S = IState, C = any> {
+	new (props: P | null, context?: C): Component<P>;
+	getDerivedStateFromError?(error: any): S;
+	getDerivedStateFromProps?(props: P, state: S): S;
+	contextType?: Context<C>;
 }
 
 export type ComponentType<P = {}> =

@@ -57,10 +57,92 @@ function createElement(type) {
   }
   return node;
 }
+function arrify(val) {
+  return val == null ? [] : Array.isArray(val) ? val : [val];
+}
 function createTextElement(value) {
   return createElement(TEXT_ELEMENT, {
     nodeValue: value
   });
+}
+const forEach = (children, callback) => {
+  children = arrify(children);
+  for (let i = 0; i < children.length; i++) {
+    callback(children[i], i);
+  }
+};
+const map = (children, callback) => {
+  children = arrify(children);
+  const newChildren = [];
+  for (let i = 0; i < children.length; i++) {
+    newChildren.push(callback(children[i], i));
+  }
+  return newChildren;
+};
+const isValidElement = val => {
+  if (typeof val !== 'object') return false;
+  if (val.$$typeof) return true;
+  return false;
+};
+
+class Component {
+  constructor(props, context) {
+    this.props = props || {};
+    this.context = context;
+  }
+  shouldComponentUpdate(props, state, nextContext) {
+    return true;
+  }
+  componentDidMount() {}
+  componentDidUpdate(props, state, snapshot) {}
+  getSnapshotBeforeUpdate(prevProps, prevState) {}
+  componentDidCatch(error, errorInfo) {}
+  componentWillUnmount() {}
+  destory() {
+    this.componentWillUnmount();
+  }
+  setState(state) {
+    this.__fiber.partialState = state;
+    batchUpdate({
+      from: ITag.CLASS_COMPONENT,
+      fiber: this.__fiber
+    });
+  }
+  render() {
+    throw new Error('render method should be implemented');
+  }
+}
+function createInstance(fiber) {
+  const Ctor = fiber.type;
+  const instance = new Ctor(fiber.props, Ctor.contextType?.currentValue);
+  instance.__fiber = fiber;
+  return instance;
+}
+
+function catchError(error, fiber, oldFiber, errorInfo) {
+  let component, ctor, handled;
+  let current = fiber;
+  for (; current = current.parent;) {
+    if ((component = fiber.stateNode) && component instanceof Component && !component._processingException) {
+      try {
+        ctor = fiber.type;
+        if (ctor && ctor.getDerivedStateFromError) {
+          component.setState(ctor.getDerivedStateFromError(error));
+          handled = true;
+        }
+        if (component.componentDidCatch) {
+          component.componentDidCatch(error, errorInfo || {});
+          handled = true;
+        }
+        if (handled) {
+          return;
+        }
+      } catch (e) {
+        error = e;
+      }
+    }
+  }
+  throw error;
 }
 
 let currentFiber = {
@@ -283,6 +365,12 @@ const wait = (fn, time) => function () {
     setTimeout(() => resolve(fn(...args)), time);
   });
 };
+const createRef = initialVal => {
+  return {
+    current: initialVal
+  };
+};
+const forwardRef = render => props => render(props, props.ref);
 
 const ENOUGH_TIME = 1;
 const updateQueue = [];
@@ -367,21 +455,54 @@ function performUnitOfWork(wipFiber) {
 }
 function beginWork(wipFiber) {
   setCurrentFiber(wipFiber);
-  switch (wipFiber.tag) {
-    case ITag.FUNCTION_COMPONENT:
-      updateFunctionComponent(wipFiber);
-      break;
-    case ITag.HOST_ROOT:
-    case ITag.HOST_COMPONENT:
-    case ITag.HOST_TEXT:
-      updateHostComponent(wipFiber);
-      break;
+  try {
+    switch (wipFiber.tag) {
+      case ITag.FUNCTION_COMPONENT:
+        updateFunctionComponent(wipFiber);
+        break;
+      case ITag.CLASS_COMPONENT:
+        updateClassComponent(wipFiber);
+        break;
+      case ITag.HOST_ROOT:
+      case ITag.HOST_COMPONENT:
+      case ITag.HOST_TEXT:
+        updateHostComponent(wipFiber);
+        break;
+    }
+    if (wipFiber.$$typeof === FRAGMENT) reconcileChildrenArray(wipFiber, wipFiber.props.children);
+  } catch (error) {
+    catchError(error, wipFiber);
   }
-  if (wipFiber.$$typeof === FRAGMENT) reconcileChildrenArray(wipFiber, wipFiber.props.children);
 }
 function updateFunctionComponent(wipFiber) {
   const newChildElements = wipFiber.type(wipFiber.props);
   reconcileChildrenArray(wipFiber, newChildElements);
+}
+function updateClassComponent(wipFiber) {
+  let instance = wipFiber.stateNode;
+  if (!instance) {
+    instance = wipFiber.stateNode = createInstance(wipFiber);
+  }
+  const Ctor = wipFiber.type;
+  let nextState = Object.assign({}, instance.state, wipFiber.partialState);
+  const nextContext = Ctor.contextType?.currentValue;
+  if (!instance.shouldComponentUpdate(wipFiber.props, nextState, nextContext)) {
+    return cloneChildren(wipFiber);
+  }
+  if (Ctor.getDerivedStateFromProps) {
+    nextState = Ctor.getDerivedStateFromProps(wipFiber.props, nextState);
+  }
+  const prevState = instance.state;
+  const prevProps = instance.props;
+  instance.context = nextContext;
+  instance.props = wipFiber.props;
+  instance.state = nextState;
+  wipFiber.partialState = null;
+  const oldFiber = wipFiber.alternate;
+  reconcileChildrenArray(wipFiber, instance.render());
+  if (instance.getSnapshotBeforeUpdate && oldFiber) {
+    instance._snapshot = instance.getSnapshotBeforeUpdate(prevProps, prevState);
+  }
 }
 function updateHostComponent(wipFiber) {
   if (!wipFiber.stateNode) {
@@ -390,8 +511,16 @@ function updateHostComponent(wipFiber) {
   const newChildElements = wipFiber.props.children;
   reconcileChildrenArray(wipFiber, newChildElements);
 }
-function arrify(val) {
-  return val == null ? [] : Array.isArray(val) ? val : [val];
+function cloneChildren(wipFiber) {
+  const oldFiber = wipFiber.alternate;
+  if (!oldFiber.child) return;
+  let oldChild = oldFiber.child;
+  let prevChild = null;
+  for (let i = 0; oldChild; i++, oldChild = oldChild.sibling) {
+    const newChild = cloneFiber(oldChild, wipFiber, i);
+    if (prevChild) prevChild.sibling = newChild;else wipFiber.child = newChild;
+    prevChild = newChild;
+  }
 }
 function reconcileChildrenArray(wipFiber, newChildElements) {
   const elements = arrify(newChildElements);
@@ -439,7 +568,13 @@ function completeWork(fiber) {
   }
 }
 function commitAllWork(fiber) {
-  (fiber.effects || []).forEach(f => commitWork(f));
+  (fiber.effects || []).forEach(f => {
+    try {
+      commitWork(f);
+    } catch (error) {
+      catchError(error, fiber);
+    }
+  });
   fiber.stateNode._rootContainerFiber = fiber;
   nextUnitOfWork = null;
   pendingCommit = null;
@@ -453,7 +588,7 @@ function commitWork(fiber) {
 function getHostParent(fiber) {
   let domParentFiber = fiber.parent;
   if (!domParentFiber) return fiber.stateNode;
-  while (domParentFiber.tag === ITag.FUNCTION_COMPONENT || domParentFiber.tag === ITag.FRAGMENT) {
+  while (domParentFiber.tag === ITag.FUNCTION_COMPONENT || domParentFiber.tag === ITag.CLASS_COMPONENT || domParentFiber.tag === ITag.FRAGMENT) {
     domParentFiber = domParentFiber.parent;
   }
   return domParentFiber.stateNode;
@@ -485,6 +620,8 @@ function commitPlacement(fiber) {
     domMap.set(node, fiber);
     if (before) domParent.insertBefore(node, before);else domParent.appendChild(node);
     if (fiber.props.ref) fiber.props.ref.current = fiber.stateNode;
+  } else if (fiber.tag === ITag.CLASS_COMPONENT) {
+    fiber.stateNode.componentDidMount();
   } else if (fiber.tag === ITag.FUNCTION_COMPONENT) {
     let {
       effects,
@@ -537,6 +674,11 @@ function commitUpdate(fiber) {
       } = _ref4;
       if (canRun) callback();
     });
+  } else if (fiber.tag === ITag.CLASS_COMPONENT && fiber.stateNode instanceof Component) {
+    const oldFiber = fiber.alternate;
+    if (oldFiber) {
+      fiber.stateNode.componentDidUpdate(oldFiber.props, oldFiber.stateNode.state);
+    }
   }
   fiber.effectTag &= ~Effect.UPDATE;
 }
@@ -557,7 +699,12 @@ function commitDeletion(fiber) {
     if (node.child) return node.child;
     let cursor = node;
     while (cursor && cursor != fiber) {
-      if (cursor.hooks.destroy) cursor.hooks.destroy.forEach(f => f());
+      try {
+        if (cursor.hooks.destroy) cursor.hooks.destroy.forEach(f => f());
+        if (cursor.stateNode instanceof Component) cursor.stateNode.destory();
+      } catch (error) {
+        catchError(error, cursor);
+      }
       if (cursor.sibling) return cursor.sibling;
       cursor = cursor.parent;
     }
@@ -567,32 +714,50 @@ function commitDeletion(fiber) {
 }
 
 const createContext = initialValue => {
-  let currentValue = initialValue;
+  const $currentValue = createRef(initialValue);
   return {
-    currentValue,
+    get currentValue() {
+      return $currentValue.current;
+    },
     Provider: _ref => {
       let {
         value,
         children
       } = _ref;
-      currentValue = value;
+      $currentValue.current = value;
       return children;
     },
     Consumer: _ref2 => {
       let {
         children
       } = _ref2;
-      return children(currentValue);
+      return children($currentValue.current);
     }
   };
 };
 
-const forwardRef = render => props => render(props, props.ref);
+const Children = {
+  map,
+  forEach
+};
 var index = {
   createElement,
   render,
-  Fragment: FRAGMENT
+  Fragment: FRAGMENT,
+  Component,
+  forwardRef,
+  Children,
+  isValidElement,
+  createRef,
+  useEffect,
+  useLayoutEffect,
+  useState,
+  useMemo,
+  useCallback,
+  useRef,
+  useContext,
+  createContext
 };
 
-export { Effect, FRAGMENT as Fragment, ITag, createContext, createElement, index as default, forwardRef, initHooks, render, setCurrentFiber, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState };
+export { Children, Component, Effect, FRAGMENT as Fragment, ITag, createContext, createElement, createRef, index as default, forwardRef, isValidElement, render, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState };
 //# sourceMappingURL=index.mjs.map

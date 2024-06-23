@@ -8,19 +8,31 @@ import {
 } from './interface';
 import { batchUpdate } from './reconciler';
 
-export class Component<P = IProps> {
+export class Component<P = IProps, S = IState, C = any> {
 	public props: P;
-	public state?: IState;
+	public state?: S;
+	public context?: C;
 
 	public __fiber?: IFiber;
-
-	constructor(props: P | null) {
+	_snapshot: any;
+	_processingException?: boolean;
+	_dirty?: () => void;
+	_pendingError?: Component;
+	constructor(props: P | null, context?: C) {
 		this.props = props || ({} as P);
+		this.context = context;
 	}
-
-	componentDidMount(props: P) {}
-
-	destory() {}
+	shouldComponentUpdate(props: P, state: S, nextContext?: C): boolean {
+		return true;
+	}
+	componentDidMount() {}
+	componentDidUpdate(props: P, state: S, snapshot?: any) {}
+	getSnapshotBeforeUpdate?(prevProps: P, prevState: S): any {}
+	componentDidCatch?(error: any, errorInfo: any) {}
+	componentWillUnmount() {}
+	destory() {
+		this.componentWillUnmount();
+	}
 
 	setState(state: any) {
 		this.__fiber!.partialState = state;
@@ -32,7 +44,8 @@ export class Component<P = IProps> {
 }
 
 export function createInstance(fiber: IFiber) {
-	const instance = new (fiber.type as ClassComponent)(fiber.props);
+	const Ctor = fiber.type as ClassComponent;
+	const instance = new Ctor(fiber.props, Ctor.contextType?.currentValue);
 	instance.__fiber = fiber;
 	return instance;
 }

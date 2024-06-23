@@ -1,13 +1,17 @@
 import { Context } from './interface';
+import { createRef } from './utils';
 
 export const createContext = <T = any>(initialValue: T): Context<T> => {
-	let currentValue = initialValue;
+	const $currentValue = createRef(initialValue);
 	return {
-		currentValue,
+		get currentValue() {
+			return $currentValue.current;
+		},
 		Provider: ({ value, children }: { value: T; children: any }) => {
-			currentValue = value;
+			$currentValue.current = value;
+
 			return children;
 		},
-		Consumer: ({ children }) => children(currentValue)
+		Consumer: ({ children }) => children($currentValue.current)
 	};
 };

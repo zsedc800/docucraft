@@ -1,4 +1,11 @@
-import { ComponentType, IProps, ITag, IVNode } from './interface';
+import {
+	ComponentChild,
+	ComponentChildren,
+	ComponentType,
+	IProps,
+	ITag,
+	IVNode
+} from './interface';
 
 export const TEXT_ELEMENT = 'TEXT ELEMENT';
 export const FRAGMENT = Symbol.for('srender.fragment');
@@ -48,6 +55,38 @@ export function createElement(
 	return node;
 }
 
+export function arrify(val: any) {
+	return val == null ? [] : Array.isArray(val) ? val : [val];
+}
+
 function createTextElement(value: string): IVNode {
 	return createElement(TEXT_ELEMENT, { nodeValue: value });
 }
+
+export const forEach = (
+	children: ComponentChildren,
+	callback: (child: ComponentChild, index: number) => void
+) => {
+	children = arrify(children);
+	for (let i = 0; i < children.length; i++) {
+		callback(children[i], i);
+	}
+};
+
+export const map = (
+	children: ComponentChildren,
+	callback: (child: ComponentChild, index: number) => ComponentChild
+) => {
+	children = arrify(children);
+	const newChildren = [];
+	for (let i = 0; i < children.length; i++) {
+		newChildren.push(callback(children[i], i));
+	}
+	return newChildren;
+};
+
+export const isValidElement = (val: any) => {
+	if (typeof val !== 'object') return false;
+	if (val.$$typeof) return true;
+	return false;
+};

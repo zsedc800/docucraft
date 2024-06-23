@@ -1,3 +1,5 @@
+import { ComponentChildren, FunctionComponent, Ref } from './interface';
+
 export function isSubclassOf(subClass: Function, superClass: Function) {
 	let prototype = subClass.prototype
 		? Object.getPrototypeOf(subClass.prototype)
@@ -20,3 +22,14 @@ export const wait =
 			setTimeout(() => resolve(fn(...args)), time);
 		});
 	};
+
+export const createRef = <T = any>(initialVal: T): Ref<T> => {
+	return { current: initialVal };
+};
+
+export const forwardRef =
+	<P = {}, T = any>(
+		render: (props: P, ref: Ref<T>) => ComponentChildren
+	): FunctionComponent<{ ref: Ref<T> } & P> =>
+	(props) =>
+		render(props, props.ref);
