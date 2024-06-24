@@ -1,4 +1,9 @@
-import { ComponentChildren, FunctionComponent, Ref } from './interface';
+import {
+	ComponentChildren,
+	ComponentType,
+	FunctionComponent,
+	Ref
+} from './interface';
 
 export function isSubclassOf(subClass: Function, superClass: Function) {
 	let prototype = subClass.prototype
@@ -33,3 +38,42 @@ export const forwardRef =
 	): FunctionComponent<{ ref: Ref<T> } & P> =>
 	(props) =>
 		render(props, props.ref);
+
+export const wrapPromise = <T = any>(promise: Promise<T>) => {
+	let status: 'pending' | 'fulfilled' | 'rejected' = 'pending',
+		result: T;
+
+	const next = promise.then(
+		(res) => {
+			status = 'fulfilled';
+			result = res;
+		},
+		(reason) => {
+			status = 'rejected';
+			result = reason;
+		}
+	);
+
+	return {
+		read(): T {
+			switch (status) {
+				case 'pending':
+					throw next;
+				case 'fulfilled':
+					return result;
+				case 'rejected':
+				default:
+					throw result;
+			}
+		}
+	};
+};
+
+export const lazy = <T extends ComponentType<any>>(
+	load: () => Promise<{ default: T }>
+): (() => T) => {
+	const p = load();
+	const { read } = wrapPromise(p);
+
+	return () => read().default;
+};

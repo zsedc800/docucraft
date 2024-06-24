@@ -10,17 +10,24 @@ import {
 export const TEXT_ELEMENT = 'TEXT ELEMENT';
 export const FRAGMENT = Symbol.for('srender.fragment');
 export const ELEMENT = Symbol.for('srender.element');
+export const SUSPENSE = Symbol.for('srender.suspense');
 
 export const getTag = ({ type, $$typeof }: IVNode) => {
 	if (typeof type === 'string')
 		return type === TEXT_ELEMENT ? ITag.HOST_TEXT : ITag.HOST_COMPONENT;
 	else if (typeof type === 'function') return ITag.FUNCTION_COMPONENT;
-	else if ($$typeof === FRAGMENT) return ITag.FRAGMENT;
-	else return ITag.UNKNOWN;
+
+	switch ($$typeof) {
+		case FRAGMENT:
+			return ITag.FRAGMENT;
+		case SUSPENSE:
+			return ITag.SUSPENSE;
+	}
+	return ITag.UNKNOWN;
 };
 
 export function createElement(
-	type: ComponentType | typeof FRAGMENT | typeof TEXT_ELEMENT,
+	type: ComponentType,
 	config: Record<any, any> | null = {},
 	...args: any[]
 ): IVNode {
@@ -45,13 +52,10 @@ export function createElement(
 
 	let node: IVNode = {
 		$$typeof: ELEMENT,
-		props
+		props,
+		type
 	};
-	if (type === FRAGMENT) {
-		node.$$typeof = FRAGMENT;
-	} else {
-		node.type = type;
-	}
+	if (typeof type === 'symbol') node.$$typeof = type;
 	return node;
 }
 

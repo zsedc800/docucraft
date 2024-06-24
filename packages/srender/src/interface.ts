@@ -7,6 +7,7 @@ export enum ITag {
 	FUNCTION_COMPONENT = 'function',
 	HOST_ROOT = 'root',
 	FRAGMENT = 'fragment',
+	SUSPENSE = 'suspense',
 	UNKNOWN = 'unknown'
 }
 
@@ -64,6 +65,7 @@ export interface ClassComponent<P = IProps, S = IState, C = any> {
 
 export type ComponentType<P = {}> =
 	| string
+	| symbol
 	| FunctionComponent<P>
 	| ClassComponent<P>;
 

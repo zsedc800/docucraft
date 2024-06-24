@@ -6,6 +6,7 @@ var ITag;
   ITag["FUNCTION_COMPONENT"] = "function";
   ITag["HOST_ROOT"] = "root";
   ITag["FRAGMENT"] = "fragment";
+  ITag["SUSPENSE"] = "suspense";
   ITag["UNKNOWN"] = "unknown";
 })(ITag || (ITag = {}));
 var Effect;
