@@ -3,11 +3,12 @@ import { Route, BrowserRouter as Router, Routes } from 'react-router-dom';
 import './style.css';
 import Example from './Example';
 import Editor from './Editor';
-import { Button } from '@docucraft/ui';
+import Content from './Content';
+
 export default () => (
 	<div className="">
 		<Router>
-			{/* <h1>xdf</h1> */}
+			<Content />
 			<Routes>
 				<Route path="/" Component={Editor}></Route>
 				<Route path="/example" Component={Example} />

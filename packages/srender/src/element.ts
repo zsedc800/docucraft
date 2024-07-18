@@ -1,29 +1,45 @@
+import { Component } from './component';
 import {
+	ClassComponent,
 	ComponentChild,
 	ComponentChildren,
 	ComponentType,
+	FiberTag,
+	FunctionComponent,
 	IProps,
 	ITag,
-	IVNode
+	IVNode,
+	VNode
 } from './interface';
+import { isSubclassOf } from './utils';
 
-export const TEXT_ELEMENT = 'TEXT ELEMENT';
-export const FRAGMENT = Symbol.for('srender.fragment');
-export const ELEMENT = Symbol.for('srender.element');
-export const SUSPENSE = Symbol.for('srender.suspense');
+export const TEXT_ELEMENT = 'TEXT_ELEMENT';
+export const FRAGMENT = Symbol.for('srender.Fragment');
+export const ELEMENT = Symbol.for('srender.Element');
+export const SUSPENSE = Symbol.for('srender.Suspense');
+
+export const OFFSCREEN = Symbol.for('srender.Offscreen');
+export const ContextProvider = Symbol.for('srender.ContextProvider');
 
 export const getTag = ({ type, $$typeof }: IVNode) => {
-	if (typeof type === 'string')
-		return type === TEXT_ELEMENT ? ITag.HOST_TEXT : ITag.HOST_COMPONENT;
-	else if (typeof type === 'function') return ITag.FUNCTION_COMPONENT;
-
 	switch ($$typeof) {
 		case FRAGMENT:
-			return ITag.FRAGMENT;
+			return FiberTag.Fragment;
 		case SUSPENSE:
-			return ITag.SUSPENSE;
+			return FiberTag.Suspense;
+		case OFFSCREEN:
+			return FiberTag.Offscreen;
+		case ContextProvider:
+			return FiberTag.ContextProvider;
 	}
-	return ITag.UNKNOWN;
+	if (typeof type === 'string')
+		return type === TEXT_ELEMENT ? FiberTag.HostText : FiberTag.HostComponent;
+	if (typeof type === 'function')
+		return isSubclassOf(type, Component)
+			? FiberTag.ClassComponent
+			: FiberTag.FunctionComponent;
+
+	return FiberTag.Unknown;
 };
 
 export function createElement(
@@ -44,7 +60,7 @@ export function createElement(
 		children = [...args];
 	}
 	if (config && config.children) children = children.concat(config.children);
-	const props: IProps = Object.assign({}, config);
+	const props: IProps = Object.assign({ children: null }, config);
 
 	props.children = children
 		.filter((c) => c != undefined && c != null && c !== false)
@@ -56,6 +72,12 @@ export function createElement(
 		type
 	};
 	if (typeof type === 'symbol') node.$$typeof = type;
+	if (
+		typeof type === 'function' &&
+		(type as FunctionComponent).displayType === ContextProvider
+	)
+		node.$$typeof = ContextProvider;
+
 	return node;
 }
 

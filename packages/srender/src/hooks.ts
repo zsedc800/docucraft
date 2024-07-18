@@ -1,60 +1,34 @@
-import { Context, IFiber, ITag, Ref } from './interface';
-import { batchUpdate } from './reconciler';
+import { Context, Fiber, HookEffect, IFiber, ITag, Ref } from './interface';
+import {
+	createUpdateQueue,
+	createWorkInProgressHook,
+	processHookState
+} from './reconciler/fiberHooks';
+import { wait } from './utils';
 
-let currentFiber: Ref<IFiber | null> = { current: null };
-export function initHooks(fiber?: IFiber) {
-	if (!fiber) return {};
-	let { refs, states, effects, layoutEffects } = fiber.hooks;
-	if (refs) refs.index = 0;
-	if (states) states.index = 0;
-	if (effects) effects.index = 0;
-	if (layoutEffects) layoutEffects.index = 0;
-	return {
-		refs,
-		states,
-		effects,
-		layoutEffects
-	};
-}
-export function setCurrentFiber(wip: IFiber) {
-	currentFiber.current = wip;
-}
-function getCurrentFiber(): IFiber {
-	return currentFiber.current!;
-}
-export const useRef: <T = any>(initValue?: T) => { current: T | null } = (
+export const useRef: <T = any>(initValue: T) => { current: T } = (
 	initValue
 ) => {
-	const wip = getCurrentFiber();
-	let { refs } = wip.hooks;
-	if (!refs) wip.hooks.refs = refs = { index: 0, values: [] };
-
-	if (refs.index >= refs.values.length)
-		refs.values.push({ current: initValue || null });
-
-	return refs.values[refs.index++];
+	const hook = createWorkInProgressHook({ current: initValue });
+	return hook.state;
 };
 
-export const useState = <T = any>(initalState: T) => {
-	const wip = getCurrentFiber();
-	const currentFiber = useRef<IFiber>(wip);
-	currentFiber.current = wip;
-	let { states } = wip.hooks;
-	if (!states) wip.hooks.states = states = { index: 0, values: [] };
-	if (states.index >= states.values.length) states.values.push(initalState);
-	const index = states.index;
-	const setState = (st: T) => {
-		states.values[index] = st;
-		batchUpdate({
-			from: ITag.FUNCTION_COMPONENT,
-			fiber: currentFiber.current!
-		});
-	};
-	return [states.values[states.index++], setState];
+export const useState = <T = any>(initialState: T) => {
+	const ref = useRef<Fiber | null>(null);
+	const hook = createWorkInProgressHook(
+		typeof initialState === 'function' ? initialState() : initialState,
+		ref
+	);
+	if (!hook.queue) createUpdateQueue(hook, ref);
+	processHookState(hook);
+	return [hook.state, hook.queue!.dispatch!];
 };
 
 function areDependenciesEqual(prevDeps: any, deps: any) {
 	if (prevDeps === null) return false;
+	if (!prevDeps && !deps) return false;
+	if (!(Array.isArray(prevDeps) && Array.isArray(deps))) return false;
+
 	for (let i = 0; i < deps.length; i++) {
 		if (deps[i] !== prevDeps[i]) {
 			return false;
@@ -63,52 +37,54 @@ function areDependenciesEqual(prevDeps: any, deps: any) {
 	return true;
 }
 
-export const useLayoutEffect = (
-	callback: () => void | (() => void),
-	deps?: any[]
-) => {
-	const wip = getCurrentFiber();
-	const $deps = useRef(deps);
-	let { layoutEffects } = wip.hooks;
-	if (!layoutEffects)
-		wip.hooks.layoutEffects = layoutEffects = { index: 0, values: [] };
-	if (layoutEffects.index >= layoutEffects.values.length)
-		layoutEffects.values.push({ callback, canRun: true });
-	else if (!areDependenciesEqual($deps.current, deps)) {
-		layoutEffects.values[layoutEffects.index] = { callback, canRun: true };
-	} else {
-		layoutEffects.values[layoutEffects.index].canRun = false;
-	}
+function callbackWrapper(
+	callback: () => any,
+	effectHook: HookEffect,
+	deps?: any[],
+	sync = true
+) {
+	const res = areDependenciesEqual(effectHook.deps, deps)
+		? () => {}
+		: sync
+			? () => {
+					effectHook.destroy = callback();
+				}
+			: wait(() => (effectHook.destroy = callback()), 17);
+	effectHook.deps = deps;
+	return res;
+}
+
+export const useLayoutEffect = (callback: () => any, deps?: any[]) => {
+	const effectHook: HookEffect = {
+		create: callback
+	};
+	const hook = createWorkInProgressHook(effectHook);
+
+	hook.state.create = callbackWrapper(callback, hook.state, deps);
 };
 
 export const useEffect = (
 	callback: () => void | (() => void),
 	deps?: any[]
 ) => {
-	const wip = getCurrentFiber();
-	const $deps = useRef(deps);
-	let { effects } = wip.hooks;
-	if (!effects) wip.hooks.effects = effects = { index: 0, values: [] };
-	if (effects.index >= effects.values.length)
-		effects.values.push({ callback, canRun: true });
-	else if (!areDependenciesEqual($deps.current, deps)) {
-		effects.values[effects.index] = { callback, canRun: true };
-	} else {
-		effects.values[effects.index].canRun = false;
-	}
+	const effectHook: HookEffect = {
+		create: callback
+	};
+	const hook = createWorkInProgressHook(effectHook);
+	hook.state.create = callbackWrapper(callback, hook.state, deps, false);
 };
 
-export const useMemo = (callback: () => any, deps?: any[]) => {
-	const cachedValue = useRef();
-	const cachedDeps = useRef(deps);
+export const useMemo = <T = any>(callback: () => T, deps?: any[]): T => {
+	const effectHook: { value: T | null; deps?: any[] } = {
+		value: null
+	};
+	const hook = createWorkInProgressHook(effectHook);
 
-	if (cachedValue.current) {
-		if (!areDependenciesEqual(cachedDeps.current, deps))
-			cachedValue.current = callback();
-	} else {
-		cachedValue.current = callback();
+	if (!areDependenciesEqual(hook.state.deps, deps)) {
+		hook.state.value = callback();
 	}
-	return cachedValue.current;
+	hook.state.deps = deps;
+	return hook.state.value!;
 };
 
 export const useCallback = (callback: (...args: any[]) => any, deps?: any[]) =>

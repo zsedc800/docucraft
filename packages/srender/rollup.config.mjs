@@ -3,7 +3,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import postcss from 'rollup-plugin-postcss';
 import typescript from 'rollup-plugin-typescript2';
-import serve from 'rollup-plugin-serve';
+// import serve from 'rollup-plugin-serve';
 import copy from 'rollup-plugin-copy';
 
 const createBabelConfig = (targets) => ({
@@ -24,14 +24,15 @@ const common = {
 			declarationDir: 'dist',
 			rootDir: 'src'
 		}),
-		commonjs(),
-		postcss({ extract: 'style.css', extensions: ['.css', '.scss', 'sass'] }),
-		serve({
-			open: true,
-			contentBase: ['dist', 'public'],
-			port: 3010,
-			host: '0.0.0.0'
-		})
+		copy({ targets: [{ src: './src/*.d.ts', dest: './dist' }] }),
+		// commonjs(),
+		postcss({ extract: 'style.css', extensions: ['.css', '.scss', 'sass'] })
+		// serve({
+		// 	open: true,
+		// 	contentBase: ['dist', 'public'],
+		// 	port: 3010,
+		// 	host: '0.0.0.0'
+		// })
 		// copy({ targets: [{ src: 'src/jsx.d.ts', dest: 'dist' }] })
 	],
 	external: (id) => /node_modules/.test(id)

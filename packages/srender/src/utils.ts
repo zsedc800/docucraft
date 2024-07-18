@@ -1,7 +1,10 @@
+import { createElement } from './element';
+import { SuspenseException } from './reconciler/handleThrow';
 import {
 	ComponentChildren,
 	ComponentType,
 	FunctionComponent,
+	IProps,
 	Ref
 } from './interface';
 
@@ -42,7 +45,6 @@ export const forwardRef =
 export const wrapPromise = <T = any>(promise: Promise<T>) => {
 	let status: 'pending' | 'fulfilled' | 'rejected' = 'pending',
 		result: T;
-
 	const next = promise.then(
 		(res) => {
 			status = 'fulfilled';
@@ -56,9 +58,11 @@ export const wrapPromise = <T = any>(promise: Promise<T>) => {
 
 	return {
 		read(): T {
+			console.log(11);
+
 			switch (status) {
 				case 'pending':
-					throw next;
+					throw new SuspenseException(next);
 				case 'fulfilled':
 					return result;
 				case 'rejected':
@@ -69,11 +73,12 @@ export const wrapPromise = <T = any>(promise: Promise<T>) => {
 	};
 };
 
-export const lazy = <T extends ComponentType<any>>(
+export const lazy = <P extends IProps, T extends ComponentType<P>>(
 	load: () => Promise<{ default: T }>
-): (() => T) => {
+): ((p: P) => any) => {
 	const p = load();
+
 	const { read } = wrapPromise(p);
 
-	return () => read().default;
+	return (props: P) => createElement(read().default as any, props);
 };

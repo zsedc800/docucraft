@@ -1,13 +1,15 @@
 import {
 	createElement,
 	FRAGMENT as Fragment,
+	OFFSCREEN as Offscreen,
+	SUSPENSE as Suspense,
 	forEach,
 	map,
 	isValidElement
 } from './element';
 import { render } from './reconciler';
 import { Component } from './component';
-import { createRef, forwardRef } from './utils';
+import { createRef, forwardRef, lazy, wrapPromise } from './utils';
 
 import {
 	useEffect,
@@ -20,7 +22,7 @@ import {
 } from './hooks';
 
 import { createContext } from './context';
-export * from './interface';
+// export * from './interface';
 
 const Children = { map, forEach };
 
@@ -40,7 +42,10 @@ export default {
 	useCallback,
 	useRef,
 	useContext,
-	createContext
+	createContext,
+	Offscreen,
+	Suspense,
+	lazy
 };
 
 export {
@@ -59,5 +64,9 @@ export {
 	useCallback,
 	useRef,
 	useContext,
-	createContext
+	createContext,
+	Offscreen,
+	Suspense,
+	lazy,
+	wrapPromise
 };

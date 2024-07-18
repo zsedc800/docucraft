@@ -6,3 +6,5 @@ export {
 	createElement as jsxDE,
 	Fragment
 };
+
+export { JSX } from '../src/jsx';

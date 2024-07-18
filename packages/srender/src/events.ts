@@ -1,4 +1,4 @@
-import { IFiber } from './interface';
+import { Fiber, FiberTag } from './interface';
 
 const events = [
 	'onCopy',
@@ -163,23 +163,24 @@ const events = [
 	'onTransitionEndCapture'
 ];
 
-export const domMap = new WeakMap<HTMLElement, IFiber>();
+export const domMap = new WeakMap<HTMLElement, Fiber>();
 
 export const registerEvent = (root: HTMLElement) => {
 	const listener = (eventName: string) => (e: Event) => {
 		const fiber = domMap.get(e.target as HTMLElement);
-		let curent: IFiber | null | undefined = fiber;
-		while (curent) {
-			const handler = curent.props[eventName];
-			if (handler) {
-				handler(e);
+		let current: Fiber | null | undefined = fiber;
+
+		while (current) {
+			if (current.tag === FiberTag.HostComponent) {
+				const handler = current.pendingProps[eventName];
+				handler && handler(e);
 			}
-			curent = curent.parent;
+			current = current.parent;
 		}
 	};
 
 	for (const eventName of events) {
 		const event = eventName.toLowerCase().slice(2);
-		root.addEventListener(event, listener(eventName), { capture: false });
+		root.addEventListener(event, listener(eventName), false);
 	}
 };

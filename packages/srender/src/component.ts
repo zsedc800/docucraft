@@ -1,23 +1,18 @@
 import {
 	ClassComponent,
 	ComponentChildren,
-	IFiber,
-	IProps,
-	IState,
-	ITag
+	Fiber,
+	Props,
+	State
 } from './interface';
-import { batchUpdate } from './reconciler';
 
-export class Component<P = IProps, S = IState, C = any> {
+export class Component<P = Props, S = State, C = any> {
 	public props: P;
 	public state?: S;
 	public context?: C;
 
-	public __fiber?: IFiber;
+	public __fiber?: Fiber;
 	_snapshot: any;
-	_processingException?: boolean;
-	_dirty?: () => void;
-	_pendingError?: Component;
 	constructor(props: P | null, context?: C) {
 		this.props = props || ({} as P);
 		this.context = context;
@@ -35,17 +30,17 @@ export class Component<P = IProps, S = IState, C = any> {
 	}
 
 	setState(state: any) {
-		this.__fiber!.partialState = state;
-		batchUpdate({ from: ITag.CLASS_COMPONENT, fiber: this.__fiber });
+		// this.__fiber!.partialState = state;
+		// batchUpdate({ from: ITag.CLASS_COMPONENT, fiber: this.__fiber! });
 	}
 	render(): ComponentChildren {
 		throw new Error('render method should be implemented');
 	}
 }
 
-export function createInstance(fiber: IFiber) {
+export function createInstance(fiber: Fiber) {
 	const Ctor = fiber.type as ClassComponent;
-	const instance = new Ctor(fiber.props, Ctor.contextType?.currentValue);
+	const instance = new Ctor(fiber.pendingProps, Ctor.contextType?.currentValue);
 	instance.__fiber = fiber;
 	return instance;
 }

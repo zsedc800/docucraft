@@ -1,6 +1,5 @@
-import { TEXT_ELEMENT, getTag } from './element';
-import { initHooks } from './hooks';
-import { Effect, IFiber, IProps, IState, IVNode } from './interface';
+import { TEXT_ELEMENT } from './element';
+import { Fiber, IProps, IState } from './interface';
 
 const isEvent = (name: string) => name.startsWith('on');
 const isAttribute = (name: string) =>
@@ -26,8 +25,6 @@ export function updateDomProperties(
 		.filter(isAttribute)
 		.filter(isNew(prevProps, nextProps))
 		.forEach((name) => {
-			// console.log(dom, dom.setAttribute, 'dom.');
-
 			(dom as IState)[name] = nextProps[name];
 			// dom.setAttribute(name, nextProps[name]);
 		});
@@ -48,49 +45,11 @@ export function updateDomProperties(
 		});
 }
 
-export function createDomElement(fiber: IFiber) {
+export function createDomElement(fiber: Fiber) {
 	const isTextElement = fiber.type === TEXT_ELEMENT;
 	const dom = isTextElement
 		? document.createTextNode('')
 		: document.createElement(fiber.type as string);
-	updateDomProperties(dom as HTMLElement, [], fiber.props);
+	updateDomProperties(dom as HTMLElement, [], fiber.pendingProps);
 	return dom;
-}
-
-export function cloneFiber(
-	oldFiber: IFiber,
-	parent: IFiber | null | undefined,
-	index: number,
-	props?: IProps
-): IFiber {
-	if (!props) props = oldFiber.props;
-	return {
-		type: oldFiber.type,
-		tag: oldFiber.tag,
-		stateNode: oldFiber.stateNode,
-		hooks: initHooks(oldFiber!),
-		index,
-		parent: parent,
-		alternate: oldFiber,
-		$$typeof: oldFiber.$$typeof,
-		props,
-		partialState: oldFiber.partialState,
-		effectTag: Effect.UPDATE
-	};
-}
-export function createFiber(
-	element: IVNode,
-	parent: IFiber | null | undefined,
-	index: number
-) {
-	return {
-		type: element.type,
-		$$typeof: element.$$typeof,
-		tag: getTag(element),
-		props: element.props,
-		hooks: initHooks(),
-		parent,
-		index,
-		effectTag: Effect.PLACEMENT
-	};
 }
