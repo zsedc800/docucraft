@@ -21,6 +21,7 @@ export function mountClassComponent(wipFiber: Fiber, lanes: Lanes) {
 	instance.context = nextContext;
 	instance.props = wipFiber.pendingProps;
 	instance.state = nextState;
+	wipFiber.memoizedState = nextState;
 
 	reconcileChildrenArray(wipFiber, instance.render(), lanes);
 }

@@ -33,7 +33,6 @@ const maxYieldInterval = 300;
 
 type WorkFn = (hasTimeRemaining: boolean, initialTime: number) => boolean;
 export let requestHostCallback: (cb: WorkFn) => void;
-export let cancelHostCallback: () => void;
 export let scheduledHostCallback: WorkFn | null = null;
 export interface Task {
 	id: number;
@@ -82,32 +81,33 @@ function shift(queue: TaskQueue<Task>) {
 }
 
 function workLoop(hasTimeRemaining: boolean, initialTime: number) {
-	let currentTime = initialTime;
+	let currentTime = getCurrentTime();
 	advanceTimers(currentTime);
 	currentTask = peek(taskQueue);
+
 	while (currentTask) {
-		if (
-			currentTask.expirationTime > currentTime &&
-			(!hasTimeRemaining || shouldYieldToHost())
-		) {
-			break;
-		}
 		const { callback } = currentTask;
+
 		if (callback) {
 			currentTask.callback = null;
 			currentPriorityLevel = currentTask.priorityLevel;
 			const didUserCallbackTimeout = currentTask.expirationTime <= currentTime;
 			const continuationCallback = callback(didUserCallbackTimeout);
+
 			currentTime = getCurrentTime();
-			if (typeof continuationCallback === 'function')
+			if (typeof continuationCallback === 'function') {
 				currentTask.callback = continuationCallback;
-			else if (currentTask === peek(taskQueue)) {
-				shift(taskQueue);
-			}
+				return true;
+			} else if (currentTask === peek(taskQueue)) shift(taskQueue);
+
 			advanceTimers(currentTime);
-		} else shift(taskQueue);
+		} else {
+			shift(taskQueue);
+		}
+
 		currentTask = peek(taskQueue);
 	}
+
 	if (currentTask) return true;
 	else {
 		const firstTimer = peek(timerQueue);
@@ -148,6 +148,7 @@ export function scheduleCallback(
 	) {
 		delay = options.delay;
 	}
+
 	startTime = currentTime + delay;
 	const timeout = timeoutForPriorityLevel(priorityLevel);
 	const expirationTime = startTime + timeout;
@@ -175,6 +176,7 @@ export function scheduleCallback(
 
 		if (!isHostCallbackScheduled && !isPerformingWork) {
 			isHostCallbackScheduled = true;
+
 			requestHostCallback(flushWork);
 		}
 	}
@@ -182,7 +184,9 @@ export function scheduleCallback(
 }
 
 export function shouldYieldToHost() {
-	return getCurrentTime() - deadline;
+	const res = getCurrentTime() - deadline > 0;
+
+	return res;
 }
 
 export const shouldYield = shouldYieldToHost;
@@ -194,6 +198,7 @@ const performWorkUntilDeadline = () => {
 	if (scheduledHostCallback) {
 		const currentTime = getCurrentTime();
 		deadline = currentTime + yieldInterval;
+
 		const hasTimeRemaining = true;
 		const hasMoreWork = scheduledHostCallback(hasTimeRemaining, currentTime);
 		if (!hasMoreWork) {
@@ -217,9 +222,9 @@ requestHostCallback = function (callback) {
 	}
 };
 
-cancelHostCallback = function () {
+export function cancelHostCallback() {
 	scheduledHostCallback = null;
-};
+}
 let taskTimeoutID: any;
 function requestHostTimeout(callback: any, ms: number) {
 	taskTimeoutID = setTimeout(() => callback(getCurrentTime()), ms);

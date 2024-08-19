@@ -23,10 +23,11 @@ import {
 	pushSuspenseHander,
 	reconcileChildrenArray
 } from './utils';
-import { Lanes, OffscreenLane, PingLane, intersectLanes } from '../Lanes';
+import { Lanes, PingLane, TransitionLanes, intersectLanes } from '../Lanes';
 
 export function beginWork(wipFiber: Fiber, renderLanes: Lanes) {
 	createWorkInProgress(wipFiber);
+
 	if (
 		!intersectLanes(wipFiber.lanes, renderLanes) &&
 		!intersectLanes(wipFiber.childLanes, renderLanes)
@@ -43,7 +44,7 @@ export function beginWork(wipFiber: Fiber, renderLanes: Lanes) {
 			processClassComponent(wipFiber, renderLanes);
 			break;
 		case FiberTag.Suspense:
-			processSuspenseComponent(wipFiber, renderLanes);
+			if (processSuspenseComponent(wipFiber, renderLanes)) return true;
 			break;
 		case FiberTag.Offscreen:
 			if (processOffscreenComponent(wipFiber, renderLanes)) return true;
@@ -63,16 +64,20 @@ export function beginWork(wipFiber: Fiber, renderLanes: Lanes) {
 	}
 	return false;
 }
-
+let flag = false;
 function processOffscreenComponent(fiber: Fiber, lanes: Lanes) {
 	let children = fiber.pendingProps.children;
 
 	if (fiber.pendingProps.mode === 'hidden') {
-		console.log(fiber.lanes, fiber, 'xx');
-
 		fiber.lanes |= PingLane;
 		cloneFiberChildren(fiber.alternate?.child || null, fiber);
 
+		return true;
+	}
+
+	if (intersectLanes(fiber.lanes, TransitionLanes) && flag) {
+		flag = false;
+		cloneFiberChildren(fiber.alternate?.child || null, fiber);
 		return true;
 	}
 
@@ -87,6 +92,13 @@ function processSuspenseComponent(wipFiber: Fiber, lanes: Lanes) {
 	const DidCapture = (wipFiber.flags & Flags.DidCapture) !== Flags.NONE;
 
 	if (DidCapture) {
+		if (
+			intersectLanes(wipFiber.childLanes, TransitionLanes) &&
+			wipFiber.alternate
+		) {
+			cloneFiberChildren(wipFiber.alternate?.child, wipFiber);
+			return true;
+		}
 		showFallback = true;
 		wipFiber.flags &= ~FiberFlags.DidCapture;
 	}
@@ -112,6 +124,7 @@ function processSuspenseComponent(wipFiber: Fiber, lanes: Lanes) {
 			);
 		else mountSuspensePrimaryChildren(wipFiber, nextPrimaryChildren, lanes);
 	}
+	return false;
 }
 
 function processFunctionComponent(wipFiber: Fiber, lanes: Lanes) {

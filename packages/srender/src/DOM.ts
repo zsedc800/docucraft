@@ -1,4 +1,4 @@
-import { render } from './reconciler';
+import { render } from './reconciler/core';
 
 export default {
 	render

@@ -58,8 +58,6 @@ export const wrapPromise = <T = any>(promise: Promise<T>) => {
 
 	return {
 		read(): T {
-			console.log(11);
-
 			switch (status) {
 				case 'pending':
 					throw new SuspenseException(next);

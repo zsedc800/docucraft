@@ -92,170 +92,6 @@ var Flags;
   Flags[Flags["DidCapture"] = 2] = "DidCapture";
 })(Flags || (Flags = {}));
 
-const events = ['onCopy', 'onCopyCapture', 'onCutCapture', 'onPaste', 'onPasteCapture', 'onCompositionEnd', 'onCompositionEndCapture', 'onCompositionStart', 'onCompositionStartCapture', 'onCompositionUpdate', 'onCompositionUpdateCapture', 'onFocus', 'onCut', 'onFocusCapture', 'onBlur', 'onBlurCapture', 'onChange', 'onChangeCapture', 'onBeforeInput', 'onBeforeInputCapture', 'onInput', 'onInputCapture', 'onReset', 'onResetCapture', 'onSubmit', 'onSubmitCapture', 'onInvalid', 'onInvalidCapture', 'onLoad', 'onLoadCapture', 'onError', 'onErrorCapture', 'onKeyDown', 'onKeyDownCapture', 'onKeyPress', 'onKeyPressCapture', 'onKeyUp', 'onKeyUpCapture', 'onAbort', 'onAbortCapture', 'onCanPlay', 'onCanPlayCapture', 'onCanPlayThrough', 'onCanPlayThroughCapture', 'onDurationChange', 'onDurationChangeCapture', 'onEmptied', 'onEmptiedCapture', 'onEncrypted', 'onEncryptedCapture', 'onEnded', 'onEndedCapture', 'onLoadedData', 'onLoadedDataCapture', 'onLoadedMetadata', 'onLoadedMetadataCapture', 'onLoadStart', 'onLoadStartCapture', 'onPause', 'onPauseCapture', 'onPlay', 'onPlayCapture', 'onPlaying', 'onPlayingCapture', 'onProgress', 'onProgressCapture', 'onRateChange', 'onRateChangeCapture', 'onResize', 'onResizeCapture', 'onSeeked', 'onSeekedCapture', 'onSeeking', 'onSeekingCapture', 'onStalled', 'onStalledCapture', 'onSuspend', 'onSuspendCapture', 'onTimeUpdate', 'onTimeUpdateCapture', 'onVolumeChange', 'onVolumeChangeCapture', 'onWaiting', 'onWaitingCapture', 'onAuxClick', 'onAuxClickCapture', 'onClick', 'onClickCapture', 'onContextMenu', 'onContextMenuCapture', 'onDoubleClick', 'onDoubleClickCapture', 'onDrag', 'onDragCapture', 'onDragEnd', 'onDragEndCapture', 'onDragEnter', 'onDragEnterCapture', 'onDragExit', 'onDragExitCapture', 'onDragLeave', 'onDragLeaveCapture', 'onDragOver', 'onDragOverCapture', 'onDragStart', 'onDragStartCapture', 'onDrop', 'onDropCapture', 'onMouseDown', 'onMouseDownCapture', 'onMouseEnter', 'onMouseLeave', 'onMouseMove', 'onMouseMoveCapture', 'onMouseOut', 'onMouseOutCapture', 'onMouseOver', 'onMouseOverCapture', 'onMouseUp', 'onMouseUpCapture', 'onSelect', 'onSelectCapture', 'onTouchCancel', 'onTouchCancelCapture', 'onTouchEnd', 'onTouchEndCapture', 'onTouchMove', 'onTouchMoveCapture', 'onTouchStart', 'onTouchStartCapture', 'onPointerDown', 'onPointerDownCapture', 'onPointerMove', 'onPointerMoveCapture', 'onPointerUp', 'onPointerUpCapture', 'onPointerCancel', 'onPointerCancelCapture', 'onPointerEnter', 'onPointerLeave', 'onPointerOver', 'onPointerOverCapture', 'onPointerOut', 'onPointerOutCapture', 'onGotPointerCapture', 'onGotPointerCaptureCapture', 'onLostPointerCapture', 'onLostPointerCaptureCapture', 'onScroll', 'onScrollCapture', 'onWheel', 'onWheelCapture', 'onAnimationStart', 'onAnimationStartCapture', 'onAnimationEnd', 'onAnimationEndCapture', 'onAnimationIteration', 'onAnimationIterationCapture', 'onTransitionEnd', 'onTransitionEndCapture'];
-const domMap = new WeakMap();
-const registerEvent = root => {
-  const listener = eventName => e => {
-    const fiber = domMap.get(e.target);
-    let current = fiber;
-    while (current) {
-      if (current.tag === FiberTag.HostComponent) {
-        const handler = current.pendingProps[eventName];
-        handler && handler(e);
-      }
-      current = current.parent;
-    }
-  };
-  for (const eventName of events) {
-    const event = eventName.toLowerCase().slice(2);
-    root.addEventListener(event, listener(eventName), false);
-  }
-};
-
-const isEvent = name => name.startsWith('on');
-const isAttribute = name => !isEvent(name) && name !== 'children' && name !== 'style';
-const isNew = (prev, next) => key => prev[key] !== next[key];
-const isGone = next => key => !(key in next);
-function updateDomProperties(dom, prevProps, nextProps) {
-  Object.keys(prevProps).filter(isAttribute).filter(isGone(nextProps)).forEach(name => {
-    dom[name] = null;
-    // dom.removeAttribute(name);
-  });
-  Object.keys(nextProps).filter(isAttribute).filter(isNew(prevProps, nextProps)).forEach(name => {
-    dom[name] = nextProps[name];
-    // dom.setAttribute(name, nextProps[name]);
-  });
-  prevProps.style = prevProps.style || {};
-  nextProps.style = nextProps.style || {};
-  Object.keys(nextProps.style).filter(isNew(prevProps.style, nextProps.style)).forEach(key => {
-    dom.style[key] = nextProps.style[key];
-  });
-  Object.keys(prevProps.style).filter(isGone(nextProps.style)).forEach(key => {
-    dom.style[key] = '';
-  });
-}
-function createDomElement(fiber) {
-  const isTextElement = fiber.type === TEXT_ELEMENT;
-  const dom = isTextElement ? document.createTextNode('') : document.createElement(fiber.type);
-  updateDomProperties(dom, [], fiber.pendingProps);
-  return dom;
-}
-
-function getHostParent(fiber) {
-  let domParentFiber = fiber.parent;
-  while (domParentFiber && domParentFiber.parent && domParentFiber.tag !== FiberTag.HostComponent && domParentFiber.tag !== FiberTag.HostText) {
-    domParentFiber = domParentFiber.parent;
-  }
-  if (!domParentFiber) return fiber.stateNode;
-  return domParentFiber.parent ? domParentFiber.stateNode : domParentFiber.stateNode.container;
-}
-function getHostSibling(fiber) {
-  let node = fiber;
-  siblings: while (true) {
-    while (!node.sibling) {
-      if (!node.parent || node.parent.tag === FiberTag.HostComponent) return null;
-      node = node.parent;
-    }
-    node.sibling.parent = node.parent;
-    node = node.sibling;
-    while (node.tag !== FiberTag.HostComponent && node.tag !== FiberTag.HostText) {
-      if (node.flags & FiberFlags.Placement || !node.child) continue siblings;
-      node.child.parent = node;
-      node = node.child;
-    }
-    if (!(node.flags & FiberFlags.Placement)) {
-      return node.stateNode;
-    }
-  }
-}
-function callEffect(fiber) {
-  let key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'create';
-  let hook = fiber.memoizedState;
-  while (hook) {
-    const create = hook.state[key];
-    if (typeof create === 'function') create();
-    hook = hook.next;
-  }
-}
-function commitPlacement(fiber) {
-  const domParent = getHostParent(fiber);
-  if (fiber.tag === FiberTag.HostComponent || fiber.tag === FiberTag.HostText) {
-    const before = getHostSibling(fiber);
-    const node = fiber.stateNode;
-    if (before) domParent.insertBefore(node, before);else domParent.appendChild(node);
-    if (fiber.ref) fiber.ref.current = fiber.stateNode;
-  } else if (fiber.tag === FiberTag.ClassComponent) {
-    fiber.stateNode.componentDidMount();
-  } else if (fiber.tag === FiberTag.FunctionComponent) {
-    callEffect(fiber);
-  }
-  fiber.flags &= ~FiberFlags.Placement;
-}
-function commitUpdate(fiber) {
-  if (fiber.tag === FiberTag.HostComponent) {
-    updateDomProperties(fiber.stateNode, fiber.alternate.pendingProps, fiber.pendingProps);
-  } else if (fiber.tag === FiberTag.FunctionComponent) {
-    callEffect(fiber);
-  } else if (fiber.tag === FiberTag.ClassComponent && fiber.stateNode instanceof Component) {
-    const oldFiber = fiber.alternate;
-    if (oldFiber) {
-      fiber.stateNode.componentDidUpdate(oldFiber.pendingProps, oldFiber.stateNode.state);
-    }
-  }
-  fiber.flags &= ~FiberFlags.Update;
-}
-function commitDeletion(fiber) {
-  let node = fiber;
-  const domParent = getHostParent(fiber);
-  while (true) {
-    if (!node) break;
-    if (node.tag !== FiberTag.HostComponent && node.tag !== FiberTag.HostText) {
-      node = node.child;
-      continue;
-    }
-    domParent.removeChild(node.stateNode);
-    while (node !== fiber && !node.sibling) node = node.parent;
-    if (node === fiber) break;
-    node = node.sibling;
-  }
-  const goStep = node => {
-    if (node.child) return node.child;
-    let cursor = node;
-    while (cursor && cursor != fiber) {
-      if (cursor.tag === FiberTag.FunctionComponent) callEffect(cursor, 'destroy');
-      if (cursor.stateNode instanceof Component) cursor.stateNode.destory();
-      if (cursor.sibling) return cursor.sibling;
-      cursor = cursor.parent;
-    }
-  };
-  while (node) node = goStep(node);
-  fiber.flags &= ~FiberFlags.Deletion;
-}
-function commitWork(fiber) {
-  if (fiber.tag === FiberTag.HostRoot) return;
-  if (fiber.flags & FiberFlags.Placement) commitPlacement(fiber);
-  if (fiber.flags & FiberFlags.Update) commitUpdate(fiber);
-  if (fiber.flags & FiberFlags.Deletion) commitDeletion(fiber);
-  fiber.effects = [];
-}
-
-// lane使用31位二进制来表示优先级车道共31条, 位数越小（1的位置越靠右）表示优先级越高
-// 没有优先级
-const NoLanes = /*                        */0b0000000000000000000000000000000;
-// 同步优先级，表示同步的任务一次只能执行一个，例如：用户的交互事件产生的更新任务
-const SyncLane = /*                        */0b0000000000000000000000000000001;
-const PingLane = /*                             */0b0010000000000000000000000000000;
-
-function mergeLanes(a, b) {
-  return a | b;
-}
-function intersectLanes(a, b) {
-  return a & b;
-}
-function requestUpdateLane() {
-  return SyncLane;
-}
-
 function adjustHeap(list, parent, end, compare) {
   if (parent < 0) return;
   for (let i = 2 * parent + 1; i < end; i = i * 2 + 1) {
@@ -370,13 +206,10 @@ function shift(queue) {
   return queue.shift();
 }
 function workLoop$1(hasTimeRemaining, initialTime) {
-  let currentTime = initialTime;
+  let currentTime = getCurrentTime();
   advanceTimers(currentTime);
   currentTask = peek(taskQueue);
   while (currentTask) {
-    if (currentTask.expirationTime > currentTime && (!hasTimeRemaining || shouldYieldToHost())) {
-      break;
-    }
     const {
       callback
     } = currentTask;
@@ -386,11 +219,14 @@ function workLoop$1(hasTimeRemaining, initialTime) {
       const didUserCallbackTimeout = currentTask.expirationTime <= currentTime;
       const continuationCallback = callback(didUserCallbackTimeout);
       currentTime = getCurrentTime();
-      if (typeof continuationCallback === 'function') currentTask.callback = continuationCallback;else if (currentTask === peek(taskQueue)) {
-        shift(taskQueue);
-      }
+      if (typeof continuationCallback === 'function') {
+        currentTask.callback = continuationCallback;
+        return true;
+      } else if (currentTask === peek(taskQueue)) shift(taskQueue);
       advanceTimers(currentTime);
-    } else shift(taskQueue);
+    } else {
+      shift(taskQueue);
+    }
     currentTask = peek(taskQueue);
   }
   if (currentTask) return true;else {
@@ -406,7 +242,7 @@ function flushWork(hasTimeRemaining, initialTime) {
     cancelHostTimeout();
   }
   isPerformingWork = true;
-  const res = workLoop$1(hasTimeRemaining, initialTime);
+  const res = workLoop$1();
   currentTask = null;
   isPerformingWork = false;
   return res;
@@ -444,7 +280,8 @@ function scheduleCallback(priorityLevel, callback, options) {
   return newTask;
 }
 function shouldYieldToHost() {
-  return getCurrentTime() - deadline;
+  const res = getCurrentTime() - deadline > 0;
+  return res;
 }
 const shouldYield = shouldYieldToHost;
 const channel = new MessageChannel();
@@ -509,6 +346,53 @@ function advanceTimers(currentTime) {
   }
 }
 
+// lane使用31位二进制来表示优先级车道共31条, 位数越小（1的位置越靠右）表示优先级越高
+// 没有优先级
+const NoLanes = /*                        */0b0000000000000000000000000000000;
+const NoLane = /*                          */0b0000000000000000000000000000000;
+// 同步优先级，表示同步的任务一次只能执行一个，例如：用户的交互事件产生的更新任务
+const SyncLane = /*                        */0b0000000000000000000000000000001;
+const InputContinuousLane = /*            */0b0000000000000000000000000000100;
+const TransitionLanes = /*                       */0b0000000001111111111111111000000;
+const TransitionLane1 = /*                        */0b0000000000000000000000001000000;
+const NonIdleLanes = /*                                 */0b0000111111111111111111111111111;
+const PingLane = /*                             */0b0010000000000000000000000000000;
+const DiscreteEventPriority = SyncLane;
+const ContinuousEventPriority = InputContinuousLane;
+
+function isSubsetOfLanes(set, subset) {
+  return (set & subset) === subset;
+}
+function mergeLanes(a, b) {
+  return a | b;
+}
+function intersectLanes(a, b) {
+  return a & b;
+}
+function getHighestPriorityLane(lanes) {
+  return lanes & -lanes;
+}
+let currentIndex = 0;
+let batchTransitionLane = NoLane;
+function getTransitionLane() {
+  const res = TransitionLane1 << currentIndex;
+  currentIndex = (currentIndex + 1) % 16;
+  return res;
+}
+function requestUpdateLane() {
+  if (currentBatchConfig.transition) {
+    batchTransitionLane = batchTransitionLane === NoLane || !isBatchingUpdates ? getTransitionLane() : batchTransitionLane;
+    return batchTransitionLane;
+  }
+  return SyncLane;
+}
+function LaneToPriority(lane) {
+  if (lane <= DiscreteEventPriority) return ImmediatePriority;
+  if (lane <= ContinuousEventPriority) return UserBlockingPriority;
+  if (lane & NonIdleLanes) return NormalPriority;
+  return IdlePriority;
+}
+
 function createFiberNode(tag, pendingProps, options) {
   const {
     key,
@@ -533,9 +417,6 @@ function createFiberNode(tag, pendingProps, options) {
     flags: FiberFlags.Placement,
     lanes: NoLanes,
     childLanes: NoLanes,
-    pendingLanes: NoLanes,
-    renderLanes: NoLanes,
-    expiredLanes: NoLanes,
     alternate: null,
     effects: null
   };
@@ -548,7 +429,6 @@ function cloneFiberNode(oldFiber, pendingProps) {
     ref
   } = pendingProps;
   const {
-    parent,
     child,
     sibling
   } = options;
@@ -565,6 +445,10 @@ function cloneFiberNode(oldFiber, pendingProps) {
   return fiber;
 }
 
+const resetHandlers = [];
+function resetContext() {
+  for (const fn of resetHandlers) fn();
+}
 const createContext = initialValue => {
   const $currentValue = createRef(initialValue);
   const stackValue = [initialValue];
@@ -576,6 +460,7 @@ const createContext = initialValue => {
     stackValue.push(value);
     return children;
   };
+  resetHandlers.push(() => stackValue.length = 1);
   const context = {
     get currentValue() {
       return stackValue[stackValue.length - 1];
@@ -599,17 +484,22 @@ function popProvider(context) {
   context.pop();
 }
 
+function markCurrentFiber(wip, old) {
+  if (wip) wip.flags |= FiberFlags.PerformWork;
+  if (old) old.flags &= ~FiberFlags.PerformWork;
+}
 function cloneChildren(wipFiber) {
   const oldFiber = wipFiber.alternate;
   if (!oldFiber.child) return;
   let oldChild = oldFiber.child;
   let prevChild = null;
   for (let i = 0; oldChild; i++, oldChild = oldChild.sibling) {
-    const newChild = cloneFiberNode(oldChild, {}, {
+    const newChild = cloneFiberNode(oldChild, oldChild.pendingProps, {
       parent: wipFiber,
       index: i,
       alternate: oldChild
     });
+    markCurrentFiber(newChild, oldChild);
     if (prevChild) prevChild.sibling = newChild;else wipFiber.child = newChild;
     prevChild = newChild;
     oldChild.alternate = null;
@@ -634,6 +524,7 @@ function reconcileChildrenArray(wipFiber, newChildElements, lanes) {
       newFiber = cloneFiberNode(oldFiber, element.props, {
         parent: wipFiber,
         alternate: oldFiber,
+        memoizedProps: oldFiber.pendingProps,
         index,
         lanes: needUpdate ? mergeLanes(lanes, oldFiber.lanes) : oldFiber.lanes
       });
@@ -642,11 +533,12 @@ function reconcileChildrenArray(wipFiber, newChildElements, lanes) {
       newFiber = createFiberNode(getTag(element), element.props, {
         parent: wipFiber,
         index,
+        memoizedProps: element.props,
         type: element.type,
         lanes
       });
     }
-    oldFiber ? oldFiber.alternate = null : void 0;
+    // markCurrentFiber(newFiber, oldFiber || null);
     if (index === 0) {
       wipFiber.child = newFiber;
     } else if (prevFiber) prevFiber.sibling = newFiber;
@@ -678,6 +570,7 @@ function clearSuspenseHander() {
 function hideAllChildren(fiber) {
   let node = fiber.child;
   while (node) {
+    console.log(node.stateNode, 'node');
     if (node.tag === FiberTag.HostComponent) {
       node.stateNode.style.display = 'none';
     } else {
@@ -699,9 +592,17 @@ function unhideAllChildren(fiber) {
 }
 function unwindWork(fiber, lanes) {
   const flags = fiber.flags;
-  if (lanes) {
-    fiber.lanes &= ~lanes;
-    fiber.childLanes &= ~lanes;
+  if (lanes || lanes === NoLanes) {
+    unwindWorks.push(fiber);
+    if (fiber.parent) {
+      const childEffects = fiber.effects || [];
+      const thisEffect = fiber.flags > FiberFlags.PerformWork ? [fiber] : [];
+      const parentEffects = fiber.parent.effects || [];
+      fiber.parent.effects = parentEffects.concat(childEffects, thisEffect);
+    } else {
+      const root = fiber.stateNode;
+      root.finishedWork = fiber;
+    }
   }
   switch (fiber.tag) {
     case FiberTag.Suspense:
@@ -714,17 +615,40 @@ function unwindWork(fiber, lanes) {
       const ctx = fiber.type._context;
       popProvider(ctx);
       return;
+  }
+}
+function unwindUnit(fiber, lanes) {
+  fiber.lanes &= ~lanes;
+  fiber.childLanes &= ~lanes;
+  const oldFiber = fiber.alternate;
+  if (oldFiber) oldFiber.alternate = fiber;
+  markCurrentFiber(fiber, oldFiber);
+  switch (fiber.tag) {
     case FiberTag.Offscreen:
       return fiber.pendingProps.mode === 'hidden' ? hideAllChildren(fiber) : unhideAllChildren(fiber);
   }
 }
-function cloneFiberChildren(firstChild, parent) {
+function _cloneChildren(firstChild, parent) {
   let next = firstChild;
   parent.child = firstChild;
   while (next) {
     next.parent = parent;
     next = next.sibling;
   }
+}
+function cloneFiberChildren(firstChild, parent) {
+  cloneChildrenHandlers.push(() => _cloneChildren(firstChild, parent));
+}
+function getLatestFiber(fiber) {
+  let node = fiber;
+  while (node.alternate) {
+    if (node.alternate.alternate === node) {
+      if (node.alternate.flags & FiberFlags.PerformWork) node = node.alternate;
+      break;
+    }
+    node = node.alternate;
+  }
+  return node;
 }
 
 function createUpdate(payload, eventTime, lane) {
@@ -772,7 +696,7 @@ function initializeUpdateQueue(memoizedState) {
     effects: []
   };
 }
-function processUpdateQueue(wip, hooks, queue) {
+function processUpdateQueue(wip, hooks, queue, renderLanes) {
   if (!queue) return;
   let {
     firstBaseUpdate,
@@ -785,49 +709,86 @@ function processUpdateQueue(wip, hooks, queue) {
     const lastPendingUpdate = pendingQueue;
     const firstPendingUpdate = lastPendingUpdate.next;
     lastPendingUpdate.next = null;
-    if (!lastBaseUpdate) {
-      firstBaseUpdate = firstPendingUpdate;
-    } else {
+    if (lastBaseUpdate) {
       lastBaseUpdate.next = firstPendingUpdate;
+    } else {
+      firstBaseUpdate = firstPendingUpdate;
     }
     lastBaseUpdate = lastPendingUpdate;
   }
   if (firstBaseUpdate) {
     let newState = queue.baseState;
+    let newBaseState = null;
+    let newFirstBaseUpdate = null;
+    let newLastBaseUpdate = null;
     let update = firstBaseUpdate;
     do {
-      newState = getStateFromUpdate(update, newState, wip.pendingProps);
+      const updateLane = update.lane;
+      if (!isSubsetOfLanes(renderLanes, updateLane)) {
+        const clone = {
+          eventTime: update.eventTime,
+          lane: updateLane,
+          tag: update.tag,
+          payload: update.payload,
+          next: null
+        };
+        if (!newLastBaseUpdate) {
+          newFirstBaseUpdate = newLastBaseUpdate = clone;
+          newBaseState = newState;
+        } else {
+          newLastBaseUpdate.next = clone;
+          newLastBaseUpdate = newLastBaseUpdate.next;
+        }
+      } else {
+        newState = getStateFromUpdate(update, newState, wip.pendingProps);
+      }
       update = update.next;
     } while (update);
-    if (hooks) {
-      hooks.state = newState;
-    } else {
-      wip.memoizedState = newState;
+    if (!newLastBaseUpdate) {
+      newBaseState = newState;
     }
-    queue.baseState = newState;
-    queue.firstBaseUpdate = null;
-    queue.lastBaseUpdate = null;
+    if (hooks) {
+      hooks.state = newBaseState;
+    } else {
+      wip.memoizedState = newBaseState;
+    }
+    queue.baseState = newBaseState;
+    queue.firstBaseUpdate = newFirstBaseUpdate;
+    queue.lastBaseUpdate = newLastBaseUpdate;
   }
 }
 function markUpdateFromFiberToRoot(fiber) {
   let parent = fiber.parent,
     node = fiber;
   while (parent) {
-    parent.childLanes = mergeLanes(node.lanes, node.childLanes);
+    parent.childLanes |= mergeLanes(node.lanes, node.childLanes);
     node = parent;
     parent = parent.parent;
   }
-  return node.tag === FiberTag.HostRoot ? node.stateNode : null;
+  if (node.tag !== FiberTag.HostRoot) {
+    return null;
+  }
+  const root = node.stateNode;
+  root.pendingLanes = mergeLanes(node.lanes, node.childLanes);
+  return root;
 }
-function scheduleUpdateOnFiber(fiber) {
-  const root = markUpdateFromFiberToRoot(fiber);
-  if (!root) return;
-  ensureRootIsScheduled(root);
+let isBatchingUpdates = false;
+function batchedUpdates(fn, a) {
+  const previousIsBatchingUpdates = isBatchingUpdates;
+  isBatchingUpdates = true;
+  try {
+    return fn(a);
+  } finally {
+    isBatchingUpdates = previousIsBatchingUpdates;
+    if (!isBatchingUpdates) {
+      workInProgressRoot && ensureRootIsScheduled(workInProgressRoot);
+    }
+  }
 }
 function updateClassComponent(wipFiber, lanes) {
   const instance = wipFiber.stateNode;
   const Ctor = wipFiber.type;
-  processUpdateQueue(wipFiber, null, wipFiber.updateQueue);
+  processUpdateQueue(wipFiber, null, wipFiber.updateQueue, lanes);
   let nextState = wipFiber.memoizedState;
   const nextContext = Ctor.contextType?.currentValue;
   if (!instance.shouldComponentUpdate(wipFiber.pendingProps, nextState, nextContext)) {
@@ -841,7 +802,7 @@ function updateClassComponent(wipFiber, lanes) {
   instance.context = nextContext;
   instance.props = wipFiber.pendingProps;
   instance.state = nextState;
-  // wipFiber.partialState = null;
+  wipFiber.memoizedState = nextState;
   reconcileChildrenArray(wipFiber, instance.render(), lanes);
   if (instance.getSnapshotBeforeUpdate) {
     instance._snapshot = instance.getSnapshotBeforeUpdate(prevProps, prevState);
@@ -858,12 +819,13 @@ function updateSuspenseFallbackChildren(fiber, primaryChildren, fallbackChildren
     lanes,
     alternate: oldFiber
   });
-  oldFiber.alternate = null;
+  oldFiber.alternate = offscreen;
   const fallback = oldFiber.sibling ? cloneFiberNode(oldFiber.sibling, {
     children: fallbackChildren
   }, {
     parent: fiber,
-    index: 1
+    index: 1,
+    lanes: mergeLanes(oldFiber.lanes, lanes)
   }) : createFiberNode(FiberTag.Fragment, {
     children: fallbackChildren
   }, {
@@ -871,6 +833,7 @@ function updateSuspenseFallbackChildren(fiber, primaryChildren, fallbackChildren
     index: 1,
     lanes
   });
+  if (oldFiber.sibling) deleteChild(oldFiber.sibling, fiber);
   offscreen.sibling = fallback;
   fiber.child = offscreen;
 }
@@ -885,9 +848,157 @@ function updateSuspensePrimaryChildren(fiber, primaryChildren, lanes) {
     lanes,
     alternate: oldFiber
   });
-  oldFiber.alternate = null;
-  if (oldFiber?.sibling) deleteChild(oldFiber.sibling, fiber);
+  oldFiber.alternate = offscreen;
+  oldFiber.sibling && deleteChild(oldFiber.sibling, fiber);
   fiber.child = offscreen;
+}
+
+const events = ['onCopy', 'onCopyCapture', 'onCutCapture', 'onPaste', 'onPasteCapture', 'onCompositionEnd', 'onCompositionEndCapture', 'onCompositionStart', 'onCompositionStartCapture', 'onCompositionUpdate', 'onCompositionUpdateCapture', 'onFocus', 'onCut', 'onFocusCapture', 'onBlur', 'onBlurCapture', 'onChange', 'onChangeCapture', 'onBeforeInput', 'onBeforeInputCapture', 'onInput', 'onInputCapture', 'onReset', 'onResetCapture', 'onSubmit', 'onSubmitCapture', 'onInvalid', 'onInvalidCapture', 'onLoad', 'onLoadCapture', 'onError', 'onErrorCapture', 'onKeyDown', 'onKeyDownCapture', 'onKeyPress', 'onKeyPressCapture', 'onKeyUp', 'onKeyUpCapture', 'onAbort', 'onAbortCapture', 'onCanPlay', 'onCanPlayCapture', 'onCanPlayThrough', 'onCanPlayThroughCapture', 'onDurationChange', 'onDurationChangeCapture', 'onEmptied', 'onEmptiedCapture', 'onEncrypted', 'onEncryptedCapture', 'onEnded', 'onEndedCapture', 'onLoadedData', 'onLoadedDataCapture', 'onLoadedMetadata', 'onLoadedMetadataCapture', 'onLoadStart', 'onLoadStartCapture', 'onPause', 'onPauseCapture', 'onPlay', 'onPlayCapture', 'onPlaying', 'onPlayingCapture', 'onProgress', 'onProgressCapture', 'onRateChange', 'onRateChangeCapture', 'onResize', 'onResizeCapture', 'onSeeked', 'onSeekedCapture', 'onSeeking', 'onSeekingCapture', 'onStalled', 'onStalledCapture', 'onSuspend', 'onSuspendCapture', 'onTimeUpdate', 'onTimeUpdateCapture', 'onVolumeChange', 'onVolumeChangeCapture', 'onWaiting', 'onWaitingCapture', 'onAuxClick', 'onAuxClickCapture', 'onClick', 'onClickCapture', 'onContextMenu', 'onContextMenuCapture', 'onDoubleClick', 'onDoubleClickCapture', 'onDrag', 'onDragCapture', 'onDragEnd', 'onDragEndCapture', 'onDragEnter', 'onDragEnterCapture', 'onDragExit', 'onDragExitCapture', 'onDragLeave', 'onDragLeaveCapture', 'onDragOver', 'onDragOverCapture', 'onDragStart', 'onDragStartCapture', 'onDrop', 'onDropCapture', 'onMouseDown', 'onMouseDownCapture', 'onMouseEnter', 'onMouseLeave', 'onMouseMove', 'onMouseMoveCapture', 'onMouseOut', 'onMouseOutCapture', 'onMouseOver', 'onMouseOverCapture', 'onMouseUp', 'onMouseUpCapture', 'onSelect', 'onSelectCapture', 'onTouchCancel', 'onTouchCancelCapture', 'onTouchEnd', 'onTouchEndCapture', 'onTouchMove', 'onTouchMoveCapture', 'onTouchStart', 'onTouchStartCapture', 'onPointerDown', 'onPointerDownCapture', 'onPointerMove', 'onPointerMoveCapture', 'onPointerUp', 'onPointerUpCapture', 'onPointerCancel', 'onPointerCancelCapture', 'onPointerEnter', 'onPointerLeave', 'onPointerOver', 'onPointerOverCapture', 'onPointerOut', 'onPointerOutCapture', 'onGotPointerCapture', 'onGotPointerCaptureCapture', 'onLostPointerCapture', 'onLostPointerCaptureCapture', 'onScroll', 'onScrollCapture', 'onWheel', 'onWheelCapture', 'onAnimationStart', 'onAnimationStartCapture', 'onAnimationEnd', 'onAnimationEndCapture', 'onAnimationIteration', 'onAnimationIterationCapture', 'onTransitionEnd', 'onTransitionEndCapture'];
+const domMap = new WeakMap();
+const registerEvent = root => {
+  const listener = eventName => e => {
+    const fiber = domMap.get(e.target);
+    let current = fiber;
+    while (current) {
+      if (current.tag === FiberTag.HostComponent) {
+        const handler = current.pendingProps[eventName];
+        handler && batchedUpdates(handler, e);
+      }
+      current = current.parent;
+    }
+  };
+  for (const eventName of events) {
+    const event = eventName.toLowerCase().slice(2);
+    root.addEventListener(event, listener(eventName), false);
+  }
+};
+
+const isEvent = name => name.startsWith('on');
+const isAttribute = name => !isEvent(name) && name !== 'children' && name !== 'style';
+const isNew = (prev, next) => key => prev[key] !== next[key];
+const isGone = next => key => !(key in next);
+function updateDomProperties(dom, prevProps, nextProps) {
+  Object.keys(prevProps).filter(isAttribute).filter(isGone(nextProps)).forEach(name => {
+    dom[name] = null;
+    // dom.removeAttribute(name);
+  });
+  Object.keys(nextProps).filter(isAttribute).filter(isNew(prevProps, nextProps)).forEach(name => {
+    dom[name] = nextProps[name];
+    // dom.setAttribute(name, nextProps[name]);
+  });
+  prevProps.style = prevProps.style || {};
+  nextProps.style = nextProps.style || {};
+  Object.keys(nextProps.style).filter(isNew(prevProps.style, nextProps.style)).forEach(key => {
+    dom.style[key] = nextProps.style[key];
+  });
+  Object.keys(prevProps.style).filter(isGone(nextProps.style)).forEach(key => {
+    dom.style[key] = '';
+  });
+}
+function createDomElement(fiber) {
+  const isTextElement = fiber.type === TEXT_ELEMENT;
+  const dom = isTextElement ? document.createTextNode('') : document.createElement(fiber.type);
+  updateDomProperties(dom, [], fiber.pendingProps);
+  return dom;
+}
+
+function getHostParent(fiber) {
+  let domParentFiber = fiber.parent;
+  while (domParentFiber && domParentFiber.parent && domParentFiber.tag !== FiberTag.HostComponent && domParentFiber.tag !== FiberTag.HostText) {
+    domParentFiber = domParentFiber.parent;
+  }
+  if (!domParentFiber) return fiber.stateNode;
+  return domParentFiber.parent ? domParentFiber.stateNode : domParentFiber.stateNode.container;
+}
+function getHostSibling(fiber) {
+  let node = fiber;
+  siblings: while (true) {
+    while (!node.sibling) {
+      if (!node.parent || node.parent.tag === FiberTag.HostComponent) return null;
+      node = node.parent;
+    }
+    node.sibling.parent = node.parent;
+    node = node.sibling;
+    while (node.tag !== FiberTag.HostComponent && node.tag !== FiberTag.HostText) {
+      if (node.flags & FiberFlags.Placement || !node.child) continue siblings;
+      node.child.parent = node;
+      node = node.child;
+    }
+    if (!(node.flags & FiberFlags.Placement)) {
+      return node.stateNode;
+    }
+  }
+}
+function callEffect(fiber) {
+  let key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'create';
+  let hook = fiber.memoizedState;
+  while (hook) {
+    const create = hook.state[key];
+    if (typeof create === 'function') create();
+    hook = hook.next;
+  }
+}
+function commitPlacement(fiber) {
+  const domParent = getHostParent(fiber);
+  if (fiber.tag === FiberTag.HostComponent || fiber.tag === FiberTag.HostText) {
+    const before = getHostSibling(fiber);
+    const node = fiber.stateNode;
+    // console.log(fiber, before, domParent, '333');
+    if (before) domParent.insertBefore(node, before);else domParent.appendChild(node);
+    if (fiber.ref) fiber.ref.current = fiber.stateNode;
+  } else if (fiber.tag === FiberTag.ClassComponent) {
+    fiber.stateNode.componentDidMount();
+  } else if (fiber.tag === FiberTag.FunctionComponent) {
+    callEffect(fiber);
+  }
+  fiber.flags &= ~FiberFlags.Placement;
+}
+function commitUpdate(fiber) {
+  if (fiber.tag === FiberTag.HostComponent || fiber.tag === FiberTag.HostText) {
+    updateDomProperties(fiber.stateNode, fiber.alternate.pendingProps, fiber.pendingProps);
+  } else if (fiber.tag === FiberTag.FunctionComponent) {
+    callEffect(fiber);
+  } else if (fiber.tag === FiberTag.ClassComponent && fiber.stateNode instanceof Component) {
+    const oldFiber = fiber.alternate;
+    if (oldFiber) {
+      fiber.stateNode.componentDidUpdate(oldFiber.pendingProps, oldFiber.stateNode.state);
+    }
+  }
+  fiber.flags &= ~FiberFlags.Update;
+}
+function commitDeletion(fiber) {
+  let node = fiber;
+  const domParent = getHostParent(fiber);
+  while (true) {
+    if (!node) break;
+    if (node.tag !== FiberTag.HostComponent && node.tag !== FiberTag.HostText) {
+      node = node.child;
+      continue;
+    }
+    domParent.removeChild(node.stateNode);
+    while (node !== fiber && !node.sibling) node = node.parent;
+    if (node === fiber) break;
+    node = node.sibling;
+  }
+  const goStep = node => {
+    if (node.child) return node.child;
+    let cursor = node;
+    while (cursor && cursor != fiber) {
+      if (cursor.tag === FiberTag.FunctionComponent) callEffect(cursor, 'destroy');
+      if (cursor.stateNode instanceof Component) cursor.stateNode.destory();
+      if (cursor.sibling) return cursor.sibling;
+      cursor = cursor.parent;
+    }
+  };
+  while (node) node = goStep(node);
+  fiber.flags &= ~FiberFlags.Deletion;
+}
+function commitWork(fiber) {
+  if (fiber.tag === FiberTag.HostRoot) return;
+  if (fiber.flags & FiberFlags.Placement) commitPlacement(fiber);
+  if (fiber.flags & FiberFlags.Update) commitUpdate(fiber);
+  if (fiber.flags & FiberFlags.Deletion) commitDeletion(fiber);
+  fiber.effects = [];
 }
 
 let workInProgressHook = null;
@@ -907,33 +1018,31 @@ function createHooks(state) {
     next: null
   };
 }
-function createWorkInProgressHook(state, ref) {
+function createWorkInProgressHook(state) {
   if (!firstWorkInProgressHook) {
     firstWorkInProgressHook = workInProgressHook = createHooks(state);
     workInProgress.memoizedState = firstWorkInProgressHook;
   } else if (!workInProgressHook) {
     lastWorkInProgressHook.next = workInProgressHook = createHooks(state);
   }
-  if (ref) ref.current = workInProgress;
   lastWorkInProgressHook = workInProgressHook;
   workInProgressHook = workInProgressHook.next;
   return lastWorkInProgressHook;
 }
 function processHookState(hook) {
-  if (workInProgress.alternate) processUpdateQueue(workInProgress, hook, hook.queue);
+  if (workInProgress.alternate) processUpdateQueue(workInProgress, hook, hook.queue, workInProgressRootRenderLanes);
 }
-function createUpdateQueue(hook, fiber) {
+function createUpdateQueue(hook) {
   hook.queue = initializeUpdateQueue(hook.state);
-  hook.queue.dispatch = dispatchState.bind(null, fiber, hook);
+  hook.queue.dispatch = dispatchState.bind(null, workInProgress, hook);
 }
 function dispatchState(fiber, hook, state) {
-  if (!fiber.current) return;
-  const current = fiber.current;
+  if (!fiber) return;
+  const current = getLatestFiber(fiber);
   const lane = requestUpdateLane();
   current.lanes |= lane;
   const update = createUpdate(state, getCurrentTime(), lane, UpdateState.replaceState);
   enqueueUpdate(hook.queue, update);
-  console.log(lane, 'l');
   scheduleUpdateOnFiber(current);
 }
 
@@ -946,6 +1055,7 @@ function mountClassComponent(wipFiber, lanes) {
   instance.context = nextContext;
   instance.props = wipFiber.pendingProps;
   instance.state = nextState;
+  wipFiber.memoizedState = nextState;
   reconcileChildrenArray(wipFiber, instance.render(), lanes);
 }
 function mountSuspenseFallbackChildren(fiber, primaryChildren, fallbackChildren, lanes) {
@@ -993,7 +1103,7 @@ function beginWork(wipFiber, renderLanes) {
       processClassComponent(wipFiber, renderLanes);
       break;
     case FiberTag.Suspense:
-      processSuspenseComponent(wipFiber, renderLanes);
+      if (processSuspenseComponent(wipFiber, renderLanes)) return true;
       break;
     case FiberTag.Offscreen:
       if (processOffscreenComponent(wipFiber, renderLanes)) return true;
@@ -1009,11 +1119,16 @@ function beginWork(wipFiber, renderLanes) {
   }
   return false;
 }
+let flag = false;
 function processOffscreenComponent(fiber, lanes) {
   let children = fiber.pendingProps.children;
   if (fiber.pendingProps.mode === 'hidden') {
-    console.log(fiber.lanes, fiber, 'xx');
     fiber.lanes |= PingLane;
+    cloneFiberChildren(fiber.alternate?.child || null, fiber);
+    return true;
+  }
+  if (intersectLanes(fiber.lanes, TransitionLanes) && flag) {
+    flag = false;
     cloneFiberChildren(fiber.alternate?.child || null, fiber);
     return true;
   }
@@ -1026,6 +1141,10 @@ function processSuspenseComponent(wipFiber, lanes) {
   let showFallback = false;
   const DidCapture = (wipFiber.flags & Flags.DidCapture) !== Flags.NONE;
   if (DidCapture) {
+    if (intersectLanes(wipFiber.childLanes, TransitionLanes) && wipFiber.alternate) {
+      cloneFiberChildren(wipFiber.alternate?.child, wipFiber);
+      return true;
+    }
     showFallback = true;
     wipFiber.flags &= ~FiberFlags.DidCapture;
   }
@@ -1035,6 +1154,7 @@ function processSuspenseComponent(wipFiber, lanes) {
   } else {
     if (showFallback) mountSuspenseFallbackChildren(wipFiber, nextPrimaryChildren, nextFallbackChildren, lanes);else mountSuspensePrimaryChildren(wipFiber, nextPrimaryChildren, lanes);
   }
+  return false;
 }
 function processFunctionComponent(wipFiber, lanes) {
   const newChildElements = wipFiber.type(wipFiber.pendingProps);
@@ -1053,18 +1173,39 @@ function processHostComponent(wipFiber, lanes) {
 }
 
 let nextUnitOfWork = null;
-let pendingCommit = null;
 let rootFiberNode = null;
+let workInProgressRoot = null;
 let workInProgressRootRenderLanes = NoLanes;
+let currentBatchConfig = {
+  transition: null
+};
+let unwindWorks = [];
+let cloneChildrenHandlers = [];
 registerEvent(document.body);
 function render(children, containerDom) {
   if (!containerDom) containerDom = document.createElement('div');
-  if (!rootFiberNode) rootFiberNode = {
-    container: containerDom,
-    mode: Mode.NoMode
-  };
+  if (!rootFiberNode) rootFiberNode = createRootFiber(containerDom, Mode.NoMode);
   renderOnRootFiber(children, containerDom, rootFiberNode);
   return containerDom;
+}
+function createRoot() {
+  const rootFiberNode = createRootFiber(null, Mode.Concurrent);
+  return {
+    render: (children, dom) => renderOnRootFiber(children, dom, rootFiberNode),
+    unmount() {}
+  };
+}
+function createRootFiber(container, mode) {
+  return {
+    container,
+    mode,
+    pendingLanes: NoLanes,
+    expiredLanes: NoLanes,
+    renderLanes: NoLanes,
+    finishedWork: null,
+    callbackNode: null,
+    callbackId: NoLanes
+  };
 }
 function renderOnRootFiber(children, dom, rootFiberNode) {
   const {
@@ -1081,68 +1222,104 @@ function renderOnRootFiber(children, dom, rootFiberNode) {
     mode
   });
   rootFiberNode.current = root;
-  root.lanes = SyncLane;
-  root.pendingLanes = root.lanes;
+  rootFiberNode.pendingLanes |= SyncLane;
+  root.lanes |= SyncLane;
+  workInProgressRoot = rootFiberNode;
   scheduleOnRoot(rootFiberNode);
 }
 function scheduleOnRoot(root) {
   ensureRootIsScheduled(root);
 }
-function ensureRootIsScheduled(rootNode) {
-  const root = rootNode.current;
+function scheduleUpdateOnFiber(fiber) {
+  const root = markUpdateFromFiberToRoot(fiber);
+  workInProgressRoot = root;
   if (!root) return;
-  root.effects = [];
-  root.pendingLanes = mergeLanes(root.pendingLanes, root.childLanes);
+  if (!isBatchingUpdates) ensureRootIsScheduled(root);
+}
+function ensureRootIsScheduled(root) {
   const lanes = getNextLanes(root);
   workInProgressRootRenderLanes = lanes;
   root.pendingLanes &= ~lanes;
-  if (lanes === SyncLane) {
+  if (root.callbackNode && lanes < root.callbackId) {
+    root.callbackNode.callback = null;
+    root.callbackNode = null;
+    root.pendingLanes |= root.callbackId;
+    root.callbackId = NoLanes;
+    resetContext();
+  }
+  const priority = LaneToPriority(lanes);
+  if (lanes === NoLanes) {
+    return;
+  } else if (lanes === SyncLane) {
     return performSyncWorkOnRoot(root);
   } else {
-    scheduleCallback(UserBlockingPriority, performConcurrentWorkOnRoot.bind(null, root));
+    root.callbackNode = scheduleCallback(priority, performConcurrentWorkOnRoot.bind(null, root));
+    root.callbackId = lanes;
   }
 }
 function getNextLanes(root) {
   const pendingLanes = root.pendingLanes;
-  return pendingLanes;
-  // return SyncLane;
+  return getHighestPriorityLane(pendingLanes);
 }
 function performSyncWorkOnRoot(root) {
   performWork(root, workLoopSync);
 }
 function performConcurrentWorkOnRoot(root) {
-  performWork(root, workLoop);
+  return performWork(root, workLoop);
+}
+function prepareStack() {
+  clearSuspenseHander();
+  unwindWorks = [];
+  cloneChildrenHandlers.length = 0;
 }
 function performWork(root, workLoop) {
-  clearSuspenseHander();
-  nextUnitOfWork = cloneFiberNode(root, root.pendingProps, {
-    alternate: root
+  let {
+    current
+  } = root;
+  if (!current) return;
+  prepareStack();
+  nextUnitOfWork = cloneFiberNode(current, current.pendingProps, {
+    alternate: current
   });
   while (nextUnitOfWork) {
     try {
-      workLoop();
-      break;
+      return workLoop(root);
     } catch (error) {
       nextUnitOfWork = catchError(error, nextUnitOfWork);
     }
   }
 }
-function workLoopSync() {
+function workLoopSync(root) {
   while (nextUnitOfWork) {
     nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
   }
-  if (pendingCommit) {
-    commitAllWork(pendingCommit);
+  const {
+    finishedWork
+  } = root;
+  if (finishedWork) {
+    commitAllWork(finishedWork);
   }
 }
-function workLoop() {
-  while (nextUnitOfWork && shouldYield()) {
+function workLoop(root) {
+  while (nextUnitOfWork && !shouldYield()) {
     nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
   }
-  if (pendingCommit) commitAllWork(pendingCommit);
+  const {
+    finishedWork
+  } = root;
+  if (finishedWork) {
+    commitAllWork(finishedWork);
+  } else {
+    let prevWork = nextUnitOfWork;
+    return () => {
+      nextUnitOfWork = prevWork;
+      return workLoop(root);
+    };
+  }
 }
 function performUnitOfWork(wipFiber) {
   const skip = beginWork(wipFiber, workInProgressRootRenderLanes);
+  wipFiber.memoizedProps = wipFiber.pendingProps;
   if (wipFiber.child && !skip) {
     return wipFiber.child;
   }
@@ -1157,39 +1334,49 @@ function performUnitOfWork(wipFiber) {
 }
 function completeWork(fiber) {
   unwindWork(fiber, workInProgressRootRenderLanes);
-  if (fiber.parent) {
-    const childEffects = fiber.effects || [];
-    const thisEffect = fiber.flags > FiberFlags.PerformWork ? [fiber] : [];
-    const parentEffects = fiber.parent.effects || [];
-    fiber.parent.effects = parentEffects.concat(childEffects, thisEffect);
-  } else {
-    pendingCommit = fiber;
-  }
+}
+function beforeCommit() {
+  for (const fn of cloneChildrenHandlers) fn();
+  for (const f of unwindWorks) unwindUnit(f, workInProgressRootRenderLanes);
 }
 function commitAllWork(fiber) {
+  beforeCommit();
   (fiber.effects || []).forEach(f => commitWork(f));
-  fiber.stateNode.current = fiber;
+  const root = fiber.stateNode;
+  root.current = fiber;
+  root.finishedWork = null;
   nextUnitOfWork = null;
-  pendingCommit = null;
+  ensureRootIsScheduled(root);
 }
 
-function attachPingListener(root, promise) {
+function getNearestSuspense(fiber) {
+  let node = fiber;
+  while (node && node.tag !== FiberTag.Suspense) node = node.parent;
+  return node ? getLatestFiber(node) : null;
+}
+function attachPingListener(fiber, promise) {
   const ping = () => {
-    ensureRootIsScheduled(root);
+    const suspense = getNearestSuspense(fiber);
+    if (suspense) suspense.lanes |= fiber.lanes;
+    const root = suspense ? markUpdateFromFiberToRoot(suspense) : null;
+    root && ensureRootIsScheduled(root);
   };
   promise.then(ping, ping);
 }
 function catchError(error, fiber, lanes, errorInfo) {
   let component, ctor, handled;
+  let needPing = true;
   if (error instanceof SuspenseException) {
     error = error.promise;
     const suspenseBoundary = getSuspenseHander();
-    if (suspenseBoundary) suspenseBoundary.flags |= Flags.ShouldCapture;
+    if (suspenseBoundary) {
+      suspenseBoundary.flags |= Flags.ShouldCapture;
+      if (suspenseBoundary.memoizedState === error) needPing = false;
+      suspenseBoundary.memoizedState = error;
+    }
   }
-  if (error instanceof Promise) {
-    fiber.lanes |= PingLane;
-    const root = markUpdateFromFiberToRoot(fiber);
-    if (root) attachPingListener(root, error);
+  if (error instanceof Promise && needPing) {
+    attachPingListener(fiber, error);
   }
   for (let current = fiber; current; current = current.parent) {
     current.effects = []; // reset effect
@@ -1258,7 +1445,6 @@ const wrapPromise = promise => {
   });
   return {
     read() {
-      console.log(11);
       switch (status) {
         case 'pending':
           throw new SuspenseException(next);
@@ -1318,10 +1504,12 @@ function createElement(type) {
     config = {};
   } else if (Array.isArray(args[0])) {
     children = args[0];
+  } else if (config?.children) {
+    config.key = config.key ? config.key : args[0] || void 0;
   } else {
     children = [...args];
   }
-  if (config && config.children) children = children.concat(config.children);
+  if (config && (config.children || config.children === 0)) children = children.concat(config.children);
   const props = Object.assign({
     children: null
   }, config);
@@ -1370,9 +1558,8 @@ const useRef = initValue => {
   return hook.state;
 };
 const useState = initialState => {
-  const ref = useRef(null);
-  const hook = createWorkInProgressHook(typeof initialState === 'function' ? initialState() : initialState, ref);
-  if (!hook.queue) createUpdateQueue(hook, ref);
+  const hook = createWorkInProgressHook(typeof initialState === 'function' ? initialState() : initialState);
+  if (!hook.queue) createUpdateQueue(hook);
   processHookState(hook);
   return [hook.state, hook.queue.dispatch];
 };
@@ -1424,6 +1611,21 @@ const useCallback = (callback, deps) => useMemo(() => callback, deps);
 const useContext = context => {
   return context.currentValue;
 };
+function _startTransition(setPending, fn) {
+  setPending(true);
+  const prevTransition = currentBatchConfig.transition;
+  currentBatchConfig.transition = 1;
+  setPending(false);
+  fn();
+  currentBatchConfig.transition = prevTransition;
+}
+function startTransition(fn) {
+  _startTransition(() => {}, fn);
+}
+const useTransition = () => {
+  const [isPending, setPending] = useState(false);
+  return [isPending, _startTransition.bind(null, setPending)];
+};
 
 // export * from './interface';
 const Children = {
@@ -1433,6 +1635,7 @@ const Children = {
 var index = {
   createElement,
   render,
+  createRoot,
   Fragment: FRAGMENT,
   Component,
   forwardRef,
@@ -1446,11 +1649,13 @@ var index = {
   useCallback,
   useRef,
   useContext,
+  useTransition,
+  startTransition,
   createContext,
   Offscreen: OFFSCREEN,
   Suspense: SUSPENSE,
   lazy
 };
 
-export { Children, Component, FRAGMENT as Fragment, OFFSCREEN as Offscreen, SUSPENSE as Suspense, createContext, createElement, createRef, index as default, forwardRef, isValidElement, lazy, render, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, wrapPromise };
+export { Children, Component, FRAGMENT as Fragment, OFFSCREEN as Offscreen, SUSPENSE as Suspense, createContext, createElement, createRef, createRoot, index as default, forwardRef, isValidElement, lazy, render, startTransition, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition, wrapPromise };
 //# sourceMappingURL=index.mjs.map

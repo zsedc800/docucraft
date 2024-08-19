@@ -56,10 +56,13 @@ export function createElement(
 		config = {};
 	} else if (Array.isArray(args[0])) {
 		children = args[0];
+	} else if (config?.children) {
+		config.key = config.key ? config.key : args[0] || void 0;
 	} else {
 		children = [...args];
 	}
-	if (config && config.children) children = children.concat(config.children);
+	if (config && (config.children || config.children === 0))
+		children = children.concat(config.children);
 	const props: IProps = Object.assign({ children: null }, config);
 
 	props.children = children

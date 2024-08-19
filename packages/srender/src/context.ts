@@ -1,7 +1,10 @@
 import { ContextProvider } from './element';
-import { Context, FC, IFiber } from './interface';
+import { Context } from './interface';
 import { createRef } from './utils';
-
+const resetHandlers: Array<() => void> = [];
+export function resetContext() {
+	for (const fn of resetHandlers) fn();
+}
 export const createContext = <T = any>(initialValue: T): Context<T> => {
 	const $currentValue = createRef(initialValue);
 	const stackValue = [initialValue];
@@ -9,6 +12,8 @@ export const createContext = <T = any>(initialValue: T): Context<T> => {
 		stackValue.push(value);
 		return children;
 	};
+
+	resetHandlers.push(() => (stackValue.length = 1));
 
 	const context: Context<T> = {
 		get currentValue() {

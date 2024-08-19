@@ -1,5 +1,6 @@
 import { Lane, Lanes } from '../Lanes';
 import { Component } from '../component';
+import { Task } from '../scheduler';
 import { FiberFlags, FiberTag, Mode, UpdateState } from './enums';
 
 export interface Props {
@@ -120,9 +121,6 @@ export interface Fiber {
 
 	lanes: Lanes;
 	childLanes: Lanes;
-	pendingLanes: Lanes;
-	renderLanes: Lanes;
-	expiredLanes: Lanes;
 
 	flags: FiberFlags;
 
@@ -135,7 +133,7 @@ export interface Fiber {
 
 	pendingProps: Props;
 	memoizedProps: Props | null;
-	updateQueue: UpdateQueue | null;
+	updateQueue: UpdateQueue<any> | null;
 	memoizedState: State | Hooks | null;
 	alternate: Fiber | null;
 
@@ -146,4 +144,10 @@ export interface RootFiberNode {
 	container: HTMLElement | null;
 	current?: Fiber;
 	mode: Mode;
+	pendingLanes: Lanes;
+	renderLanes: Lanes;
+	expiredLanes: Lanes;
+	finishedWork: Fiber | null;
+	callbackNode: Task | null;
+	callbackId: Lanes;
 }

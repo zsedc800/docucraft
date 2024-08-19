@@ -1,4 +1,5 @@
-import { Context, Fiber, HookEffect, IFiber, ITag, Ref } from './interface';
+import { Context, Fiber, HookEffect } from './interface';
+import { currentBatchConfig } from './reconciler/core';
 import {
 	createUpdateQueue,
 	createWorkInProgressHook,
@@ -14,12 +15,10 @@ export const useRef: <T = any>(initValue: T) => { current: T } = (
 };
 
 export const useState = <T = any>(initialState: T) => {
-	const ref = useRef<Fiber | null>(null);
 	const hook = createWorkInProgressHook(
-		typeof initialState === 'function' ? initialState() : initialState,
-		ref
+		typeof initialState === 'function' ? initialState() : initialState
 	);
-	if (!hook.queue) createUpdateQueue(hook, ref);
+	if (!hook.queue) createUpdateQueue(hook);
 	processHookState(hook);
 	return [hook.state, hook.queue!.dispatch!];
 };
@@ -92,4 +91,23 @@ export const useCallback = (callback: (...args: any[]) => any, deps?: any[]) =>
 
 export const useContext = <T>(context: Context<T>): T => {
 	return context.currentValue;
+};
+
+function _startTransition(setPending: (b: boolean) => void, fn: () => void) {
+	setPending(true);
+	const prevTransition = currentBatchConfig.transition;
+	currentBatchConfig.transition = 1;
+	setPending(false);
+	fn();
+	currentBatchConfig.transition = prevTransition;
+}
+
+export function startTransition(fn: () => void) {
+	_startTransition(() => {}, fn);
+}
+
+export const useTransition = () => {
+	const [isPending, setPending] = useState(false);
+
+	return [isPending, _startTransition.bind(null, setPending)];
 };

@@ -1,13 +1,29 @@
 import { Component } from '../component';
-import { ClassComponent, Flags, Fiber, RootFiberNode } from '../interface';
-import { ensureRootIsScheduled } from '.';
-import { getSuspenseHander, unwindWork } from './utils';
-import { Lanes, PingLane } from '../Lanes';
+import {
+	ClassComponent,
+	Flags,
+	Fiber,
+	RootFiberNode,
+	FiberTag
+} from '../interface';
+import { ensureRootIsScheduled } from './core';
+import { getLatestFiber, getSuspenseHander, unwindWork } from './utils';
+import { Lanes } from '../Lanes';
 import { markUpdateFromFiberToRoot } from './update';
 
-function attachPingListener(root: RootFiberNode, promise: Promise<any>) {
+function getNearestSuspense(fiber: Fiber) {
+	let node: Fiber | null = fiber;
+	while (node && node.tag !== FiberTag.Suspense) node = node.parent;
+	return node ? getLatestFiber(node) : null;
+}
+
+function attachPingListener(fiber: Fiber, promise: Promise<any>) {
 	const ping = () => {
-		ensureRootIsScheduled(root);
+		const suspense = getNearestSuspense(fiber);
+		if (suspense) suspense.lanes |= fiber.lanes;
+
+		const root = suspense ? markUpdateFromFiberToRoot(suspense) : null;
+		root && ensureRootIsScheduled(root);
 	};
 
 	promise.then(ping, ping);
@@ -20,17 +36,22 @@ export function catchError(
 	errorInfo?: any
 ) {
 	let component, ctor, handled;
-
+	let needPing = true;
 	if (error instanceof SuspenseException) {
 		error = error.promise;
 		const suspenseBoundary = getSuspenseHander();
-		if (suspenseBoundary) suspenseBoundary.flags |= Flags.ShouldCapture;
+
+		if (suspenseBoundary) {
+			suspenseBoundary.flags |= Flags.ShouldCapture;
+
+			if (suspenseBoundary.memoizedState === error) needPing = false;
+
+			suspenseBoundary.memoizedState = error;
+		}
 	}
 
-	if (error instanceof Promise) {
-		fiber.lanes |= PingLane;
-		const root = markUpdateFromFiberToRoot(fiber);
-		if (root) attachPingListener(root, error);
+	if (error instanceof Promise && needPing) {
+		attachPingListener(fiber, error);
 	}
 
 	for (

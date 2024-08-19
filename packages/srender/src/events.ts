@@ -1,4 +1,5 @@
 import { Fiber, FiberTag } from './interface';
+import { batchedUpdates } from './reconciler/update';
 
 const events = [
 	'onCopy',
@@ -173,7 +174,7 @@ export const registerEvent = (root: HTMLElement) => {
 		while (current) {
 			if (current.tag === FiberTag.HostComponent) {
 				const handler = current.pendingProps[eventName];
-				handler && handler(e);
+				handler && batchedUpdates(handler, e);
 			}
 			current = current.parent;
 		}

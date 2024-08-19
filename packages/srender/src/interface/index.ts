@@ -53,7 +53,7 @@ export interface SrenderDOMAttributes {
 export type IdleRequestCallback = (deadline: IdleDeadline) => any;
 
 export interface SuspenseProps {
-	children?: VNode;
+	children?: VNode | VNode[];
 	fallback?: NonNullable<VNode> | null;
 }
 
@@ -70,55 +70,4 @@ export interface IProps {
 	children?: ComponentChildren;
 	style?: object;
 	[key: string]: any;
-}
-
-export interface IFiber {
-	tag: ITag;
-	type?: ComponentType;
-	lanes?: number;
-
-	flags: Flags;
-
-	$$typeof: Symbol;
-	index: number;
-
-	parent?: IFiber | null;
-	child?: IFiber | null;
-	sibling?: IFiber | null;
-	alternate?: IFiber | null;
-
-	stateNode?: Element | Component;
-
-	hooks: {
-		refs?: {
-			index: number;
-			values: Ref[];
-		};
-		states?: {
-			index: number;
-			values: any[];
-		};
-		layoutEffects?: {
-			index: number;
-			values: { callback: () => void | (() => void); canRun: boolean }[];
-		};
-		effects?: {
-			index: number;
-			values: { callback: () => void | (() => void); canRun: boolean }[];
-		};
-		destroy?: (() => void)[];
-	};
-
-	props: IProps;
-	partialState?: IState | null;
-	effectTag: Effect;
-	effects?: IFiber[];
-}
-
-export interface IUpdate {
-	from: ITag;
-	dom?: HTMLElement;
-	newProps?: IProps;
-	partialState?: IState | null;
-	fiber?: IFiber;
 }

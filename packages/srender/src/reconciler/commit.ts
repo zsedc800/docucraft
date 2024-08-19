@@ -66,6 +66,7 @@ function commitPlacement(fiber: Fiber) {
 	if (fiber.tag === FiberTag.HostComponent || fiber.tag === FiberTag.HostText) {
 		const before = getHostSibling(fiber);
 		const node = fiber.stateNode as Element;
+		// console.log(fiber, before, domParent, '333');
 
 		if (before) domParent.insertBefore(node, before);
 		else domParent.appendChild(node);
@@ -79,7 +80,7 @@ function commitPlacement(fiber: Fiber) {
 }
 
 function commitUpdate(fiber: Fiber) {
-	if (fiber.tag === FiberTag.HostComponent) {
+	if (fiber.tag === FiberTag.HostComponent || fiber.tag === FiberTag.HostText) {
 		updateDomProperties(
 			fiber.stateNode as HTMLElement,
 			(fiber.alternate as Fiber).pendingProps,

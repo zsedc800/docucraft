@@ -1,4 +1,22 @@
-import { Lane, Lanes, SyncLane } from './consts';
+import { currentBatchConfig } from '../reconciler/core';
+import { isBatchingUpdates } from '../reconciler/update';
+import {
+	IdlePriority,
+	ImmediatePriority,
+	NoPriority,
+	NormalPriority,
+	UserBlockingPriority
+} from '../scheduler';
+import {
+	ContinuousEventPriority,
+	DiscreteEventPriority,
+	Lane,
+	Lanes,
+	NoLane,
+	NonIdleLanes,
+	SyncLane,
+	TransitionLane1
+} from './consts';
 
 export * from './consts';
 
@@ -22,6 +40,30 @@ export function getHighestPriorityLane(lanes: Lanes) {
 	return lanes & -lanes;
 }
 
+let currentIndex = 0;
+let batchTransitionLane = NoLane;
+export function resetBatchTransitionLane() {
+	batchTransitionLane = NoLane;
+}
+function getTransitionLane() {
+	const res = TransitionLane1 << currentIndex;
+	currentIndex = (currentIndex + 1) % 16;
+	return res;
+}
 export function requestUpdateLane(): Lane {
+	if (currentBatchConfig.transition) {
+		batchTransitionLane =
+			batchTransitionLane === NoLane || !isBatchingUpdates
+				? getTransitionLane()
+				: batchTransitionLane;
+		return batchTransitionLane;
+	}
 	return SyncLane;
+}
+
+export function LaneToPriority(lane: Lane) {
+	if (lane <= DiscreteEventPriority) return ImmediatePriority;
+	if (lane <= ContinuousEventPriority) return UserBlockingPriority;
+	if (lane & NonIdleLanes) return NormalPriority;
+	return IdlePriority;
 }

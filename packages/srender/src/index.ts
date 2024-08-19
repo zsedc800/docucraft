@@ -7,7 +7,7 @@ import {
 	map,
 	isValidElement
 } from './element';
-import { render } from './reconciler';
+import { render, createRoot } from './reconciler';
 import { Component } from './component';
 import { createRef, forwardRef, lazy, wrapPromise } from './utils';
 
@@ -18,7 +18,9 @@ import {
 	useMemo,
 	useCallback,
 	useRef,
-	useContext
+	useContext,
+	useTransition,
+	startTransition
 } from './hooks';
 
 import { createContext } from './context';
@@ -29,6 +31,7 @@ const Children = { map, forEach };
 export default {
 	createElement,
 	render,
+	createRoot,
 	Fragment,
 	Component,
 	forwardRef,
@@ -42,6 +45,8 @@ export default {
 	useCallback,
 	useRef,
 	useContext,
+	useTransition,
+	startTransition,
 	createContext,
 	Offscreen,
 	Suspense,
@@ -51,6 +56,7 @@ export default {
 export {
 	createElement,
 	render,
+	createRoot,
 	Fragment,
 	Component,
 	forwardRef,
@@ -65,6 +71,8 @@ export {
 	useRef,
 	useContext,
 	createContext,
+	useTransition,
+	startTransition,
 	Offscreen,
 	Suspense,
 	lazy,

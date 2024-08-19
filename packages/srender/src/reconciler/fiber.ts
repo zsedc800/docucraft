@@ -26,9 +26,6 @@ export function createFiberNode(
 		flags: FiberFlags.Placement,
 		lanes: NoLanes,
 		childLanes: NoLanes,
-		pendingLanes: NoLanes,
-		renderLanes: NoLanes,
-		expiredLanes: NoLanes,
 		alternate: null,
 		effects: null
 	};
@@ -42,12 +39,10 @@ export function cloneFiberNode(
 	options: Partial<Fiber> = {}
 ) {
 	const { key, ref } = pendingProps;
-	const { parent, child, sibling } = options;
+	const { child, sibling } = options;
 	if (!child) options.child = null;
 	if (!sibling) options.sibling = null;
-	if (parent) {
-		// options.lanes =
-	}
+
 	const fiber = Object.assign(
 		{ key, ref },
 		oldFiber,

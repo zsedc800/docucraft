@@ -1,18 +1,25 @@
-import { Suspense, lazy, useMemo, useState } from '@docucraft/srender';
+import { Suspense, lazy, useState, useTransition } from '@docucraft/srender';
 import { Button } from '@docucraft/ui';
-const Cmp = lazy(
-	() =>
-		new Promise<any>((r) =>
-			setTimeout(() => r({ default: () => (<div>lucky...</div>) as any }), 5000)
-		)
-);
+
+const cache: any = {};
+const useMemo = (fn: (e: any) => any, [dep]: any[]) => {
+	if (!cache[dep]) cache[dep] = fn(dep);
+	return cache[dep];
+};
 const createPromise = (val: any, ts = 3000) =>
 	new Promise((r) => setTimeout(() => r(val), ts));
-export default () => {
-	const [p, setState] = useState(createPromise(23445));
+
+const Main = () => {
+	const [p, setState] = useState(0);
+	const [isPending, startTransition] = useTransition();
 
 	const Cnp = useMemo(
-		() => lazy(() => p.then((r: any) => ({ default: () => <span>{r}</span> }))),
+		(index) => {
+			const p = createPromise('hello' + index);
+			return lazy(() =>
+				p.then((r: any) => ({ default: () => <span>{r}</span> }))
+			);
+		},
 		[p]
 	);
 
@@ -22,17 +29,89 @@ export default () => {
 				<Button
 					onClick={() => {
 						console.log('click');
-						setState(createPromise('helol'));
+						startTransition(() => {
+							setState(p + 1);
+						});
 					}}
 				>
-					加载
+					{isPending ? '加载中...' : '加载'}
 				</Button>
 			</div>
-			<Suspense fallback={<div>加载中...</div>}>
-				{/* <Cmp /> */}
-				{/* <div className="">{read()}</div> */}
-				<Cnp />
-			</Suspense>
+			<Cnp />
 		</>
 	);
 };
+
+const now = performance.now;
+const ListItem = ({ children }: any) => {
+	const current = performance.now();
+
+	while (performance.now() - current < 5);
+	return <li>{children}</li>;
+};
+
+const Input = () => {
+	const [val, setVal] = useState('');
+	console.log(val, 'val');
+
+	return (
+		<div>
+			<input
+				placeholder="输入"
+				value={val}
+				onInput={(e) => setVal((e.target as HTMLInputElement).value)}
+			/>
+
+			<span>{val}</span>
+		</div>
+	);
+};
+
+const List = () => {
+	const [flag, toggle] = useState(false);
+	const [isPending, startTransition] = useTransition();
+	console.log(isPending, 'pending');
+
+	return (
+		<>
+			<Button
+				onClick={() => {
+					startTransition(() => {
+						toggle(!flag);
+					});
+				}}
+			>
+				toggle
+			</Button>
+
+			<div style={{ height: '300px', overflow: 'auto' }}>
+				{isPending ? (
+					'加载中'
+				) : flag ? (
+					<div id="ttyu">
+						{Array.from({ length: 1000 }).map((t, i) => (
+							<ListItem>{i}</ListItem>
+						))}
+					</div>
+				) : (
+					'empty'
+				)}
+			</div>
+		</>
+	);
+};
+
+export default () => {
+	return (
+		<>
+			<Input />
+			<List />
+		</>
+	);
+};
+
+// export default () => (
+// 	<Suspense fallback={<div>加载中...</div>}>
+// 		<Main />
+// 	</Suspense>
+// );
