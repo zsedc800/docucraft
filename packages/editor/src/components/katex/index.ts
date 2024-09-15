@@ -1,5 +1,4 @@
 import katex from 'katex';
-import 'katex/dist/katex.min.css';
 import { NodeSpec } from 'prosemirror-model';
 import { Plugin } from 'prosemirror-state';
 import createElement from '../../createElement';

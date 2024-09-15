@@ -25,12 +25,15 @@ export class TableView implements NodeView {
 	colgroup: HTMLTableColElement;
 	contentDOM: HTMLTableSectionElement;
 	private $cell?: ResolvedPos;
+
 	constructor(
 		public node: Node,
 		public view: EditorView,
 		private getPos: () => number | undefined,
 		public cellMinWidth: number
 	) {
+		console.log('table create');
+
 		this.dom = createElement('div', {
 			class: tableClassName
 		});
@@ -121,6 +124,8 @@ export class TableView implements NodeView {
 	};
 
 	destroy() {
+		console.log('table destroy');
+
 		this.dom.removeEventListener('mouseover', this.handleMouseOver);
 		this.dom.removeEventListener('mouseleave', this.handleMouseLeave);
 	}

@@ -18,7 +18,6 @@ import {
 	TextSelection
 } from 'prosemirror-state';
 import { tableNodeTypes } from './schema';
-import { version } from 'react';
 import { clipCells, fitSlice, insertCells, pastedCells } from './copypaste';
 import { TableMap } from './tableMap';
 

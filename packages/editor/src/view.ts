@@ -13,6 +13,19 @@ import { TaskItemViewConstructor, taskItem } from './components/taskList';
 import { columnResizing, tableEditing } from './components/tables';
 import { addView } from './utils';
 import { mathRender } from './components/katex';
+import {
+	HeadingViewConstructor,
+	ListSymbolConstructor
+} from './components/heading';
+import { outlineTreePlugin } from './components/outline';
+
+export class Editor {
+	constructor(container?: HTMLElement) {
+		if (container) this.setup(container);
+	}
+
+	setup(container: HTMLElement) {}
+}
 
 export const setupEditor = (el: HTMLElement | null) => {
 	if (!el) return;
@@ -30,7 +43,8 @@ export const setupEditor = (el: HTMLElement | null) => {
 			highlightCodePlugin(),
 			columnResizing(),
 			tableEditing({}),
-			mathRender()
+			mathRender(),
+			outlineTreePlugin
 		]
 	});
 
@@ -44,7 +58,9 @@ export const setupEditor = (el: HTMLElement | null) => {
 		},
 		nodeViews: {
 			codeBlock: CodeBlockViewConstructor,
-			taskItem: TaskItemViewConstructor
+			taskItem: TaskItemViewConstructor,
+			listSymbol: ListSymbolConstructor,
+			heading: HeadingViewConstructor
 		},
 		handleClickOn(view, pos, node, nodePos, event, direct) {
 			const markType = view.state.schema.marks.link;

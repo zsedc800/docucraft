@@ -1,0 +1,12 @@
+.list-symbol {
+	display: inline-block;
+	margin-right: 0.25em;
+	&::after {
+		content: '.';
+	}
+}
+
+.heading {
+	display: flex;
+	align-items: center;
+}

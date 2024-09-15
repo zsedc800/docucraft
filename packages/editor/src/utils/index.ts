@@ -1,3 +1,4 @@
+import { Node } from 'prosemirror-model';
 import { EditorView } from 'prosemirror-view';
 
 let view: { current?: EditorView } = {};
@@ -20,4 +21,16 @@ export function escapeLatex(latex: string) {
 	};
 
 	return latex.replace(/[\\{}$&#_%^~]/g, (match) => escapeMap[match]);
+}
+
+let uniqueIdCounter = 0;
+export function generateUniqueId() {
+	uniqueIdCounter++;
+	return `unique-${uniqueIdCounter}`;
+}
+
+export function assignUniqueId(node: any) {
+	if (!node.attrs.id) {
+		node.attrs.id = generateUniqueId();
+	}
 }

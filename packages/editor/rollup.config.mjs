@@ -3,6 +3,7 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import postcss from 'rollup-plugin-postcss';
 import typescript from 'rollup-plugin-typescript2';
+import alias from '@rollup/plugin-alias'
 
 const createBabelConfig = (targets) => ({
 	babelHelpers: 'bundled',
@@ -14,7 +15,9 @@ const createBabelConfig = (targets) => ({
 
 const common = {
 	input: 'src/index.ts',
+
 	plugins: [
+		// alias({ entries: [{ find: 'react', replacement: '@docucraft/srender' }] }),
 		resolve({ extensions: ['.js', '.jsx', '.ts', '.tsx'] }),
 		typescript({
 			tsconfig: './tsconfig.json',

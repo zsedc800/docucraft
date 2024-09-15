@@ -78,7 +78,7 @@ export const tableNodes = (options: TableNodesOptions): TableNodes => {
 		cellAttrs[prop] = { default: extraAttrs[prop].default };
 	return {
 		table: {
-			attrs: { class: { default: '' } },
+			attrs: { class: { default: '' }, hidden: { default: false } },
 			content: 'tableRow+',
 			tableRole: 'table',
 			isolating: true,
