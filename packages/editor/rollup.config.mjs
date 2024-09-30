@@ -19,18 +19,16 @@ const createBabelConfig = (targets) => ({
 const common = {
 	input: 'src/index.ts',
 	external: (id) =>
-		/node_modules|\@docucraft\/icons/.test(id) && !whitelist.includes(id),
+		/node_modules|\@docucraft\/icons\/styles/.test(id) &&
+		!whitelist.includes(id),
 	plugins: [
 		alias({
 			entries: [{ find: 'react', replacement: path.resolve('../srender') }]
 		}),
 		resolve({ extensions: ['.js', '.jsx', '.ts', '.tsx'] }),
-		typescript({
-			tsconfig: './tsconfig.json',
-			declaration: true,
-			declarationDir: 'dist',
-			rootDir: 'src'
-		}),
+		// typescript({
+		// 	tsconfig: './tsconfig.json'
+		// }),
 		commonjs(),
 		postcss({ extract: 'style.css', extensions: ['.css', '.scss', 'sass'] })
 	]

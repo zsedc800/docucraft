@@ -2,9 +2,9 @@
 	"name": "@docucraft/icons",
 	"version": "1.0.0",
 	"description": "",
-	"main": "index.jsx",
+	"main": "index.js",
 	"types": "index.d.ts",
-	"module": "./index.tsx",
+	"module": "./index.js",
 	"scripts": {
 		"dev": "tsc -w"
 	},
@@ -12,14 +12,10 @@
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
-		"@docucraft/srender": "workspace:^",
 		"typescript": "^5"
 	},
 	"dependencies": {
 		"material-icons": "^1.13.12",
 		"material-symbols": "^0.20.0"
-	},
-	"peerDependencies": {
-		"@docucraft/srender": "workspace:^"
 	}
 }

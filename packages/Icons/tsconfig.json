@@ -1,6 +1,7 @@
 {
 	"compilerOptions": {
-		"jsx": "preserve",
+		"jsx": "react-jsx",
+		"jsxImportSource": "react",
 		"target": "ESNext",
 
 		"module": "ESNext" /* Specify what module code is generated. */,

@@ -1,5 +1,6 @@
 import { useLayoutEffect, useRef } from '@docucraft/srender';
 import { Button } from '@docucraft/ui';
+import Icon from '@docucraft/icons';
 import { HeadingView } from '.';
 export type Level = 1 | 2 | 3 | 4 | 5 | 6;
 export interface Props {
@@ -9,7 +10,7 @@ export interface Props {
 	hidden: boolean;
 	id: string;
 }
-const Cmp = () => <span>dxce</span>;
+const Cmp = () => <Button>dxce</Button>;
 export default ({ view, level, fold, hidden, id }: Props) => {
 	const $heading = useRef<HTMLElement>();
 	const $content = useRef<HTMLDivElement>();
@@ -23,7 +24,9 @@ export default ({ view, level, fold, hidden, id }: Props) => {
 	return (
 		<Tag ref={$heading} id={id} className={`heading ${hidden ? 'hidden' : ''}`}>
 			<div className="heading-tools" contenteditable="false">
-				<Button
+				<Icon
+					style={{ cursor: 'pointer' }}
+					name={fold ? 'arrow_drop_down' : 'arrow_right'}
 					onClick={() => {
 						const pos = view.getPos();
 
@@ -39,9 +42,7 @@ export default ({ view, level, fold, hidden, id }: Props) => {
 							});
 						view.view.dispatch(tr);
 					}}
-				>
-					{fold ? '展开' : '折叠'}
-				</Button>
+				/>
 			</div>
 			{outlineTree && outlineTree.orderType ? (
 				<span

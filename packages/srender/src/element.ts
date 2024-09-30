@@ -65,6 +65,8 @@ export function createElement(
 	if (config && (config.children || config.children === 0))
 		children = children.concat(config.children);
 	const props: IProps = Object.assign({ children: null }, config);
+	console.log('create ele');
+
 	// if (props.className) props.class = props.className;
 	props.children = children
 		.filter((c) => c != undefined && c != null && c !== false)

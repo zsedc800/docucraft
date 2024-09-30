@@ -1,6 +1,11 @@
 import { MaterialIcon } from 'material-icons';
-import { IconType, getIconType } from './vars';
 import type { CSSProperties } from 'react';
+
+let iconType: IconType = 'filled';
+export type IconType = 'filled' | 'outlined' | 'round' | 'sharp' | 'two-tone';
+export const setCurrentIconType = (type: IconType) => (iconType = type);
+export const getIconType = () => iconType;
+
 export interface Props {
 	name: MaterialIcon;
 	className?: string;

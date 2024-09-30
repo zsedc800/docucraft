@@ -13,6 +13,7 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
+		"@docucraft/icons": "workspace:^",
 		"@docucraft/srender": "workspace:^",
 		"@docucraft/ui": "workspace:^",
 		"highlight.js": "^11.9.0",
