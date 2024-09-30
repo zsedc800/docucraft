@@ -73,7 +73,7 @@ const rules = [
 				end,
 				schema.nodes.listSymbol.create(
 					{ level },
-					schema.text(outineTree.calculateOrderNumber(parent))
+					schema.text(outineTree.calculateOrderNumber(parent.attrs.id))
 				)
 			);
 		return tr;

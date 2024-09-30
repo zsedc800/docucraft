@@ -1,14 +1,19 @@
 import { Node, ResolvedPos } from 'prosemirror-model';
-import { EditorState, Plugin, PluginKey } from 'prosemirror-state';
-import { Decoration, DecorationSet, DecorationSource } from 'prosemirror-view';
-import createElement from '../../createElement';
+import { Plugin, PluginKey, Transaction } from 'prosemirror-state';
+import { DecorationSet, DecorationSource } from 'prosemirror-view';
 import { ReplaceStep } from 'prosemirror-transform';
 import { HeadingView } from '../heading';
+import {
+	convertToAlphabet,
+	convertToChineseNumber,
+	convertToRoman
+} from '../../utils';
 
 export class OutlineNode {
 	children: OutlineNode[];
 	parent: OutlineNode | null;
 	constructor(
+		public id: string,
 		public node: HeadingView | null,
 		public level: number
 	) {
@@ -17,32 +22,31 @@ export class OutlineNode {
 	}
 }
 
+export type OrderType = 0 | 1 | 2 | 3;
+
 export class OutlineTree {
 	root: OutlineNode;
+	private map: Map<string, OutlineNode>;
+	orderType: OrderType = 3;
 	constructor(public decorations: DecorationSource) {
-		this.root = new OutlineNode(null, 0);
+		this.root = new OutlineNode('root', null, 0);
+		this.map = new Map();
 	}
-	foldOrNot(fold: boolean, dom: HTMLElement) {
-		let current: Element | null = dom;
-		const level = Number(dom.tagName.charAt(1));
-		while ((current = current.nextElementSibling)) {
-			if (
-				/^h\d$/.test(current.tagName) &&
-				Number(dom.tagName.charAt(1)) <= level
-			)
-				break;
-			else
-				fold
-					? current.classList.add('hidden')
-					: current.classList.remove('hidden');
-		}
+	setOrderType(type: OrderType) {
+		this.orderType = type;
+		this.updateHeading();
 	}
 	insertOrUpdate(heading: HeadingView, $pos: ResolvedPos) {
-		const node = heading.node;
+		const { node, id } = heading;
 		const level = node.attrs.level;
 
 		const parent = $pos.parent;
-		const outlineNode = new OutlineNode(heading, level);
+		let outlineNode = this.findNodeById(id);
+		if (outlineNode) {
+			outlineNode.node = heading;
+			return outlineNode;
+		} else outlineNode = new OutlineNode(id, heading, level);
+		this.map.set(id, outlineNode);
 		let index = $pos.index($pos.depth);
 		let cursor,
 			count = 0,
@@ -73,17 +77,13 @@ export class OutlineTree {
 
 			const olNode = this.findNodeById(cursor.attrs.id);
 			if (!olNode) throw new Error('can not found node');
-			console.log(olNode, 'olnode');
 
 			if (olNode.level > level) {
 				let l = olNode.level;
 				if (l < lastLevel) {
 					count = 1;
 					lastLevel = l;
-				} else if (l > lastLevel) {
-				} else {
-					count++;
-				}
+				} else if (l === lastLevel) count++;
 			} else if (olNode.level < level) {
 				olNode.children.unshift(outlineNode);
 				outlineNode.parent = olNode;
@@ -108,45 +108,40 @@ export class OutlineTree {
 	}
 
 	findNodeById(id: string) {
-		const search = (currentNode: OutlineNode): OutlineNode | null => {
-			if (currentNode.node?.id === id) return currentNode;
-			for (let child of currentNode.children) {
-				const result = search(child);
-				if (result) return result;
-			}
-			return null;
-		};
-		return search(this.root);
+		return this.map.get(id) || null;
 	}
 
 	removeById(id: string) {
-		const searchAndRemove = (currentNode: OutlineNode) => {
-			const index = currentNode.children.findIndex(
-				(child) => child.node?.id === id
+		const outlineNode = this.findNodeById(id);
+		if (outlineNode) {
+			const children = outlineNode.parent?.children || [];
+			const index = children.indexOf(outlineNode);
+			children.splice(index, 1, ...outlineNode.children);
+			outlineNode.children.forEach(
+				(child) => (child.parent = outlineNode.parent)
 			);
-			if (index !== -1) {
-				currentNode.children.splice(index, 1);
-				return true;
-			}
-			for (const child of currentNode.children) {
-				if (searchAndRemove(child)) return true;
-			}
-			return false;
-		};
-		const res = searchAndRemove(this.root);
-		let queue = [this.root];
-		while (queue.length) {
-			const ele = queue.shift();
-			ele?.node?.updateSymbol();
-			queue = queue.concat(ele!.children);
+			this.map.delete(id);
 		}
-		return res;
-	}
-	calculateOrderNumber(node: Node) {
-		const nums = [];
-		let current = this.findNodeById(node.attrs.id);
 
-		console.log(current, 'cur');
+		this.updateHeading();
+		return !!outlineNode;
+	}
+	updateHeading() {
+		for (const [key, outlineNode] of this.map) outlineNode.node?.updateSymbol();
+	}
+	dataLevel(id: string) {
+		let current = this.findNodeById(id),
+			offset = -2;
+		while (current) {
+			offset++;
+			current = current.parent;
+		}
+		return offset;
+	}
+	private renderOrder1(id: string) {
+		const nums = [];
+		let current = this.findNodeById(id);
+
 		while (current && current.parent) {
 			const index = current.parent.children.indexOf(current) + 1;
 
@@ -156,6 +151,49 @@ export class OutlineTree {
 
 		return nums.join('.');
 	}
+	private renderOrder2(id: string) {
+		let current = this.findNodeById(id);
+		const index = current?.parent?.children.indexOf(current);
+		if (typeof index !== 'number') return '';
+		const offset = this.dataLevel(id);
+		switch (offset % 3) {
+			case 0:
+				return convertToChineseNumber(index + 1);
+			case 1:
+				return `(${convertToChineseNumber(index + 1)})`;
+			case 2:
+				return index + 1 + '';
+		}
+
+		return '';
+	}
+	private renderOrder3(id: string) {
+		let current = this.findNodeById(id);
+		const index = current?.parent?.children.indexOf(current);
+		if (typeof index !== 'number') return '';
+		const offset = this.dataLevel(id);
+		switch (offset % 3) {
+			case 0:
+				return convertToAlphabet(index + 1);
+			case 1:
+				return convertToRoman(index + 1);
+			case 2:
+				return index + 1 + '';
+		}
+
+		return '';
+	}
+	calculateOrderNumber(id: string) {
+		switch (this.orderType) {
+			case 1:
+				return this.renderOrder1(id);
+			case 2:
+				return this.renderOrder2(id);
+			case 3:
+				return this.renderOrder3(id);
+		}
+		return '';
+	}
 }
 
 export const outlineTreeKey = new PluginKey<OutlineTree>('outlineTreeKey');
@@ -163,9 +201,7 @@ export const outlineTreePlugin = new Plugin({
 	key: outlineTreeKey,
 	state: {
 		init(_, { doc }) {
-			const outlineTree = new OutlineTree(
-				DecorationSet.create(doc, getDecos(doc))
-			);
+			const outlineTree = new OutlineTree(DecorationSet.create(doc, []));
 			return outlineTree;
 		},
 		apply(tr, value, oldState) {
@@ -180,65 +216,47 @@ export const outlineTreePlugin = new Plugin({
 					});
 				}
 			});
-			// value.decorations = DecorationSet.create(tr.doc, getDecos(tr.doc, value));
-			// const mappedDecorationSet = value.decorations.map(tr.mapping, tr.doc);
-			// const decorations: Decoration[] = [];
-			// tr.steps.forEach((step) => {
-			// 	if (step instanceof ReplaceStep && step.slice && step.slice.content) {
-			// 		step.slice.content.forEach((node) => {
-			// 			console.log(node, step, 'step');
-
-			// 			if (node.type.name === 'heading') {
-			// 				decorations.push(
-			// 					Decoration.widget(
-			// 						step.from + 1,
-			// 						() =>
-			// 							createElement(
-			// 								'span',
-			// 								{ class: 'list-symbol' },
-			// 								value.calculateOrderNumber(node)
-			// 							),
-			// 						{ key: node.attrs.id }
-			// 					)
-			// 				);
-			// 			}
-			// 		});
-			// 	}
-			// });
 
 			return value;
 		}
-	}
-	// props: {
-	// 	decorations(state) {
-	// 		return outlineTreeKey.getState(state)?.decorations;
-	// 	}
-	// }
-});
+	},
+	appendTransaction(transactions, oldState, newState) {
+		let tr: Transaction | undefined;
+		for (const transaction of transactions) {
+			const data = transaction.getMeta('toggleHeading');
 
-function getDecos(doc: Node, tree?: OutlineTree): Decoration[] {
-	if (!tree) return [];
+			if (data && typeof data.pos !== 'undefined') {
+				tr = newState.tr;
+				const pos = data.pos;
+				const $pos = oldState.doc.resolve(pos);
+				const parent = $pos.parent;
+				const index = $pos.index($pos.depth);
+				const node = parent.child(index);
+				let offset = pos + node.nodeSize;
 
-	let decorations: Decoration[] = [];
+				for (let i = index + 1; i < parent.childCount; i++) {
+					const current = parent.child(i);
 
-	doc.descendants((node, pos) => {
-		if (node.type.name === 'heading') {
-			decorations.push(
-				Decoration.widget(
-					pos + 1,
-					() =>
-						createElement(
-							'span',
-							{ class: 'list-symbol' },
-							tree.calculateOrderNumber(node)
-						),
-					{
-						ignoreSelection: true
-					}
-				)
-			);
+					if (
+						current.type.name === 'heading' &&
+						current.attrs.level <= node.attrs.level
+					)
+						break;
+
+					tr = tr.setNodeMarkup(
+						offset,
+						current.type,
+						{
+							...current.attrs,
+							hidden: data.hidden
+						},
+						current.marks
+					);
+					offset += current.nodeSize;
+				}
+				break;
+			}
 		}
-	});
-
-	return decorations;
-}
+		return tr;
+	}
+});

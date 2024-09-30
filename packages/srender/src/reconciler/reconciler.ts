@@ -143,6 +143,8 @@ function processClassComponent(wipFiber: Fiber, lanes: Lanes) {
 function processHostComponent(wipFiber: Fiber, lanes: Lanes) {
 	if (!wipFiber.stateNode) {
 		wipFiber.stateNode = createDomElement(wipFiber) as Element;
+
+		if (wipFiber.ref) wipFiber.ref.current = wipFiber.stateNode;
 	}
 	domMap.set(wipFiber.stateNode as HTMLElement, wipFiber);
 	const newChildElements = wipFiber.pendingProps.children;

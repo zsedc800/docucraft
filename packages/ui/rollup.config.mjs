@@ -7,16 +7,16 @@ import typescriptPlugin from './typescriptPlugin.mjs';
 const common = {
 	input: 'src/index.ts',
 	plugins: [
-		resolve({ extensions: ['.js', '.jsx', '.ts', '.tsx'] }),
-		typescript({
-			tsconfig: './tsconfig.json'
-		}),
-		commonjs({
-			include: 'node_modules/**'
-		}),
-		postcss({ extract: 'style.css', extensions: ['.css', '.scss', 'sass'] })
+		// resolve({ extensions: ['.js', '.jsx', '.ts', '.tsx', '.css'] }),
+		// typescript({
+		// 	tsconfig: './tsconfig.json'
+		// }),
+		// commonjs({
+		// 	include: 'node_modules/**'
+		// }),
+		// postcss({ extract: 'style.css', extensions: ['.css', '.scss', 'sass'] })
 	],
-	external: (id) => /node_modules/.test(id) || /\@docucraft/.test(id)
+	external: (id) => /node_modules|\@docucraft/.test(id)
 };
 
 const cjsConfig = {
@@ -26,7 +26,17 @@ const cjsConfig = {
 		format: 'cjs',
 		preserveModules: true
 	},
-	plugins: [...common.plugins, typescriptPlugin()]
+	plugins: [typescriptPlugin()]
 };
 
-export default [cjsConfig];
+const esmConfig = {
+	...common,
+	output: {
+		dir: 'es',
+		format: 'esm',
+		preserveModules: true
+	},
+	plugins: [typescriptPlugin({ format: 'esm' })]
+};
+
+export default [cjsConfig, esmConfig];

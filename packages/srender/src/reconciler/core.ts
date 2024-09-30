@@ -6,7 +6,8 @@ import {
 	FiberTag,
 	Fiber,
 	RootFiberNode,
-	Mode
+	Mode,
+	RootRender
 } from '../interface';
 import { commitWork } from './commit';
 import { beginWork } from './reconciler';
@@ -31,23 +32,27 @@ export let currentBatchConfig: { transition: number | null } = {
 };
 export let unwindWorks: Fiber[] = [];
 export let cloneChildrenHandlers: Array<() => void> = [];
-registerEvent(document.body);
+if (typeof window !== 'undefined') registerEvent(document.body);
 
 export function render(
 	children: ComponentChildren,
-	containerDom?: HTMLElement
+	containerDom?: HTMLElement & { __rootFiber?: RootFiberNode }
 ) {
 	if (!containerDom) containerDom = document.createElement('div');
+	let { __rootFiber: rootFiberNode } = containerDom;
 	if (!rootFiberNode)
-		rootFiberNode = createRootFiber(containerDom, Mode.NoMode);
+		rootFiberNode = containerDom.__rootFiber = createRootFiber(
+			containerDom,
+			Mode.NoMode
+		);
 	renderOnRootFiber(children, containerDom, rootFiberNode);
 	return containerDom;
 }
 
-export function createRoot() {
+export function createRoot(): RootRender {
 	const rootFiberNode = createRootFiber(null, Mode.Concurrent);
 	return {
-		render: (children: ComponentChildren, dom: HTMLElement) =>
+		render: (children: ComponentChildren, dom?: HTMLElement) =>
 			renderOnRootFiber(children, dom, rootFiberNode),
 		unmount() {}
 	};
@@ -71,14 +76,18 @@ export function createRootFiber(
 
 export function renderOnRootFiber(
 	children: ComponentChildren,
-	dom: HTMLElement,
+	dom: HTMLElement | null = null,
 	rootFiberNode: RootFiberNode
 ) {
 	const { container, current, mode } = rootFiberNode;
 	if (!container) rootFiberNode.container = dom;
 	const pendingProps = { children };
+
 	const root = current
-		? cloneFiberNode(current, pendingProps)
+		? cloneFiberNode(current, pendingProps, {
+				child: current.child,
+				sibling: current.sibling
+			})
 		: createFiberNode(FiberTag.HostRoot, pendingProps, {
 				stateNode: rootFiberNode,
 				mode
@@ -229,6 +238,7 @@ function beforeCommit() {
 
 function commitAllWork(fiber: Fiber) {
 	beforeCommit();
+
 	(fiber.effects || []).forEach((f) => commitWork(f));
 
 	const root = fiber.stateNode as RootFiberNode;

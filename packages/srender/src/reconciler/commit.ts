@@ -9,7 +9,7 @@ import {
 	RootFiberNode
 } from '../interface';
 
-function getHostParent(fiber: Fiber): HTMLElement {
+function getHostParent(fiber: Fiber): HTMLElement | null {
 	let domParentFiber = fiber.parent;
 	while (
 		domParentFiber &&
@@ -23,7 +23,7 @@ function getHostParent(fiber: Fiber): HTMLElement {
 	if (!domParentFiber) return fiber.stateNode as HTMLElement;
 	return domParentFiber.parent
 		? (domParentFiber.stateNode as HTMLElement)
-		: (domParentFiber.stateNode as RootFiberNode).container!;
+		: (domParentFiber.stateNode as RootFiberNode).container;
 }
 
 function getHostSibling(fiber: Fiber): Element | null {
@@ -63,10 +63,12 @@ function callEffect(fiber: Fiber, key: keyof HookEffect = 'create') {
 
 function commitPlacement(fiber: Fiber) {
 	const domParent = getHostParent(fiber);
-	if (fiber.tag === FiberTag.HostComponent || fiber.tag === FiberTag.HostText) {
+	if (
+		(fiber.tag === FiberTag.HostComponent || fiber.tag === FiberTag.HostText) &&
+		domParent
+	) {
 		const before = getHostSibling(fiber);
 		const node = fiber.stateNode as Element;
-		// console.log(fiber, before, domParent, '333');
 
 		if (before) domParent.insertBefore(node, before);
 		else domParent.appendChild(node);
@@ -107,7 +109,7 @@ function commitDeletion(fiber: Fiber) {
 	let node: Fiber | null | undefined = fiber;
 	const domParent = getHostParent(fiber);
 
-	while (true) {
+	while (true && domParent) {
 		if (!node) break;
 		if (node.tag !== FiberTag.HostComponent && node.tag !== FiberTag.HostText) {
 			node = node.child;

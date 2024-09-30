@@ -2,6 +2,7 @@ import { Node, ResolvedPos } from 'prosemirror-model';
 import {
 	Decoration,
 	DecorationSet,
+	DecorationSource,
 	EditorView,
 	NodeView,
 	NodeViewConstructor
@@ -17,9 +18,10 @@ import {
 	removeRow
 } from './commands';
 import { getView } from '../../utils';
+import { BaseNodeView } from '../../utils/view';
 
 const tableClassName = 'tableWrapper dc-block scrollbar';
-export class TableView implements NodeView {
+export class TableView extends BaseNodeView {
 	dom: HTMLDivElement;
 	table: HTMLTableElement;
 	colgroup: HTMLTableColElement;
@@ -33,7 +35,7 @@ export class TableView implements NodeView {
 		public cellMinWidth: number
 	) {
 		console.log('table create');
-
+		super(node, view);
 		this.dom = createElement('div', {
 			class: tableClassName
 		});
@@ -130,8 +132,8 @@ export class TableView implements NodeView {
 		this.dom.removeEventListener('mouseleave', this.handleMouseLeave);
 	}
 
-	update(node: Node, decorations: readonly Decoration[]): boolean {
-		if (node.type !== this.node.type) return false;
+	update(node: Node): boolean {
+		if (!super.update(node)) return false;
 		this.node = node;
 
 		this.dom.className = node.attrs.class || tableClassName;

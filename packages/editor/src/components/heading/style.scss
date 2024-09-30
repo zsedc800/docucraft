@@ -1,6 +1,24 @@
 .list-symbol {
 	display: inline-block;
-	margin-right: 0.25em;
+	padding: 0 4px;
+	padding-right: 6px;
+	border-radius: 4px;
+	cursor: pointer;
+	&:hover {
+		background-color: #f3f4f5;
+	}
+	&[data-type='2'][data-level='0'] {
+		&::after {
+			content: '、';
+			display: inline-block;
+			width: 0.5em;
+		}
+	}
+	&[data-type='2'][data-level='1'] {
+		&::after {
+			content: '';
+		}
+	}
 	&::after {
 		content: '.';
 	}

@@ -3,6 +3,7 @@
 	"version": "0.0.1",
 	"main": "dist/index.js",
 	"types": "dist/index.d.ts",
+	"module": "es/index.js",
 	"scripts": {
 		"build": "tsc && cp ./src/style.css ./dist/",
 		"dev": "rollup -c -w"
@@ -17,7 +18,7 @@
 	},
 	"dependencies": {
 		"@docucraft/icons": "workspace:^",
-		"@docucraft/srender": "workspace:^",
-		"material-icons": "^1.13.12"
+		"material-icons": "^1.13.12",
+		"react": "^18"
 	}
 }

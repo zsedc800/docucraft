@@ -13,10 +13,7 @@ import { TaskItemViewConstructor, taskItem } from './components/taskList';
 import { columnResizing, tableEditing } from './components/tables';
 import { addView } from './utils';
 import { mathRender } from './components/katex';
-import {
-	HeadingViewConstructor,
-	ListSymbolConstructor
-} from './components/heading';
+import { HeadingViewConstructor } from './components/heading';
 import { outlineTreePlugin } from './components/outline';
 
 export class Editor {
@@ -59,7 +56,6 @@ export const setupEditor = (el: HTMLElement | null) => {
 		nodeViews: {
 			codeBlock: CodeBlockViewConstructor,
 			taskItem: TaskItemViewConstructor,
-			listSymbol: ListSymbolConstructor,
 			heading: HeadingViewConstructor
 		},
 		handleClickOn(view, pos, node, nodePos, event, direct) {

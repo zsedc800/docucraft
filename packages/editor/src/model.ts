@@ -1,5 +1,11 @@
 // model.ts 文件命名暂时还是以 mvc 模式命名，方便理解，实际中 命名为 schema.ts 更好
-import { MarkSpec, NodeSpec, Schema, SchemaSpec } from 'prosemirror-model';
+import {
+	MarkSpec,
+	Node,
+	NodeSpec,
+	Schema,
+	SchemaSpec
+} from 'prosemirror-model';
 import { codeBlock } from './components/codeBlock';
 import { taskItem, taskList } from './components/taskList';
 import { tableNodes } from './components/tables';
@@ -7,6 +13,21 @@ import { mathNodeSpec } from './components/katex';
 
 function createNodeSpec(config: NodeSpec): NodeSpec {
 	config.attrs = { ...config.attrs, hidden: { default: false } };
+	const toDOM = config.toDOM;
+	if (toDOM)
+		config.toDOM = (node: Node) => {
+			const res = toDOM(node);
+			if (Array.isArray(res)) {
+				let [tag, attrs, content] = res;
+				if (attrs === 0) content = 0;
+				const hidden = node.attrs.hidden ? 'hidden' : '';
+				attrs = {
+					...attrs,
+					class: attrs.class ? attrs.class + ' ' + hidden : hidden
+				};
+				return [tag, attrs, content];
+			} else return res;
+		};
 	return config;
 }
 
@@ -65,6 +86,9 @@ const nodes = {
 			},
 			id: {
 				default: null
+			},
+			fold: {
+				default: false
 			}
 		},
 		// 当前节点内容可以是 0 个或多个 inline 节点

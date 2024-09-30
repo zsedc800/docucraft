@@ -9,6 +9,7 @@ import {
 } from 'prosemirror-view';
 import './style.scss';
 import createElement, { updateElement } from '../../createElement';
+import { BaseNodeView } from '../../utils/view';
 
 export const taskItem: NodeSpec = {
 	content: 'paragraph block*',
@@ -67,14 +68,11 @@ export const createTaskList: Command = (state, dispatch) => {
 	return false;
 };
 
-export class TaskItemView implements NodeView {
-	node: Node;
-	dom: HTMLElement;
-	view: EditorView;
+export class TaskItemView extends BaseNodeView {
 	contentDOM?: HTMLElement | null | undefined;
 	constructor(...args: Parameters<NodeViewConstructor>) {
 		const [node, view, getPos] = args;
-		this.node = node;
+		super(node, view);
 		this.contentDOM = createElement('div', { class: 'task-item-content' });
 		this.view = view;
 		this.dom = createElement(
@@ -98,12 +96,8 @@ export class TaskItemView implements NodeView {
 			this.contentDOM
 		);
 	}
-	update(
-		node: Node,
-		decorations: readonly Decoration[],
-		innerDecorations: DecorationSource
-	) {
-		if (node.type !== this.node.type) return false;
+	update(node: Node) {
+		if (!super.update(node)) return false;
 		updateElement(this.dom, {
 			class: `task-item${node.attrs.checked ? ' checked' : ''}`
 		});

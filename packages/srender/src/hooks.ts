@@ -7,7 +7,7 @@ import {
 } from './reconciler/fiberHooks';
 import { wait } from './utils';
 
-export const useRef: <T = any>(initValue: T) => { current: T } = (
+export const useRef: <T = any>(initValue?: T) => { current?: T } = (
 	initValue
 ) => {
 	const hook = createWorkInProgressHook({ current: initValue });

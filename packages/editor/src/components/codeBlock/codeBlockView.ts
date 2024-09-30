@@ -1,6 +1,5 @@
 import { Node } from 'prosemirror-model';
 import crel, { updateElement } from '../../createElement';
-import ReactDOM from 'react-dom/client';
 import {
 	Decoration,
 	DecorationSource,
@@ -8,24 +7,19 @@ import {
 	NodeView,
 	NodeViewConstructor
 } from 'prosemirror-view';
-import { setup } from './menu';
+// import { setup } from './menu';
+import { BaseNodeView } from '../../utils/view';
 type GetPos = () => number | undefined;
-export class CodeBlockView implements NodeView {
+export class CodeBlockView extends BaseNodeView {
 	name = 'blockCode';
-	view: EditorView;
 	getPos: GetPos;
 	unmount?: () => void;
-	dom!: HTMLElement;
 	menu: HTMLElement;
-	node: Node;
-	root: ReactDOM.Root;
+	// root: ReactDOM.Root;
 	contentDOM?: HTMLElement | null | undefined;
 	constructor(...args: Parameters<NodeViewConstructor>) {
 		const [node, view, getPos] = args;
-		console.log('create code');
-
-		this.node = node;
-		this.view = view;
+		super(node, view);
 		this.getPos = getPos;
 		this.contentDOM = crel('code', {
 			class: 'scrollbar dc-block',
@@ -42,22 +36,19 @@ export class CodeBlockView implements NodeView {
 			'data-show-line-number': node.attrs.showLineNumber,
 			'data-node-type': 'codeBlock'
 		});
-		this.root = ReactDOM.createRoot(this.menu);
+		// this.root = ReactDOM.createRoot(this.menu);
 		this.dom.appendChild(this.menu);
 		this.dom.appendChild(this.contentDOM);
 		this.renderComponent();
 	}
 
 	renderComponent() {
-		setup(this);
+		// setup(this);
 	}
 
-	update(
-		node: Node,
-		decorations: readonly Decoration[],
-		innerDecorations: DecorationSource
-	) {
-		if (node.type !== this.node.type) return false;
+	update(node: Node) {
+		const res = super.update(node);
+		if (!res) return false;
 		this.node = node;
 		updateElement(this.dom, {
 			'data-language': node.attrs.language,
@@ -78,7 +69,7 @@ export class CodeBlockView implements NodeView {
 	destroy() {
 		console.log('destroy code');
 
-		this.root.unmount();
+		// this.root.unmount();
 	}
 }
 

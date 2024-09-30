@@ -26,9 +26,9 @@ const CodeBlock = ({ nodeView }: { nodeView: CodeBlockView }) => {
 				<div className="code-block-menu-content">
 					<select
 						className="code-type-select"
-						onChange={(e) => {
+						onChange={(e: any) => {
 							const { state, dispatch } = nodeView.view;
-							const language = e.target.value;
+							const language = e.target?.value;
 							const pos = nodeView.getPos() as number;
 							state.schema.cached.lastLanguage = language;
 							if (pos || pos == 0) {
@@ -84,5 +84,5 @@ const CodeBlock = ({ nodeView }: { nodeView: CodeBlockView }) => {
 };
 
 export const setup = (nodeView: CodeBlockView) => {
-	nodeView.root.render(<CodeBlock nodeView={nodeView} />);
+	// nodeView.root.render(<CodeBlock nodeView={nodeView} />);
 };

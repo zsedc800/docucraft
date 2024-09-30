@@ -3,7 +3,10 @@ import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
 import postcss from 'rollup-plugin-postcss';
 import typescript from 'rollup-plugin-typescript2';
-import alias from '@rollup/plugin-alias'
+import alias from '@rollup/plugin-alias';
+import path from 'path';
+
+const whitelist = ['react'];
 
 const createBabelConfig = (targets) => ({
 	babelHelpers: 'bundled',
@@ -15,9 +18,12 @@ const createBabelConfig = (targets) => ({
 
 const common = {
 	input: 'src/index.ts',
-
+	external: (id) =>
+		/node_modules|\@docucraft\/icons/.test(id) && !whitelist.includes(id),
 	plugins: [
-		// alias({ entries: [{ find: 'react', replacement: '@docucraft/srender' }] }),
+		alias({
+			entries: [{ find: 'react', replacement: path.resolve('../srender') }]
+		}),
 		resolve({ extensions: ['.js', '.jsx', '.ts', '.tsx'] }),
 		typescript({
 			tsconfig: './tsconfig.json',
@@ -32,7 +38,7 @@ const common = {
 
 const esmConfig = {
 	...common,
-	external: (id) => /node_modules/.test(id),
+
 	output: {
 		file: 'dist/index.mjs',
 		format: 'esm',

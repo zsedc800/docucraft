@@ -7,4 +7,4 @@ export {
 	Fragment
 };
 
-export { JSX } from '../src/jsx';
+export * from '../dist/jsx';

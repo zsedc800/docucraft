@@ -29,6 +29,7 @@ declare global {
 
 		export interface IntrinsicAttributes {
 			key?: any;
+			[elename: string]: any;
 		}
 
 		export type ElementType<P = any> =

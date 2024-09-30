@@ -1,8 +1,8 @@
 import Icon, { IconName } from '@docucraft/icons';
-import './style';
 import { BasicType, ElementProps, Option } from '../interfaces';
-import { useEffect, useState } from '@docucraft/srender';
-import { MouseEvent } from 'react';
+import { MouseEvent, useEffect, useState } from 'react';
+import './style';
+
 interface Props extends ElementProps {
 	disabled?: boolean;
 	text?: string;
@@ -58,7 +58,7 @@ export const SegmentButton = ({
 }: {
 	options?: Option[];
 	value?: BasicType;
-	onChange?: (v: BasicType, opt?: Option) => void;
+	onChange?: (v?: BasicType, opt?: Option) => void;
 }) => {
 	const [checkedValue, setState] = useState(value);
 	useEffect(() => {

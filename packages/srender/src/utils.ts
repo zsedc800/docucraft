@@ -31,7 +31,7 @@ export const wait =
 		});
 	};
 
-export const createRef = <T = any>(initialVal: T): Ref<T> => {
+export const createRef = <T = any>(initialVal: T): { current: T } => {
 	return { current: initialVal };
 };
 

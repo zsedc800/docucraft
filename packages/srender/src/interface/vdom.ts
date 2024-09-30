@@ -63,7 +63,7 @@ export interface IVNode<P = Props> {
 
 export type Key = string | number | any;
 export interface Ref<T = any> {
-	current: T;
+	current?: T;
 }
 
 export type VNode<P = Props> = IVNode<P>;
@@ -150,4 +150,9 @@ export interface RootFiberNode {
 	finishedWork: Fiber | null;
 	callbackNode: Task | null;
 	callbackId: Lanes;
+}
+
+export interface RootRender {
+	render: (children: ComponentChildren, dom?: HTMLElement) => void;
+	unmount: () => void;
 }

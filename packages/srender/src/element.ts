@@ -48,6 +48,7 @@ export function createElement(
 	...args: any[]
 ): IVNode {
 	let children: any[] = [];
+
 	if (typeof config !== 'object' || config?.$$typeof) {
 		children = [config, ...args];
 		config = {};
@@ -64,7 +65,7 @@ export function createElement(
 	if (config && (config.children || config.children === 0))
 		children = children.concat(config.children);
 	const props: IProps = Object.assign({ children: null }, config);
-
+	// if (props.className) props.class = props.className;
 	props.children = children
 		.filter((c) => c != undefined && c != null && c !== false)
 		.map((c: any) => (c?.$$typeof ? c : createTextElement(c)));

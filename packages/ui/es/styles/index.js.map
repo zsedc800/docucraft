@@ -1,0 +1,1 @@
+{"version":3,"names":[],"sources":["index.ts"],"sourcesContent":["import '@docucraft/icons/styles';\nimport './themes/green.css';\nimport './global.css';\n"],"mappings":"AAAA,OAAO,yBAAyB;AAChC,OAAO,oBAAoB;AAC3B,OAAO,cAAc","ignoreList":[]}

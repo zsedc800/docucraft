@@ -139,6 +139,9 @@ importers:
       '@docucraft/srender':
         specifier: workspace:^
         version: link:../srender
+      '@docucraft/ui':
+        specifier: workspace:^
+        version: link:../ui
       highlight.js:
         specifier: ^11.9.0
         version: 11.9.0
@@ -181,12 +184,6 @@ importers:
       prosemirror-view:
         specifier: ^1.33.6
         version: 1.33.6
-      react:
-        specifier: ^18
-        version: 18.3.1
-      react-dom:
-        specifier: ^18
-        version: 18.3.1(react@18.3.1)
     devDependencies:
       '@types/katex':
         specifier: ^0.16.7
@@ -298,12 +295,12 @@ importers:
       '@docucraft/icons':
         specifier: workspace:^
         version: link:../Icons
-      '@docucraft/srender':
-        specifier: workspace:^
-        version: link:../srender
       material-icons:
         specifier: ^1.13.12
         version: 1.13.12
+      react:
+        specifier: ^18
+        version: 18.3.1
     devDependencies:
       '@babel/preset-typescript':
         specifier: ^7.24.1

@@ -873,18 +873,22 @@ const registerEvent = root => {
   }
 };
 
+const blacklist = ['children', 'style', 'ref'];
 const isEvent = name => name.startsWith('on');
-const isAttribute = name => !isEvent(name) && name !== 'children' && name !== 'style';
+const isAttribute = name => !(isEvent(name) || blacklist.includes(name));
+// !isEvent(name) && name !== 'children' && name !== 'style';
 const isNew = (prev, next) => key => prev[key] !== next[key];
 const isGone = next => key => !(key in next);
+function convertName(name) {
+  return name === 'className' ? 'class' : name;
+}
 function updateDomProperties(dom, prevProps, nextProps) {
   Object.keys(prevProps).filter(isAttribute).filter(isGone(nextProps)).forEach(name => {
-    dom[name] = null;
-    // dom.removeAttribute(name);
+    // (dom as IState)[name] = null;
+    dom.removeAttribute(convertName(name));
   });
   Object.keys(nextProps).filter(isAttribute).filter(isNew(prevProps, nextProps)).forEach(name => {
-    dom[name] = nextProps[name];
-    // dom.setAttribute(name, nextProps[name]);
+    if (dom.setAttribute) dom.setAttribute(convertName(name), nextProps[name]);else dom[name] = nextProps[name];
   });
   prevProps.style = prevProps.style || {};
   nextProps.style = nextProps.style || {};
@@ -898,7 +902,7 @@ function updateDomProperties(dom, prevProps, nextProps) {
 function createDomElement(fiber) {
   const isTextElement = fiber.type === TEXT_ELEMENT;
   const dom = isTextElement ? document.createTextNode('') : document.createElement(fiber.type);
-  updateDomProperties(dom, [], fiber.pendingProps);
+  updateDomProperties(dom, {}, fiber.pendingProps);
   return dom;
 }
 
@@ -940,10 +944,9 @@ function callEffect(fiber) {
 }
 function commitPlacement(fiber) {
   const domParent = getHostParent(fiber);
-  if (fiber.tag === FiberTag.HostComponent || fiber.tag === FiberTag.HostText) {
+  if ((fiber.tag === FiberTag.HostComponent || fiber.tag === FiberTag.HostText) && domParent) {
     const before = getHostSibling(fiber);
     const node = fiber.stateNode;
-    // console.log(fiber, before, domParent, '333');
     if (before) domParent.insertBefore(node, before);else domParent.appendChild(node);
     if (fiber.ref) fiber.ref.current = fiber.stateNode;
   } else if (fiber.tag === FiberTag.ClassComponent) {
@@ -969,7 +972,7 @@ function commitUpdate(fiber) {
 function commitDeletion(fiber) {
   let node = fiber;
   const domParent = getHostParent(fiber);
-  while (true) {
+  while (domParent) {
     if (!node) break;
     if (node.tag !== FiberTag.HostComponent && node.tag !== FiberTag.HostText) {
       node = node.child;
@@ -1166,6 +1169,7 @@ function processClassComponent(wipFiber, lanes) {
 function processHostComponent(wipFiber, lanes) {
   if (!wipFiber.stateNode) {
     wipFiber.stateNode = createDomElement(wipFiber);
+    if (wipFiber.ref) wipFiber.ref.current = wipFiber.stateNode;
   }
   domMap.set(wipFiber.stateNode, wipFiber);
   const newChildElements = wipFiber.pendingProps.children;
@@ -1173,7 +1177,6 @@ function processHostComponent(wipFiber, lanes) {
 }
 
 let nextUnitOfWork = null;
-let rootFiberNode = null;
 let workInProgressRoot = null;
 let workInProgressRootRenderLanes = NoLanes;
 let currentBatchConfig = {
@@ -1181,10 +1184,13 @@ let currentBatchConfig = {
 };
 let unwindWorks = [];
 let cloneChildrenHandlers = [];
-registerEvent(document.body);
+if (typeof window !== 'undefined') registerEvent(document.body);
 function render(children, containerDom) {
   if (!containerDom) containerDom = document.createElement('div');
-  if (!rootFiberNode) rootFiberNode = createRootFiber(containerDom, Mode.NoMode);
+  let {
+    __rootFiber: rootFiberNode
+  } = containerDom;
+  if (!rootFiberNode) rootFiberNode = containerDom.__rootFiber = createRootFiber(containerDom, Mode.NoMode);
   renderOnRootFiber(children, containerDom, rootFiberNode);
   return containerDom;
 }
@@ -1207,7 +1213,9 @@ function createRootFiber(container, mode) {
     callbackId: NoLanes
   };
 }
-function renderOnRootFiber(children, dom, rootFiberNode) {
+function renderOnRootFiber(children) {
+  let dom = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : null;
+  let rootFiberNode = arguments.length > 2 ? arguments[2] : undefined;
   const {
     container,
     current,
@@ -1217,7 +1225,10 @@ function renderOnRootFiber(children, dom, rootFiberNode) {
   const pendingProps = {
     children
   };
-  const root = current ? cloneFiberNode(current, pendingProps) : createFiberNode(FiberTag.HostRoot, pendingProps, {
+  const root = current ? cloneFiberNode(current, pendingProps, {
+    child: current.child,
+    sibling: current.sibling
+  }) : createFiberNode(FiberTag.HostRoot, pendingProps, {
     stateNode: rootFiberNode,
     mode
   });
@@ -1513,6 +1524,7 @@ function createElement(type) {
   const props = Object.assign({
     children: null
   }, config);
+  // if (props.className) props.class = props.className;
   props.children = children.filter(c => c != undefined && c != null && c !== false).map(c => c?.$$typeof ? c : createTextElement(c));
   let node = {
     $$typeof: ELEMENT,
