@@ -1,6 +1,7 @@
 import { MaterialIcon } from 'material-icons';
 import { IconType, getIconType } from './vars';
-import type { CSSProperties } from 'react';
+import { useEffect, useState, type CSSProperties } from 'react';
+export * from './svg';
 export interface Props {
 	name: MaterialIcon;
 	className?: string;
@@ -13,13 +14,17 @@ export const SVGIcon = () => null;
 
 export default ({ name, type, onClick, className, style = {} }: Props) => {
 	type = type || getIconType();
+	const [isFontLoaded, setState] = useState(false);
+	useEffect(() => {
+		document.fonts.ready.then(() => setState(true));
+	}, []);
 	return (
 		<i
 			style={style}
 			onClick={onClick}
 			className={`dUI-icons${type === 'filled' ? '' : '-' + type}${className ? ' ' + className : ''}`}
 		>
-			{name}
+			{isFontLoaded ? name : ''}
 		</i>
 	);
 };

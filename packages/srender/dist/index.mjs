@@ -1524,7 +1524,6 @@ function createElement(type) {
   const props = Object.assign({
     children: null
   }, config);
-  console.log('create ele');
   // if (props.className) props.class = props.className;
   props.children = children.filter(c => c != undefined && c != null && c !== false).map(c => c?.$$typeof ? c : createTextElement(c));
   let node = {

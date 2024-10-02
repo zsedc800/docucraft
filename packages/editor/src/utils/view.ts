@@ -14,6 +14,7 @@ import {
 } from '@docucraft/srender';
 export class BaseNodeView implements NodeView {
 	dom: HTMLElement;
+	contentDOM?: HTMLElement | null | undefined;
 	container?: HTMLElement;
 	rootRender: RootRender;
 	component: ComponentType<any> = () => '';
@@ -27,6 +28,11 @@ export class BaseNodeView implements NodeView {
 
 	render(props: any) {
 		this.rootRender.render(h(this.component, props));
+	}
+
+	ignoreMutation(mutation: MutationRecord) {
+		if (this.contentDOM && mutation.target !== this.contentDOM) return true;
+		return false;
 	}
 
 	update(

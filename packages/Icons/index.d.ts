@@ -1,6 +1,7 @@
 import { MaterialIcon } from 'material-icons';
 import { IconType } from './vars';
-import type { CSSProperties } from 'react';
+import { type CSSProperties } from 'react';
+export * from './svg';
 export interface Props {
     name: MaterialIcon;
     className?: string;
