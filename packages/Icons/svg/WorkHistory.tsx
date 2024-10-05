@@ -6,6 +6,7 @@ const SvgWorkHistory = (props: SVGProps<SVGSVGElement>) => (
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
+		fill="currentColor"
 		{...props}
 	>
 		<path d="M18 11c1.49 0 2.87.47 4 1.26V8c0-1.11-.89-2-2-2h-4V4c0-1.11-.89-2-2-2h-4c-1.11 0-2 .89-2 2v2H4c-1.11 0-1.99.89-1.99 2L2 19c0 1.11.89 2 2 2h7.68A6.995 6.995 0 0 1 18 11m-8-7h4v2h-4z" />

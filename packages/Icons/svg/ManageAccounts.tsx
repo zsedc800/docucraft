@@ -6,6 +6,7 @@ const SvgManageAccounts = (props: SVGProps<SVGSVGElement>) => (
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
+		fill="currentColor"
 		{...props}
 	>
 		<path d="M10.67 13.02c-.22-.01-.44-.02-.67-.02-2.42 0-4.68.67-6.61 1.82-.88.52-1.39 1.5-1.39 2.53V19c0 .55.45 1 1 1h8.26a6.96 6.96 0 0 1-.59-6.98" />

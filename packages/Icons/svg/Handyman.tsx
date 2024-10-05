@@ -6,6 +6,7 @@ const SvgHandyman = (props: SVGProps<SVGSVGElement>) => (
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
+		fill="currentColor"
 		{...props}
 	>
 		<path d="m21.67 18.17-4.72-4.72c-.48-.48-.99-.59-1.58-.59l-2.54 2.54c0 .59.11 1.11.59 1.58l4.72 4.72c.39.39 1.02.39 1.41 0l2.12-2.12a.996.996 0 0 0 0-1.41" />

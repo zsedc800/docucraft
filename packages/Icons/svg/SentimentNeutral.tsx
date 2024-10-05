@@ -6,6 +6,7 @@ const SvgSentimentNeutral = (props: SVGProps<SVGSVGElement>) => (
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
+		fill="currentColor"
 		{...props}
 	>
 		<path d="M9.75 15.5h4.5c.41 0 .75-.34.75-.75s-.34-.75-.75-.75h-4.5c-.41 0-.75.34-.75.75s.34.75.75.75" />

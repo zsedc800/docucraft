@@ -21,6 +21,8 @@ export type ComponentChild =
 	| number
 	| undefined;
 
+export type ReactNode = ComponentChild;
+
 export type ComponentChildren = ComponentChild | ComponentChild[];
 export interface BaseProps {
 	children: ComponentChildren | ((v: any) => ComponentChildren);

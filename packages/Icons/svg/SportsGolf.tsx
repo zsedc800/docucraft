@@ -6,6 +6,7 @@ const SvgSportsGolf = (props: SVGProps<SVGSVGElement>) => (
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
+		fill="currentColor"
 		{...props}
 	>
 		<path d="M12 16c3.87 0 7-3.13 7-7s-3.13-7-7-7-7 3.13-7 7 3.13 7 7 7m0-12c2.76 0 5 2.24 5 5s-2.24 5-5 5-5-2.24-5-5 2.24-5 5-5" />

@@ -1,4 +1,4 @@
-import { MaterialIcon } from 'material-icons';
+import { MaterialIcon } from './iconName';
 import { IconType } from './vars';
 import { type CSSProperties } from 'react';
 export * from './svg';

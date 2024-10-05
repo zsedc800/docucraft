@@ -6,6 +6,7 @@ const SvgBubbleChart = (props: SVGProps<SVGSVGElement>) => (
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
+		fill="currentColor"
 		{...props}
 	>
 		<circle cx={7.2} cy={14.4} r={3.2} />

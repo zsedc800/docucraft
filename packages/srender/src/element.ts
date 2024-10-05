@@ -94,6 +94,10 @@ function createTextElement(value: string): IVNode {
 	return createElement(TEXT_ELEMENT, { nodeValue: value });
 }
 
+export function cloneElement(element: VNode, props: any) {
+	return Object.assign({}, element, { props: { ...element.props, ...props } });
+}
+
 export const forEach = (
 	children: ComponentChildren,
 	callback: (child: ComponentChild, index: number) => void
@@ -114,6 +118,10 @@ export const map = (
 		newChildren.push(callback(children[i], i));
 	}
 	return newChildren;
+};
+
+export const only = <C>(children: C): C extends any[] ? never : C => {
+	return Array.isArray(children) ? children[0] : children;
 };
 
 export const isValidElement = (val: any) => {

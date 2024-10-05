@@ -6,6 +6,7 @@ const SvgPhoneLocked = (props: SVGProps<SVGSVGElement>) => (
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
+		fill="currentColor"
 		{...props}
 	>
 		<path d="M20 5v-.89c0-1-.68-1.92-1.66-2.08A2 2 0 0 0 16 4v1c-.55 0-1 .45-1 1v3c0 .55.45 1 1 1h4c.55 0 1-.45 1-1V6c0-.55-.45-1-1-1m-1 0h-2V4c0-.55.45-1 1-1s1 .45 1 1z" />

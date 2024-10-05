@@ -1,3 +1,3 @@
 import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
-const SvgMan4 = (props) => (_jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", width: "1em", height: "1em", viewBox: "0 0 24 24", ...props, children: [_jsx("path", { d: "M13.75 7h-3.5C9.04 7 8.11 8.07 8.27 9.26L9.82 20.7c.1.74.74 1.3 1.49 1.3h1.38a1.5 1.5 0 0 0 1.49-1.3l1.56-11.44C15.89 8.07 14.96 7 13.75 7" }), _jsx("circle", { cx: 12, cy: 4, r: 2 })] }));
+const SvgMan4 = (props) => (_jsxs("svg", { xmlns: "http://www.w3.org/2000/svg", width: "1em", height: "1em", viewBox: "0 0 24 24", fill: "currentColor", ...props, children: [_jsx("path", { d: "M13.75 7h-3.5C9.04 7 8.11 8.07 8.27 9.26L9.82 20.7c.1.74.74 1.3 1.49 1.3h1.38a1.5 1.5 0 0 0 1.49-1.3l1.56-11.44C15.89 8.07 14.96 7 13.75 7" }), _jsx("circle", { cx: 12, cy: 4, r: 2 })] }));
 export default SvgMan4;

@@ -6,6 +6,7 @@ const SvgAccessibleForward = (props: SVGProps<SVGSVGElement>) => (
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
+		fill="currentColor"
 		{...props}
 	>
 		<circle cx={18} cy={4.54} r={2} />

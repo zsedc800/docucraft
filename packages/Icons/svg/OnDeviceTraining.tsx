@@ -6,6 +6,7 @@ const SvgOnDeviceTraining = (props: SVGProps<SVGSVGElement>) => (
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
+		fill="currentColor"
 		{...props}
 	>
 		<path d="M11.5 17h1c.28 0 .5-.22.5-.5s-.22-.5-.5-.5h-1c-.28 0-.5.22-.5.5s.22.5.5.5m.02-5.94c-.71.16-1.29.74-1.46 1.44-.23.94.21 1.8.94 2.22v.53c0 .14.11.25.25.25h1.5c.14 0 .25-.11.25-.25v-.53c.6-.35 1-.98 1-1.72a2 2 0 0 0-2.48-1.94" />

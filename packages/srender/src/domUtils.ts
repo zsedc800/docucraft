@@ -11,6 +11,25 @@ const isGone = (next: IState) => (key: string) => !(key in next);
 function convertName(name: string) {
 	return name === 'className' ? 'class' : name;
 }
+
+const svgElements = new Set([
+	'svg',
+	'circle',
+	'rect',
+	'path',
+	'line',
+	'polygon',
+	'polyline',
+	'ellipse',
+	'g',
+	'text',
+	'tspan',
+	'defs',
+	'linearGradient',
+	'radialGradient',
+	'stop',
+	'use'
+]);
 export function updateDomProperties(
 	dom: HTMLElement,
 	prevProps: IProps,
@@ -28,9 +47,18 @@ export function updateDomProperties(
 		.filter(isAttribute)
 		.filter(isNew(prevProps, nextProps))
 		.forEach((name) => {
-			if (dom.setAttribute)
-				dom.setAttribute(convertName(name), nextProps[name]);
-			else (dom as IState)[name] = nextProps[name];
+			const value = nextProps[name];
+			if (dom.nodeType === Node.TEXT_NODE) {
+				(dom as IState)[name] = value;
+			} else if (
+				svgElements.has(dom.tagName.toLowerCase()) &&
+				name !== 'xmlns'
+			) {
+				// const svgPropName = name.replace(/(a-z)(A-Z)/g, '$1-$2').toLowerCase();
+				dom.setAttributeNS(null, convertName(name), value);
+			} else {
+				dom.setAttribute(convertName(name), value);
+			}
 		});
 
 	prevProps.style = prevProps.style || {};
@@ -50,10 +78,17 @@ export function updateDomProperties(
 }
 
 export function createDomElement(fiber: Fiber) {
+	const type = fiber.type as string;
 	const isTextElement = fiber.type === TEXT_ELEMENT;
-	const dom = isTextElement
-		? document.createTextNode('')
-		: document.createElement(fiber.type as string);
+	const dom =
+		fiber.type === 'svg' || svgElements.has(type)
+			? document.createElementNS(
+					fiber.pendingProps.xmlns || 'http://www.w3.org/2000/svg',
+					type
+				)
+			: isTextElement
+				? document.createTextNode('')
+				: document.createElement(fiber.type as string);
 	updateDomProperties(dom as HTMLElement, {}, fiber.pendingProps);
 	return dom;
 }

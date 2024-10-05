@@ -6,6 +6,7 @@ const SvgBlind = (props: SVGProps<SVGSVGElement>) => (
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
+		fill="currentColor"
 		{...props}
 	>
 		<circle cx={11.41} cy={3.5} r={2} />

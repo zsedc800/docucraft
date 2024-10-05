@@ -6,6 +6,7 @@ const Svg18UpRating = (props: SVGProps<SVGSVGElement>) => (
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
+		fill="currentColor"
 		{...props}
 	>
 		<path d="M13 12.5h1.5V14H13zm0-2.5h1.5v1.5H13z" />

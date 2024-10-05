@@ -129,9 +129,6 @@ importers:
       '@svgr/cli':
         specifier: ^8.1.0
         version: 8.1.0(typescript@5.4.5)
-      material-icons:
-        specifier: ^1.13.12
-        version: 1.13.12
     devDependencies:
       typescript:
         specifier: ^5

@@ -6,6 +6,7 @@ const SvgDeblur = (props: SVGProps<SVGSVGElement>) => (
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
+		fill="currentColor"
 		{...props}
 	>
 		<path d="M12 3v18a9 9 0 0 0 0-18" />

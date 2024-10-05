@@ -6,6 +6,7 @@ const SvgRssFeed = (props: SVGProps<SVGSVGElement>) => (
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
+		fill="currentColor"
 		{...props}
 	>
 		<circle cx={6.18} cy={17.82} r={2.18} />

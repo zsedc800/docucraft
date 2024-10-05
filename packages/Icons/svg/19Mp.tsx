@@ -6,6 +6,7 @@ const Svg19Mp = (props: SVGProps<SVGSVGElement>) => (
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
+		fill="currentColor"
 		{...props}
 	>
 		<path d="M13.5 6.5H15V8h-1.5z" />

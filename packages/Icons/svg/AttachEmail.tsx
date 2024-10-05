@@ -6,6 +6,7 @@ const SvgAttachEmail = (props: SVGProps<SVGSVGElement>) => (
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
+		fill="currentColor"
 		{...props}
 	>
 		<path d="M21 10V4c0-1.1-.9-2-2-2H3c-1.1 0-1.99.9-1.99 2L1 16c0 1.1.9 2 2 2h11v-5c0-1.66 1.34-3 3-3zm-9.47.67c-.32.2-.74.2-1.06 0L3.4 6.25a.85.85 0 1 1 .9-1.44L11 9l6.7-4.19a.85.85 0 1 1 .9 1.44z" />

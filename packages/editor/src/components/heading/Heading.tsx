@@ -1,6 +1,6 @@
 import { useLayoutEffect, useRef } from '@docucraft/srender';
 import { Button } from '@docucraft/ui';
-import Icon, { ArrowRight } from '@docucraft/icons';
+import Icon from '@docucraft/icons';
 import { HeadingView } from '.';
 export type Level = 1 | 2 | 3 | 4 | 5 | 6;
 export interface Props {
@@ -24,7 +24,6 @@ export default ({ view, level, fold, hidden, id }: Props) => {
 	return (
 		<Tag ref={$heading} id={id} className={`heading ${hidden ? 'hidden' : ''}`}>
 			<div className="heading-tools" contenteditable="false">
-				<ArrowRight />
 				<Icon
 					className="toggle-button"
 					name={fold ? 'arrow_drop_down' : 'arrow_right'}

@@ -882,13 +882,22 @@ const isGone = next => key => !(key in next);
 function convertName(name) {
   return name === 'className' ? 'class' : name;
 }
+const svgElements = new Set(['svg', 'circle', 'rect', 'path', 'line', 'polygon', 'polyline', 'ellipse', 'g', 'text', 'tspan', 'defs', 'linearGradient', 'radialGradient', 'stop', 'use']);
 function updateDomProperties(dom, prevProps, nextProps) {
   Object.keys(prevProps).filter(isAttribute).filter(isGone(nextProps)).forEach(name => {
     // (dom as IState)[name] = null;
     dom.removeAttribute(convertName(name));
   });
   Object.keys(nextProps).filter(isAttribute).filter(isNew(prevProps, nextProps)).forEach(name => {
-    if (dom.setAttribute) dom.setAttribute(convertName(name), nextProps[name]);else dom[name] = nextProps[name];
+    const value = nextProps[name];
+    if (dom.nodeType === Node.TEXT_NODE) {
+      dom[name] = value;
+    } else if (svgElements.has(dom.tagName.toLowerCase()) && name !== 'xmlns') {
+      // const svgPropName = name.replace(/(a-z)(A-Z)/g, '$1-$2').toLowerCase();
+      dom.setAttributeNS(null, convertName(name), value);
+    } else {
+      dom.setAttribute(convertName(name), value);
+    }
   });
   prevProps.style = prevProps.style || {};
   nextProps.style = nextProps.style || {};
@@ -900,8 +909,9 @@ function updateDomProperties(dom, prevProps, nextProps) {
   });
 }
 function createDomElement(fiber) {
+  const type = fiber.type;
   const isTextElement = fiber.type === TEXT_ELEMENT;
-  const dom = isTextElement ? document.createTextNode('') : document.createElement(fiber.type);
+  const dom = fiber.type === 'svg' || svgElements.has(type) ? document.createElementNS(fiber.pendingProps.xmlns || 'http://www.w3.org/2000/svg', type) : isTextElement ? document.createTextNode('') : document.createElement(fiber.type);
   updateDomProperties(dom, {}, fiber.pendingProps);
   return dom;
 }
@@ -1543,6 +1553,14 @@ function createTextElement(value) {
     nodeValue: value
   });
 }
+function cloneElement(element, props) {
+  return Object.assign({}, element, {
+    props: {
+      ...element.props,
+      ...props
+    }
+  });
+}
 const forEach = (children, callback) => {
   children = arrify(children);
   for (let i = 0; i < children.length; i++) {
@@ -1646,6 +1664,7 @@ const Children = {
 };
 var index = {
   createElement,
+  cloneElement,
   render,
   createRoot,
   Fragment: FRAGMENT,
@@ -1669,5 +1688,5 @@ var index = {
   lazy
 };
 
-export { Children, Component, FRAGMENT as Fragment, OFFSCREEN as Offscreen, SUSPENSE as Suspense, createContext, createElement, createRef, createRoot, index as default, forwardRef, isValidElement, lazy, render, startTransition, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition, wrapPromise };
+export { Children, Component, FRAGMENT as Fragment, OFFSCREEN as Offscreen, SUSPENSE as Suspense, cloneElement, createContext, createElement, createRef, createRoot, index as default, forwardRef, isValidElement, lazy, render, startTransition, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition, wrapPromise };
 //# sourceMappingURL=index.mjs.map

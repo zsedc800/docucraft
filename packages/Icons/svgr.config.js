@@ -1,8 +1,13 @@
 module.exports = {
-	icon: '1em',
+	icon: true,
+	// dimensions: false,
 	typescript: true,
 	outDir: 'svg',
-	index: true
+	index: true,
+	svgProps: {
+		// 'data-micon': 'true'
+		fill: 'currentColor'
+	}
 	// 	template: (variables, { tpl }) => {
 	// 		const attrs = (variables.jsx.openingElement.attributes);
 	//     attrs.push()

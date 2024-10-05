@@ -7,7 +7,8 @@
 	"module": "./index.js",
 	"scripts": {
 		"dev": "tsc -w",
-		"build": "svgr ./node_modules/@material-design-icons/svg/round"
+		"build:svg": "svgr ./node_modules/@material-design-icons/svg/round",
+		"build": "tsc"
 	},
 	"keywords": [],
 	"author": "",
@@ -18,7 +19,6 @@
 	"dependencies": {
 		"@fontsource-variable/material-symbols-rounded": "^5.1.0",
 		"@material-design-icons/svg": "^0.14.13",
-		"@svgr/cli": "^8.1.0",
-		"material-icons": "^1.13.12"
+		"@svgr/cli": "^8.1.0"
 	}
 }

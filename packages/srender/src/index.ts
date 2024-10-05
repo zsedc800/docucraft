@@ -5,7 +5,8 @@ import {
 	SUSPENSE as Suspense,
 	forEach,
 	map,
-	isValidElement
+	isValidElement,
+	cloneElement
 } from './element';
 import { render, createRoot } from './reconciler';
 import { Component } from './component';
@@ -30,6 +31,7 @@ const Children = { map, forEach };
 
 export default {
 	createElement,
+	cloneElement,
 	render,
 	createRoot,
 	Fragment,
@@ -55,6 +57,7 @@ export default {
 
 export {
 	createElement,
+	cloneElement,
 	render,
 	createRoot,
 	Fragment,

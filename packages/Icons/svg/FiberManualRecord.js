@@ -1,3 +1,3 @@
 import { jsx as _jsx } from "react/jsx-runtime";
-const SvgFiberManualRecord = (props) => (_jsx("svg", { xmlns: "http://www.w3.org/2000/svg", width: "1em", height: "1em", viewBox: "0 0 24 24", ...props, children: _jsx("circle", { cx: 12, cy: 12, r: 8 }) }));
+const SvgFiberManualRecord = (props) => (_jsx("svg", { xmlns: "http://www.w3.org/2000/svg", width: "1em", height: "1em", viewBox: "0 0 24 24", fill: "currentColor", ...props, children: _jsx("circle", { cx: 12, cy: 12, r: 8 }) }));
 export default SvgFiberManualRecord;

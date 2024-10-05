@@ -6,6 +6,7 @@ const SvgWrongLocation = (props: SVGProps<SVGSVGElement>) => (
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
+		fill="currentColor"
 		{...props}
 	>
 		<path d="m20.42 4.5 1.38-1.38a.996.996 0 1 0-1.41-1.41L19 3.08 17.62 1.7a.996.996 0 1 0-1.41 1.41l1.38 1.38-1.38 1.38a.996.996 0 1 0 1.41 1.41L19 5.92l1.38 1.38a.996.996 0 1 0 1.41-1.41z" />

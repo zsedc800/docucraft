@@ -19,3 +19,9 @@
 .dUI-icons-round::before {
 	content: attr(data-icon);
 }
+
+svg[data-micon='true'] {
+	display: inline-block;
+	width: 1em;
+	height: 1em;
+}
