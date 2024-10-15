@@ -31,7 +31,7 @@ export interface BaseProps {
 export interface Context<T = any> {
 	currentValue: T;
 	Provider: FunctionComponent<{ value: T } & BaseProps>;
-	Consumer: FunctionComponent<{ children: (v: T) => ComponentChildren }>;
+	Consumer: FunctionComponent<{ children: (v?: T) => ComponentChildren }>;
 	pop(): void;
 }
 
@@ -53,56 +53,69 @@ export interface ClassComponent<P = Props, S = State, C = any> {
 	getDerivedStateFromError?(error: any): S;
 	getDerivedStateFromProps?(props: P, state: S): S;
 	contextType?: Context<C>;
+	defaultProps?: P;
 }
 
-export interface IVNode<P = Props> {
+export interface VNode<P = Props> {
 	$$typeof: Symbol;
-	type?: ComponentType;
+	type: ComponentType<P>;
 	props: P & {
 		children?: ComponentChildren;
 	};
+	key: string | null;
+	ref: Ref<any> | null;
 }
 
 export type Key = string | number | any;
-export interface Ref<T = any> {
-	current?: T;
+
+export interface RefObject<T = any> {
+	current: T;
 }
 
-export type VNode<P = Props> = IVNode<P>;
+export interface RefCallback<T> {
+	(instance: T | null): void;
+}
 
-export type ComponentType<P = {}> =
+export type Ref<T> = RefCallback<T> | RefObject<T> | null;
+
+export type IVNode<P = Props> = VNode<P>;
+
+export type ComponentType<P = any> =
 	| string
-	| symbol
+	| Symbol
 	| FunctionComponent<P>
 	| ClassComponent<P>;
 
-export interface Update<S = State> {
+export type UpdatePayload<S, P> = S | ((prev: S, props: P) => S) | null;
+
+export interface Update<S = State, P = {}> {
 	lane: Lane;
 	tag: UpdateState;
-	payload: S | null;
+	payload: UpdatePayload<S, P>;
 	callback?: (prevState: S, nextProps?: any) => S;
-	next: Update<S> | null;
+	next: Update<S, P> | null;
 	eventTime: number;
 }
 
-export interface SharedQueue<S> {
-	pending: Update<S> | null;
+export interface SharedQueue<S, P = {}> {
+	pending: Update<S, P> | null;
 }
 
-export interface UpdateQueue<S = State> {
+export interface UpdateQueue<S = State, P = {}> {
 	baseState: S;
-	firstBaseUpdate: Update<S> | null;
-	lastBaseUpdate: Update<S> | null;
-	shared: SharedQueue<S>;
-	effects: Array<Update<S>>;
+	firstBaseUpdate: Update<S, P> | null;
+	lastBaseUpdate: Update<S, P> | null;
+	shared: SharedQueue<S, P>;
+	effects: Array<Update<S, P>>;
 }
 
 export interface Hooks<T = any> {
 	state: T;
 	baseState: any;
 	baseUpdate: Update<any> | null;
-	queue: (UpdateQueue<any> & { dispatch?(h: Hooks): void }) | null;
+	queue: (UpdateQueue<any, any> & { dispatch?(h: Hooks): void }) | null;
 	next: Hooks | null;
+	fiber: Fiber | null;
 }
 
 export interface HookEffect {
@@ -131,11 +144,11 @@ export interface Fiber {
 	sibling: Fiber | null;
 	index: number;
 
-	ref: Ref | null;
+	ref: Ref<any>;
 
 	pendingProps: Props;
 	memoizedProps: Props | null;
-	updateQueue: UpdateQueue<any> | null;
+	updateQueue: (UpdateQueue<any, any> & { onCommit?: () => void }) | null;
 	memoizedState: State | Hooks | null;
 	alternate: Fiber | null;
 

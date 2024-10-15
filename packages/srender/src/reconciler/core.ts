@@ -21,7 +21,11 @@ import {
 	SyncLane,
 	getHighestPriorityLane
 } from '../Lanes';
-import { isBatchingUpdates, markUpdateFromFiberToRoot } from './update';
+import {
+	isBatchingUpdates,
+	markUpdateFromFiberToRoot,
+	setBatchingUpdates
+} from './update';
 import { resetContext } from '../context';
 let nextUnitOfWork: Fiber | null | undefined = null;
 export let rootFiberNode: RootFiberNode | null = null;
@@ -32,7 +36,7 @@ export let currentBatchConfig: { transition: number | null } = {
 };
 export let unwindWorks: Fiber[] = [];
 export let cloneChildrenHandlers: Array<() => void> = [];
-if (typeof window !== 'undefined') registerEvent(document.body);
+if (typeof window !== 'undefined') registerEvent(document);
 
 export function render(
 	children: ComponentChildren,
@@ -107,6 +111,7 @@ export function scheduleUpdateOnFiber(fiber: Fiber) {
 	const root = markUpdateFromFiberToRoot(fiber);
 	workInProgressRoot = root;
 	if (!root) return;
+
 	if (!isBatchingUpdates) ensureRootIsScheduled(root);
 }
 
@@ -163,6 +168,7 @@ function performWork(
 ) {
 	let { current } = root;
 	if (!current) return;
+
 	prepareStack();
 	nextUnitOfWork = cloneFiberNode(current, current.pendingProps, {
 		alternate: current
@@ -171,6 +177,7 @@ function performWork(
 		try {
 			return workLoop(root);
 		} catch (error) {
+			console.error(error, 'error');
 			nextUnitOfWork = catchError(
 				error,
 				nextUnitOfWork,
@@ -194,7 +201,6 @@ function workLoop(root: RootFiberNode) {
 	while (nextUnitOfWork && !shouldYield()) {
 		nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
 	}
-
 	const { finishedWork } = root;
 	if (finishedWork) {
 		commitAllWork(finishedWork);
@@ -238,13 +244,16 @@ function beforeCommit() {
 
 function commitAllWork(fiber: Fiber) {
 	beforeCommit();
-
-	(fiber.effects || []).forEach((f) => commitWork(f));
-
 	const root = fiber.stateNode as RootFiberNode;
 	root.current = fiber;
+	const effects = fiber.effects || [];
+	fiber.effects = [];
 	root.finishedWork = null;
 	nextUnitOfWork = null;
 
+	const previousIsBatchingUpdates = isBatchingUpdates;
+	setBatchingUpdates(true);
+	effects.forEach((f) => commitWork(f));
+	setBatchingUpdates(previousIsBatchingUpdates);
 	ensureRootIsScheduled(root);
 }

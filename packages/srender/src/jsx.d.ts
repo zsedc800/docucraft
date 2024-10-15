@@ -19,6 +19,11 @@ type Defaultize<Props, Defaults> =
 
 type Booleanish = boolean | 'true' | 'false';
 
+declare module 'react' {
+	export type ReactNode = ComponentChild;
+	export interface ReactElement extends VNode<any> {}
+}
+
 declare global {
 	namespace JSX {
 		export type LibraryManagedAttributes<Component, Props> = Component extends {
@@ -40,6 +45,7 @@ declare global {
 			  }[keyof IntrinsicElements]
 			| ComponentType<P>;
 		export interface Element extends VNode<any> {}
+		export interface Element extends Record<any, any> {}
 		export type ElementClass = Component<any, any> | FunctionComponent<any>;
 
 		export interface ElementAttributesProperty {

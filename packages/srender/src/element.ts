@@ -1,36 +1,39 @@
 import { Component } from './component';
 import {
-	ClassComponent,
-	ComponentChild,
 	ComponentChildren,
 	ComponentType,
 	FiberTag,
 	FunctionComponent,
 	IProps,
-	ITag,
-	IVNode,
+	Ref,
 	VNode
 } from './interface';
 import { isSubclassOf } from './utils';
 
 export const TEXT_ELEMENT = 'TEXT_ELEMENT';
-export const FRAGMENT = Symbol.for('srender.Fragment');
+export const Fragment = Symbol.for('srender.Fragment');
 export const ELEMENT = Symbol.for('srender.Element');
-export const SUSPENSE = Symbol.for('srender.Suspense');
+export const Suspense = Symbol.for('srender.Suspense');
 
-export const OFFSCREEN = Symbol.for('srender.Offscreen');
+export const Offscreen = Symbol.for('srender.Offscreen');
+export const ForwardRef = Symbol.for('srender.ForwardRef');
+export const Portal = Symbol.for('srender.Portal');
 export const ContextProvider = Symbol.for('srender.ContextProvider');
 
-export const getTag = ({ type, $$typeof }: IVNode) => {
+export const getTag = ({ type, $$typeof }: VNode) => {
 	switch ($$typeof) {
-		case FRAGMENT:
+		case Fragment:
 			return FiberTag.Fragment;
-		case SUSPENSE:
+		case Suspense:
 			return FiberTag.Suspense;
-		case OFFSCREEN:
+		case Offscreen:
 			return FiberTag.Offscreen;
 		case ContextProvider:
 			return FiberTag.ContextProvider;
+		case Portal:
+			return FiberTag.Portal;
+		case ForwardRef:
+			return FiberTag.ForwardRef;
 	}
 	if (typeof type === 'string')
 		return type === TEXT_ELEMENT ? FiberTag.HostText : FiberTag.HostComponent;
@@ -46,7 +49,7 @@ export function createElement(
 	type: ComponentType,
 	config: Record<any, any> | null = {},
 	...args: any[]
-): IVNode {
+): VNode {
 	let children: any[] = [];
 
 	if (typeof config !== 'object' || config?.$$typeof) {
@@ -69,12 +72,20 @@ export function createElement(
 	// if (props.className) props.class = props.className;
 	props.children = children
 		.filter((c) => c != undefined && c != null && c !== false)
-		.map((c: any) => (c?.$$typeof ? c : createTextElement(c)));
+		.map((c: any) => {
+			if (isValidElement(c) || typeof c === 'function') return c;
+			return createTextElement(c);
+		});
 
-	let node: IVNode = {
+	props.children =
+		props.children.length === 1 ? props.children[0] : props.children;
+
+	let node: VNode = {
 		$$typeof: ELEMENT,
 		props,
-		type
+		type,
+		key: props.key,
+		ref: props.ref
 	};
 	if (typeof type === 'symbol') node.$$typeof = type;
 	if (
@@ -82,15 +93,40 @@ export function createElement(
 		(type as FunctionComponent).displayType === ContextProvider
 	)
 		node.$$typeof = ContextProvider;
+	if (type && type instanceof ExtendedComponent) {
+		node.$$typeof = type.type;
+		node.type = node.$$typeof;
+		node.props = Object.assign({}, props, type.props);
+	}
 
 	return node;
 }
 
-export function arrify(val: any) {
-	return val == null ? [] : Array.isArray(val) ? val : [val];
+export function createPortal(
+	children: ComponentChildren,
+	container: HTMLElement
+) {
+	return createElement(Portal, { children, container });
+}
+export function forwardRef<R, P>(render: (props: P, ref: Ref<R>) => VNode) {
+	return new ExtendedComponent(ForwardRef, { render });
 }
 
-function createTextElement(value: string): IVNode {
+class ExtendedComponent {
+	constructor(
+		public type: Symbol,
+		public props: Record<any, any>
+	) {}
+}
+
+const filter = (e: any) =>
+	e !== null && !['undefined', 'boolean'].includes(typeof e);
+
+export function arrify<C = any>(val: C | readonly C[]): C[] {
+	return (Array.isArray(val) ? val : [val]).filter(filter);
+}
+
+function createTextElement(value: string): VNode {
 	return createElement(TEXT_ELEMENT, { nodeValue: value });
 }
 
@@ -98,9 +134,9 @@ export function cloneElement(element: VNode, props: any) {
 	return Object.assign({}, element, { props: { ...element.props, ...props } });
 }
 
-export const forEach = (
-	children: ComponentChildren,
-	callback: (child: ComponentChild, index: number) => void
+export const forEach = <C>(
+	children: C | readonly C[],
+	callback: (child: C, index: number) => void
 ) => {
 	children = arrify(children);
 	for (let i = 0; i < children.length; i++) {
@@ -108,9 +144,9 @@ export const forEach = (
 	}
 };
 
-export const map = (
-	children: ComponentChildren,
-	callback: (child: ComponentChild, index: number) => ComponentChild
+export const map = <T, C>(
+	children: C | readonly C[],
+	callback: (child: C, index: number) => T
 ) => {
 	children = arrify(children);
 	const newChildren = [];
@@ -123,6 +159,10 @@ export const map = (
 export const only = <C>(children: C): C extends any[] ? never : C => {
 	return Array.isArray(children) ? children[0] : children;
 };
+
+export const count = (children: any) => arrify(children).length;
+
+export const toArray = arrify;
 
 export const isValidElement = (val: any) => {
 	if (typeof val !== 'object') return false;

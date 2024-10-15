@@ -1,34 +1,26 @@
-import { Children, ReactElement, ReactNode, cloneElement } from 'react';
-interface Props {
-	children: ReactElement;
-	[k: string]: any;
+import { FC, useEffect } from 'react';
+import { Tooltip } from './tooltip';
+import { Base, generateTrigger } from '../Trigger';
+
+interface Props extends Base {
+	trigger?: 'click' | 'hover';
 }
-export default ({ children, ...restProps }: Props) => {
-	const passedProps: Record<string, any> = {};
-	const passedEventList = [
-		'onContextMenu',
-		'onClick',
-		'onMouseDown',
-		'onTouchStart',
-		'onMouseEnter',
-		'onMouseLeave',
-		'onFocus',
-		'onBlur'
-	];
 
-	const mer;
-	const child = Children.only(children);
+const Trigger = generateTrigger();
 
-	passedEventList.forEach((eventName) => {
-		if (restProps[eventName]) {
-			passedProps[eventName] = (...args: any[]) => {
-				mergedChildrenProps[eventName]?.(...args);
-				restProps[eventName](...args);
-			};
-		}
-	});
-
-	// return Children.map(children, (child, index) => {
-	//     return cloneElement(child, {})
-	// });
+const TooltipComponent: FC<Props> & { tooltip: Tooltip } = ({
+	children,
+	content,
+	open,
+	onOpenChange
+}) => {
+	useEffect(() => {}, []);
+	return (
+		<Trigger open={open} onOpenChange={onOpenChange} content={content}>
+			{children}
+		</Trigger>
+	);
 };
+if (typeof window !== 'undefined') TooltipComponent.tooltip = new Tooltip();
+
+export default TooltipComponent;

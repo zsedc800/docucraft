@@ -1,12 +1,12 @@
 import { NoLanes } from '../Lanes';
-import { Fiber, FiberFlags, FiberTag, Key, Mode, Props } from '../interface';
+import { Fiber, FiberFlags, FiberTag, Mode, Props } from '../interface';
 
 export function createFiberNode(
 	tag: FiberTag,
-	pendingProps: Props,
+	props: Props,
 	options?: Partial<Fiber>
 ): Fiber {
-	const { key, ref } = pendingProps;
+	const { key, ref, ...pendingProps } = props;
 	const parent = options?.parent;
 	const base = {
 		tag,
@@ -35,10 +35,10 @@ export function createFiberNode(
 export function createFiberByElement() {}
 export function cloneFiberNode(
 	oldFiber: Fiber,
-	pendingProps: Props,
+	props: Props,
 	options: Partial<Fiber> = {}
 ) {
-	const { key, ref } = pendingProps;
+	const { key, ref, ...pendingProps } = props;
 	const { child, sibling } = options;
 	if (!child) options.child = null;
 	if (!sibling) options.sibling = null;

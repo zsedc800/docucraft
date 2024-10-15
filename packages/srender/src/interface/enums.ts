@@ -8,6 +8,8 @@ export enum FiberTag {
 	Suspense = 'Suspense',
 	Offscreen = 'Offscreen',
 	ContextProvider = 'ContextProvider',
+	Portal = 'Portal',
+	ForwardRef = 'ForwardRef',
 	Unknown = 'Unknown'
 }
 

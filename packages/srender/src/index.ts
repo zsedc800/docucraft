@@ -1,16 +1,20 @@
 import {
 	createElement,
-	FRAGMENT as Fragment,
-	OFFSCREEN as Offscreen,
-	SUSPENSE as Suspense,
+	Fragment,
+	Offscreen,
+	Suspense,
 	forEach,
 	map,
+	toArray,
+	only,
 	isValidElement,
-	cloneElement
+	cloneElement,
+	createPortal,
+	forwardRef
 } from './element';
 import { render, createRoot } from './reconciler';
 import { Component } from './component';
-import { createRef, forwardRef, lazy, wrapPromise } from './utils';
+import { useId, lazy, wrapPromise, createRef } from './utils';
 
 import {
 	useEffect,
@@ -21,16 +25,19 @@ import {
 	useRef,
 	useContext,
 	useTransition,
-	startTransition
+	startTransition,
+	useImperativeHandle,
+	useDebugValue
 } from './hooks';
 
 import { createContext } from './context';
 // export * from './interface';
 
-const Children = { map, forEach };
+const Children = { map, forEach, toArray, only };
 
 export default {
 	createElement,
+	createPortal,
 	cloneElement,
 	render,
 	createRoot,
@@ -48,6 +55,9 @@ export default {
 	useRef,
 	useContext,
 	useTransition,
+	useImperativeHandle,
+	useDebugValue,
+	useId,
 	startTransition,
 	createContext,
 	Offscreen,
@@ -57,6 +67,7 @@ export default {
 
 export {
 	createElement,
+	createPortal,
 	cloneElement,
 	render,
 	createRoot,
@@ -73,8 +84,11 @@ export {
 	useCallback,
 	useRef,
 	useContext,
+	useId,
 	createContext,
 	useTransition,
+	useImperativeHandle,
+	useDebugValue,
 	startTransition,
 	Offscreen,
 	Suspense,

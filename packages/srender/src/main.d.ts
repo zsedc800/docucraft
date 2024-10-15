@@ -1,9 +1,15 @@
-import { ExoticComponent, SuspenseProps } from './interface';
+import {
+	ExoticComponent,
+	ForwardRefExoticComponent,
+	SuspenseProps
+} from './interface';
 import './jsx';
 export * from './interface';
 export * from './index';
 
 export const Suspense: ExoticComponent<SuspenseProps>;
+
+export const forwardRef: <R, P>() => ForwardRefExoticComponent<R & P>;
 
 // export = Srender;
 // types/index.d.ts

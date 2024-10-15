@@ -30,6 +30,16 @@ const svgElements = new Set([
 	'stop',
 	'use'
 ]);
+const booleanAttributes = new Set([
+	'disabled',
+	'checked',
+	'readonly',
+	'selected',
+	'multiple',
+	'hidden',
+	'autofocus',
+	'required'
+]);
 export function updateDomProperties(
 	dom: HTMLElement,
 	prevProps: IProps,
@@ -56,6 +66,9 @@ export function updateDomProperties(
 			) {
 				// const svgPropName = name.replace(/(a-z)(A-Z)/g, '$1-$2').toLowerCase();
 				dom.setAttributeNS(null, convertName(name), value);
+			} else if (booleanAttributes.has(name)) {
+				if (value) dom.setAttribute(name, 'true');
+				else dom.removeAttribute(name);
 			} else {
 				dom.setAttribute(convertName(name), value);
 			}
@@ -67,13 +80,14 @@ export function updateDomProperties(
 	Object.keys(nextProps.style)
 		.filter(isNew(prevProps.style, nextProps.style))
 		.forEach((key) => {
-			dom.style[key as any] = (nextProps as any).style[key];
+			const val = (nextProps as any).style[key];
+			dom.style.setProperty(key, val);
 		});
 
 	Object.keys(prevProps.style)
 		.filter(isGone(nextProps.style))
 		.forEach((key) => {
-			dom.style[key as any] = '';
+			dom.style.setProperty(key, null);
 		});
 }
 

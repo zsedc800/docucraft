@@ -7,19 +7,22 @@ import {
 	FiberTag
 } from '../interface';
 import { createFiberNode } from './fiber';
-import { reconcileChildrenArray } from './utils';
+import { putRef, reconcileChildrenArray } from './utils';
 export function mountClassComponent(wipFiber: Fiber, lanes: Lanes) {
 	const instance: Component = (wipFiber.stateNode = createInstance(wipFiber));
-
+	putRef(wipFiber);
 	const Ctor = wipFiber.type as ClassComponent;
 	let nextState = Object.assign({}, instance.state);
 	const nextContext = Ctor.contextType?.currentValue;
 
 	if (Ctor.getDerivedStateFromProps)
-		nextState = Ctor.getDerivedStateFromProps(wipFiber.pendingProps, nextState);
+		nextState = Object.assign(
+			{},
+			nextState,
+			Ctor.getDerivedStateFromProps(wipFiber.pendingProps, nextState)
+		);
 
 	instance.context = nextContext;
-	instance.props = wipFiber.pendingProps;
 	instance.state = nextState;
 	wipFiber.memoizedState = nextState;
 

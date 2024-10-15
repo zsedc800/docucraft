@@ -40,7 +40,7 @@ export interface Attributes {
 }
 
 export interface ClassAttributes<T> extends Attributes {
-	ref?: Ref<T>;
+	ref?: Ref<T | undefined>;
 }
 
 export interface SrenderDOMAttributes {
@@ -60,6 +60,14 @@ export interface SuspenseProps {
 export interface ExoticComponent<P = {}> {
 	(props: P): VNode;
 	readonly $$typeof: symbol;
+}
+
+export interface NamedExoticComponent<P = {}> extends ExoticComponent<P> {
+	displayName?: string | undefined;
+}
+
+export interface ForwardRefExoticComponent<P> extends NamedExoticComponent<P> {
+	defaultProps?: Partial<P>;
 }
 
 export interface IState {

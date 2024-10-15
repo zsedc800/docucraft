@@ -6,7 +6,7 @@ import typescript from 'rollup-plugin-typescript2';
 import alias from '@rollup/plugin-alias';
 import path from 'path';
 
-const whitelist = ['react'];
+const whitelist = ['material-ui-popup-state'];
 
 const createBabelConfig = (targets) => ({
 	babelHelpers: 'bundled',
@@ -18,12 +18,18 @@ const createBabelConfig = (targets) => ({
 
 const common = {
 	input: 'src/index.ts',
-	external: (id) =>
-		/node_modules|\@docucraft\/icons\/styles/.test(id) &&
-		!whitelist.includes(id),
+	external: (id) => {
+		return (
+			/node_modules|\@docucraft\/icons\/styles/.test(id) &&
+			!/react|material|\@mui/.test(id)
+		);
+	},
 	plugins: [
 		alias({
-			entries: [{ find: 'react', replacement: path.resolve('../srender') }]
+			entries: [
+				{ find: 'react', replacement: path.resolve('../srender') },
+				{ find: 'react-dom', replacement: path.resolve('../srender') }
+			]
 		}),
 		resolve({ extensions: ['.js', '.jsx', '.ts', '.tsx'] }),
 		// typescript({

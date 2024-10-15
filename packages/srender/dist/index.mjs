@@ -1,34 +1,3 @@
-class Component {
-  constructor(props, context) {
-    this.props = props || {};
-    this.context = context;
-  }
-  shouldComponentUpdate(props, state, nextContext) {
-    return true;
-  }
-  componentDidMount() {}
-  componentDidUpdate(props, state, snapshot) {}
-  getSnapshotBeforeUpdate(prevProps, prevState) {}
-  componentDidCatch(error, errorInfo) {}
-  componentWillUnmount() {}
-  destory() {
-    this.componentWillUnmount();
-  }
-  setState(state) {
-    // this.__fiber!.partialState = state;
-    // batchUpdate({ from: ITag.CLASS_COMPONENT, fiber: this.__fiber! });
-  }
-  render() {
-    throw new Error('render method should be implemented');
-  }
-}
-function createInstance(fiber) {
-  const Ctor = fiber.type;
-  const instance = new Ctor(fiber.pendingProps, Ctor.contextType?.currentValue);
-  instance.__fiber = fiber;
-  return instance;
-}
-
 var FiberTag;
 (function (FiberTag) {
   FiberTag["HostComponent"] = "Host";
@@ -40,6 +9,8 @@ var FiberTag;
   FiberTag["Suspense"] = "Suspense";
   FiberTag["Offscreen"] = "Offscreen";
   FiberTag["ContextProvider"] = "ContextProvider";
+  FiberTag["Portal"] = "Portal";
+  FiberTag["ForwardRef"] = "ForwardRef";
   FiberTag["Unknown"] = "Unknown";
 })(FiberTag || (FiberTag = {}));
 var FiberFlags;
@@ -91,6 +62,102 @@ var Flags;
   Flags[Flags["ShouldCapture"] = 1] = "ShouldCapture";
   Flags[Flags["DidCapture"] = 2] = "DidCapture";
 })(Flags || (Flags = {}));
+
+function isSubclassOf(subClass, superClass) {
+  let prototype = subClass.prototype ? Object.getPrototypeOf(subClass.prototype) : void 0;
+  while (prototype) {
+    if (prototype === superClass.prototype) {
+      return true;
+    }
+    prototype = Object.getPrototypeOf(prototype);
+  }
+  return false;
+}
+const wait = (fn, time) => function () {
+  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+  return new Promise(resolve => {
+    setTimeout(() => resolve(fn(...args)), time);
+  });
+};
+const createRef = initialVal => ({
+  current: initialVal
+});
+const wrapPromise = promise => {
+  let status = 'pending',
+    result;
+  const next = promise.then(res => {
+    status = 'fulfilled';
+    result = res;
+  }, reason => {
+    status = 'rejected';
+    result = reason;
+  });
+  return {
+    read() {
+      switch (status) {
+        case 'pending':
+          throw new SuspenseException(next);
+        case 'fulfilled':
+          return result;
+        case 'rejected':
+        default:
+          throw result;
+      }
+    }
+  };
+};
+const lazy = load => {
+  const p = load();
+  const {
+    read
+  } = wrapPromise(p);
+  return props => createElement(read().default, props);
+};
+let counter = 0;
+function useId() {
+  return `srender_unique_${counter++}`;
+}
+
+const resetHandlers = [];
+function resetContext() {
+  for (const fn of resetHandlers) fn();
+}
+const createContext = initialValue => {
+  const $currentValue = createRef(initialValue);
+  const stackValue = [initialValue];
+  const Provider = _ref => {
+    let {
+      value,
+      children
+    } = _ref;
+    stackValue.push(value);
+    return children;
+  };
+  resetHandlers.push(() => stackValue.length = 1);
+  const context = {
+    get currentValue() {
+      return stackValue[stackValue.length - 1];
+    },
+    pop() {
+      stackValue.pop();
+    },
+    Provider,
+    Consumer: _ref2 => {
+      let {
+        children
+      } = _ref2;
+      return children($currentValue.current);
+    }
+  };
+  Provider._context = context;
+  Provider.displayType = ContextProvider;
+  return context;
+};
+function popProvider(context) {
+  context.pop();
+}
 
 function adjustHeap(list, parent, end, compare) {
   if (parent < 0) return;
@@ -393,11 +460,12 @@ function LaneToPriority(lane) {
   return IdlePriority;
 }
 
-function createFiberNode(tag, pendingProps, options) {
+function createFiberNode(tag, props, options) {
   const {
     key,
-    ref
-  } = pendingProps;
+    ref,
+    ...pendingProps
+  } = props;
   const parent = options?.parent;
   const base = {
     tag,
@@ -422,12 +490,13 @@ function createFiberNode(tag, pendingProps, options) {
   };
   return Object.assign(base, {}, options);
 }
-function cloneFiberNode(oldFiber, pendingProps) {
+function cloneFiberNode(oldFiber, props) {
   let options = arguments.length > 2 && arguments[2] !== undefined ? arguments[2] : {};
   const {
     key,
-    ref
-  } = pendingProps;
+    ref,
+    ...pendingProps
+  } = props;
   const {
     child,
     sibling
@@ -443,45 +512,6 @@ function cloneFiberNode(oldFiber, pendingProps) {
   fiber.effects = [];
   fiber.flags = FiberFlags.Update;
   return fiber;
-}
-
-const resetHandlers = [];
-function resetContext() {
-  for (const fn of resetHandlers) fn();
-}
-const createContext = initialValue => {
-  const $currentValue = createRef(initialValue);
-  const stackValue = [initialValue];
-  const Provider = _ref => {
-    let {
-      value,
-      children
-    } = _ref;
-    stackValue.push(value);
-    return children;
-  };
-  resetHandlers.push(() => stackValue.length = 1);
-  const context = {
-    get currentValue() {
-      return stackValue[stackValue.length - 1];
-    },
-    pop() {
-      stackValue.pop();
-    },
-    Provider,
-    Consumer: _ref2 => {
-      let {
-        children
-      } = _ref2;
-      return children($currentValue.current);
-    }
-  };
-  Provider._context = context;
-  Provider.displayType = ContextProvider;
-  return context;
-};
-function popProvider(context) {
-  context.pop();
 }
 
 function markCurrentFiber(wip, old) {
@@ -543,10 +573,10 @@ function reconcileChildrenArray(wipFiber, newChildElements, lanes) {
       wipFiber.child = newFiber;
     } else if (prevFiber) prevFiber.sibling = newFiber;
   }
-  for (const node of map.values()) deleteChild(node, wipFiber);
+  for (const node of map.values()) deleteChild$1(node, wipFiber);
   map.clear();
 }
-function deleteChild(fiber, parent) {
+function deleteChild$1(fiber, parent) {
   fiber.flags |= FiberFlags.Deletion;
   parent = parent || fiber.parent;
   if (parent) {
@@ -570,7 +600,6 @@ function clearSuspenseHander() {
 function hideAllChildren(fiber) {
   let node = fiber.child;
   while (node) {
-    console.log(node.stateNode, 'node');
     if (node.tag === FiberTag.HostComponent) {
       node.stateNode.style.display = 'none';
     } else {
@@ -650,227 +679,156 @@ function getLatestFiber(fiber) {
   }
   return node;
 }
+function putRef(fiber) {
+  const {
+    ref
+  } = fiber;
+  if (ref && fiber.stateNode) typeof ref === 'function' ? ref(fiber.stateNode) : ref.current = fiber.stateNode;
+}
+function defaultShouldSkip(node) {
+  return false;
+}
+function traverseFiber(root) {
+  let shouldSkip = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultShouldSkip;
+  let check = arguments.length > 2 ? arguments[2] : undefined;
+  if (!shouldSkip(root) && root.child) return root.child;
+  let cursor = root;
+  while (cursor) {
+    if (check && check(cursor)) break;
+    if (cursor.sibling) return cursor.sibling;
+    cursor = cursor.parent;
+  }
+  return null;
+}
 
-function createUpdate(payload, eventTime, lane) {
-  let tag = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : UpdateState.updateState;
-  return {
-    eventTime,
-    lane,
-    tag,
-    payload,
-    next: null
+function getNearestSuspense(fiber) {
+  let node = fiber;
+  while (node && node.tag !== FiberTag.Suspense) node = node.parent;
+  return node ? getLatestFiber(node) : null;
+}
+function attachPingListener(fiber, promise) {
+  const ping = () => {
+    const suspense = getNearestSuspense(fiber);
+    if (suspense) suspense.lanes |= fiber.lanes;
+    const root = suspense ? markUpdateFromFiberToRoot(suspense) : null;
+    root && ensureRootIsScheduled(root);
   };
+  promise.then(ping, ping);
 }
-function enqueueUpdate(queue, update) {
-  const sharedQueue = queue.shared;
-  const pending = sharedQueue.pending;
-  if (!pending) {
-    update.next = update;
-  } else {
-    update.next = pending.next;
-    pending.next = update;
-  }
-  sharedQueue.pending = update;
-}
-function getStateFromUpdate(update, prevState, nextProps) {
-  switch (update.tag) {
-    case UpdateState.replaceState:
-    case UpdateState.updateState:
-      {
-        const payload = update.payload;
-        const partialState = typeof payload === 'function' ? payload(prevState, nextProps) : payload;
-        return update.tag === UpdateState.replaceState ? partialState : Object.assign({}, prevState, partialState);
-      }
-    default:
-      return prevState;
-  }
-}
-function initializeUpdateQueue(memoizedState) {
-  return {
-    baseState: memoizedState,
-    firstBaseUpdate: null,
-    lastBaseUpdate: null,
-    shared: {
-      pending: null
-    },
-    effects: []
-  };
-}
-function processUpdateQueue(wip, hooks, queue, renderLanes) {
-  if (!queue) return;
-  let {
-    firstBaseUpdate,
-    lastBaseUpdate,
-    shared
-  } = queue;
-  let pendingQueue = shared.pending;
-  if (pendingQueue) {
-    shared.pending = null;
-    const lastPendingUpdate = pendingQueue;
-    const firstPendingUpdate = lastPendingUpdate.next;
-    lastPendingUpdate.next = null;
-    if (lastBaseUpdate) {
-      lastBaseUpdate.next = firstPendingUpdate;
-    } else {
-      firstBaseUpdate = firstPendingUpdate;
+function catchError(error, fiber, lanes, errorInfo) {
+  let component, ctor, handled;
+  let needPing = true;
+  if (error instanceof SuspenseException) {
+    error = error.promise;
+    const suspenseBoundary = getSuspenseHander();
+    if (suspenseBoundary) {
+      suspenseBoundary.flags |= Flags.ShouldCapture;
+      if (suspenseBoundary.memoizedState === error) needPing = false;
+      suspenseBoundary.memoizedState = error;
     }
-    lastBaseUpdate = lastPendingUpdate;
   }
-  if (firstBaseUpdate) {
-    let newState = queue.baseState;
-    let newBaseState = null;
-    let newFirstBaseUpdate = null;
-    let newLastBaseUpdate = null;
-    let update = firstBaseUpdate;
-    do {
-      const updateLane = update.lane;
-      if (!isSubsetOfLanes(renderLanes, updateLane)) {
-        const clone = {
-          eventTime: update.eventTime,
-          lane: updateLane,
-          tag: update.tag,
-          payload: update.payload,
-          next: null
-        };
-        if (!newLastBaseUpdate) {
-          newFirstBaseUpdate = newLastBaseUpdate = clone;
-          newBaseState = newState;
-        } else {
-          newLastBaseUpdate.next = clone;
-          newLastBaseUpdate = newLastBaseUpdate.next;
+  if (error instanceof Promise && needPing) {
+    attachPingListener(fiber, error);
+  }
+  for (let current = fiber; current; current = current.parent) {
+    current.effects = []; // reset effect
+    const next = unwindWork(current);
+    if (next) return next;
+    if ((component = fiber.stateNode) && component instanceof Component) {
+      try {
+        ctor = fiber.type;
+        if (ctor && ctor.getDerivedStateFromError) {
+          component.setState(ctor.getDerivedStateFromError(error));
+          handled = true;
         }
-      } else {
-        newState = getStateFromUpdate(update, newState, wip.pendingProps);
+        if (component.componentDidCatch) {
+          component.componentDidCatch(error, errorInfo || {});
+          handled = true;
+        }
+        if (handled) {
+          return;
+        }
+      } catch (e) {
+        error = e;
       }
-      update = update.next;
-    } while (update);
-    if (!newLastBaseUpdate) {
-      newBaseState = newState;
-    }
-    if (hooks) {
-      hooks.state = newBaseState;
-    } else {
-      wip.memoizedState = newBaseState;
-    }
-    queue.baseState = newBaseState;
-    queue.firstBaseUpdate = newFirstBaseUpdate;
-    queue.lastBaseUpdate = newLastBaseUpdate;
-  }
-}
-function markUpdateFromFiberToRoot(fiber) {
-  let parent = fiber.parent,
-    node = fiber;
-  while (parent) {
-    parent.childLanes |= mergeLanes(node.lanes, node.childLanes);
-    node = parent;
-    parent = parent.parent;
-  }
-  if (node.tag !== FiberTag.HostRoot) {
-    return null;
-  }
-  const root = node.stateNode;
-  root.pendingLanes = mergeLanes(node.lanes, node.childLanes);
-  return root;
-}
-let isBatchingUpdates = false;
-function batchedUpdates(fn, a) {
-  const previousIsBatchingUpdates = isBatchingUpdates;
-  isBatchingUpdates = true;
-  try {
-    return fn(a);
-  } finally {
-    isBatchingUpdates = previousIsBatchingUpdates;
-    if (!isBatchingUpdates) {
-      workInProgressRoot && ensureRootIsScheduled(workInProgressRoot);
     }
   }
+  throw error;
 }
-function updateClassComponent(wipFiber, lanes) {
-  const instance = wipFiber.stateNode;
-  const Ctor = wipFiber.type;
-  processUpdateQueue(wipFiber, null, wipFiber.updateQueue, lanes);
-  let nextState = wipFiber.memoizedState;
-  const nextContext = Ctor.contextType?.currentValue;
-  if (!instance.shouldComponentUpdate(wipFiber.pendingProps, nextState, nextContext)) {
-    return cloneChildren(wipFiber);
+class SuspenseException {
+  constructor(promise) {
+    this.promise = promise;
   }
-  if (Ctor.getDerivedStateFromProps) {
-    nextState = Ctor.getDerivedStateFromProps(wipFiber.pendingProps, nextState);
-  }
-  const prevState = instance.state;
-  const prevProps = instance.props;
-  instance.context = nextContext;
-  instance.props = wipFiber.pendingProps;
-  instance.state = nextState;
-  wipFiber.memoizedState = nextState;
-  reconcileChildrenArray(wipFiber, instance.render(), lanes);
-  if (instance.getSnapshotBeforeUpdate) {
-    instance._snapshot = instance.getSnapshotBeforeUpdate(prevProps, prevState);
-  }
-}
-function updateSuspenseFallbackChildren(fiber, primaryChildren, fallbackChildren, lanes) {
-  const oldFiber = fiber.alternate?.child;
-  const offscreen = cloneFiberNode(oldFiber, {
-    mode: 'hidden',
-    children: primaryChildren
-  }, {
-    parent: fiber,
-    index: 0,
-    lanes,
-    alternate: oldFiber
-  });
-  oldFiber.alternate = offscreen;
-  const fallback = oldFiber.sibling ? cloneFiberNode(oldFiber.sibling, {
-    children: fallbackChildren
-  }, {
-    parent: fiber,
-    index: 1,
-    lanes: mergeLanes(oldFiber.lanes, lanes)
-  }) : createFiberNode(FiberTag.Fragment, {
-    children: fallbackChildren
-  }, {
-    parent: fiber,
-    index: 1,
-    lanes
-  });
-  if (oldFiber.sibling) deleteChild(oldFiber.sibling, fiber);
-  offscreen.sibling = fallback;
-  fiber.child = offscreen;
-}
-function updateSuspensePrimaryChildren(fiber, primaryChildren, lanes) {
-  const oldFiber = fiber.alternate?.child;
-  const offscreen = cloneFiberNode(oldFiber, {
-    mode: 'visible',
-    children: primaryChildren
-  }, {
-    parent: fiber,
-    index: 0,
-    lanes,
-    alternate: oldFiber
-  });
-  oldFiber.alternate = offscreen;
-  oldFiber.sibling && deleteChild(oldFiber.sibling, fiber);
-  fiber.child = offscreen;
 }
 
-const events = ['onCopy', 'onCopyCapture', 'onCutCapture', 'onPaste', 'onPasteCapture', 'onCompositionEnd', 'onCompositionEndCapture', 'onCompositionStart', 'onCompositionStartCapture', 'onCompositionUpdate', 'onCompositionUpdateCapture', 'onFocus', 'onCut', 'onFocusCapture', 'onBlur', 'onBlurCapture', 'onChange', 'onChangeCapture', 'onBeforeInput', 'onBeforeInputCapture', 'onInput', 'onInputCapture', 'onReset', 'onResetCapture', 'onSubmit', 'onSubmitCapture', 'onInvalid', 'onInvalidCapture', 'onLoad', 'onLoadCapture', 'onError', 'onErrorCapture', 'onKeyDown', 'onKeyDownCapture', 'onKeyPress', 'onKeyPressCapture', 'onKeyUp', 'onKeyUpCapture', 'onAbort', 'onAbortCapture', 'onCanPlay', 'onCanPlayCapture', 'onCanPlayThrough', 'onCanPlayThroughCapture', 'onDurationChange', 'onDurationChangeCapture', 'onEmptied', 'onEmptiedCapture', 'onEncrypted', 'onEncryptedCapture', 'onEnded', 'onEndedCapture', 'onLoadedData', 'onLoadedDataCapture', 'onLoadedMetadata', 'onLoadedMetadataCapture', 'onLoadStart', 'onLoadStartCapture', 'onPause', 'onPauseCapture', 'onPlay', 'onPlayCapture', 'onPlaying', 'onPlayingCapture', 'onProgress', 'onProgressCapture', 'onRateChange', 'onRateChangeCapture', 'onResize', 'onResizeCapture', 'onSeeked', 'onSeekedCapture', 'onSeeking', 'onSeekingCapture', 'onStalled', 'onStalledCapture', 'onSuspend', 'onSuspendCapture', 'onTimeUpdate', 'onTimeUpdateCapture', 'onVolumeChange', 'onVolumeChangeCapture', 'onWaiting', 'onWaitingCapture', 'onAuxClick', 'onAuxClickCapture', 'onClick', 'onClickCapture', 'onContextMenu', 'onContextMenuCapture', 'onDoubleClick', 'onDoubleClickCapture', 'onDrag', 'onDragCapture', 'onDragEnd', 'onDragEndCapture', 'onDragEnter', 'onDragEnterCapture', 'onDragExit', 'onDragExitCapture', 'onDragLeave', 'onDragLeaveCapture', 'onDragOver', 'onDragOverCapture', 'onDragStart', 'onDragStartCapture', 'onDrop', 'onDropCapture', 'onMouseDown', 'onMouseDownCapture', 'onMouseEnter', 'onMouseLeave', 'onMouseMove', 'onMouseMoveCapture', 'onMouseOut', 'onMouseOutCapture', 'onMouseOver', 'onMouseOverCapture', 'onMouseUp', 'onMouseUpCapture', 'onSelect', 'onSelectCapture', 'onTouchCancel', 'onTouchCancelCapture', 'onTouchEnd', 'onTouchEndCapture', 'onTouchMove', 'onTouchMoveCapture', 'onTouchStart', 'onTouchStartCapture', 'onPointerDown', 'onPointerDownCapture', 'onPointerMove', 'onPointerMoveCapture', 'onPointerUp', 'onPointerUpCapture', 'onPointerCancel', 'onPointerCancelCapture', 'onPointerEnter', 'onPointerLeave', 'onPointerOver', 'onPointerOverCapture', 'onPointerOut', 'onPointerOutCapture', 'onGotPointerCapture', 'onGotPointerCaptureCapture', 'onLostPointerCapture', 'onLostPointerCaptureCapture', 'onScroll', 'onScrollCapture', 'onWheel', 'onWheelCapture', 'onAnimationStart', 'onAnimationStartCapture', 'onAnimationEnd', 'onAnimationEndCapture', 'onAnimationIteration', 'onAnimationIterationCapture', 'onTransitionEnd', 'onTransitionEndCapture'];
+const bubblingEvents = [
+// 鼠标事件
+'onClick', 'onDoubleClick', 'onMouseDown', 'onMouseUp', 'onMouseMove', 'onMouseOver', 'onMouseOut', 'onContextMenu',
+// 键盘事件
+'onKeyDown', 'onKeyPress', 'onKeyUp',
+// 输入事件
+'onInput', 'onChange', 'onSelect', 'onFocusIn',
+// focusin 会冒泡
+'onFocusOut',
+// focusout 会冒泡
+// 表单事件
+'onInvalid',
+// 拖拽事件
+'onDrag', 'onDragStart', 'onDragEnd', 'onDragOver', 'onDrop',
+// 剪切板事件
+'onCopy', 'onCut', 'onPaste',
+// 触摸事件
+'onTouchStart', 'onTouchMove', 'onTouchEnd', 'onTouchCancel',
+// 动画和转换事件
+'onTransitionRun', 'onTransitionCancel',
+// 其他事件
+'onWheel',
+// 滚轮事件
+'onResize',
+// 窗口大小调整
+'onAnimationCancel', 'onAnimationEnd', 'onAnimationIteration', 'onAnimationStart'];
+function cloneEventWithCustomProperties(originalEvent, customProps) {
+  const clonedEvent = new originalEvent.constructor(originalEvent.type, originalEvent);
+  // 使用 defineProperty 添加不可枚举的自定义属性
+  Object.keys(customProps).forEach(key => {
+    Object.defineProperty(clonedEvent, key, {
+      value: customProps[key],
+      enumerable: false,
+      // 设为不可枚举
+      writable: true,
+      configurable: true
+    });
+  });
+  return clonedEvent;
+}
 const domMap = new WeakMap();
 const registerEvent = root => {
-  const listener = eventName => e => {
-    const fiber = domMap.get(e.target);
-    let current = fiber;
-    while (current) {
-      if (current.tag === FiberTag.HostComponent) {
-        const handler = current.pendingProps[eventName];
-        handler && batchedUpdates(handler, e);
+  const listener = function (eventName) {
+    let capture = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
+    return e => {
+      const fiber = domMap.get(e.target);
+      let current = fiber;
+      while (current) {
+        if (current.tag === FiberTag.HostComponent) {
+          const handler = current.pendingProps[eventName];
+          handler && batchedUpdates(handler, cloneEventWithCustomProperties(e, {
+            target: e.target,
+            currentTarget: current.stateNode
+          }));
+          if (capture) break;
+        }
+        current = current.parent;
       }
-      current = current.parent;
-    }
+    };
   };
-  for (const eventName of events) {
+  for (const eventName of bubblingEvents) {
     const event = eventName.toLowerCase().slice(2);
     root.addEventListener(event, listener(eventName), false);
   }
+  // for (const eventName of nonBubblingEvents) {
+  // 	const event = eventName.toLowerCase().slice(2);
+  // 	root.addEventListener(event, listener(eventName, true), true);
+  // }
 };
 
 const blacklist = ['children', 'style', 'ref'];
@@ -883,6 +841,7 @@ function convertName(name) {
   return name === 'className' ? 'class' : name;
 }
 const svgElements = new Set(['svg', 'circle', 'rect', 'path', 'line', 'polygon', 'polyline', 'ellipse', 'g', 'text', 'tspan', 'defs', 'linearGradient', 'radialGradient', 'stop', 'use']);
+const booleanAttributes = new Set(['disabled', 'checked', 'readonly', 'selected', 'multiple', 'hidden', 'autofocus', 'required']);
 function updateDomProperties(dom, prevProps, nextProps) {
   Object.keys(prevProps).filter(isAttribute).filter(isGone(nextProps)).forEach(name => {
     // (dom as IState)[name] = null;
@@ -895,6 +854,8 @@ function updateDomProperties(dom, prevProps, nextProps) {
     } else if (svgElements.has(dom.tagName.toLowerCase()) && name !== 'xmlns') {
       // const svgPropName = name.replace(/(a-z)(A-Z)/g, '$1-$2').toLowerCase();
       dom.setAttributeNS(null, convertName(name), value);
+    } else if (booleanAttributes.has(name)) {
+      if (value) dom.setAttribute(name, 'true');else dom.removeAttribute(name);
     } else {
       dom.setAttribute(convertName(name), value);
     }
@@ -902,10 +863,11 @@ function updateDomProperties(dom, prevProps, nextProps) {
   prevProps.style = prevProps.style || {};
   nextProps.style = nextProps.style || {};
   Object.keys(nextProps.style).filter(isNew(prevProps.style, nextProps.style)).forEach(key => {
-    dom.style[key] = nextProps.style[key];
+    const val = nextProps.style[key];
+    dom.style.setProperty(key, val);
   });
   Object.keys(prevProps.style).filter(isGone(nextProps.style)).forEach(key => {
-    dom.style[key] = '';
+    dom.style.setProperty(key, null);
   });
 }
 function createDomElement(fiber) {
@@ -918,7 +880,7 @@ function createDomElement(fiber) {
 
 function getHostParent(fiber) {
   let domParentFiber = fiber.parent;
-  while (domParentFiber && domParentFiber.parent && domParentFiber.tag !== FiberTag.HostComponent && domParentFiber.tag !== FiberTag.HostText) {
+  while (domParentFiber && domParentFiber.parent && domParentFiber.tag !== FiberTag.Portal && domParentFiber.tag !== FiberTag.HostComponent && domParentFiber.tag !== FiberTag.HostText) {
     domParentFiber = domParentFiber.parent;
   }
   if (!domParentFiber) return fiber.stateNode;
@@ -945,10 +907,11 @@ function getHostSibling(fiber) {
 }
 function callEffect(fiber) {
   let key = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : 'create';
+  if (fiber.tag !== FiberTag.FunctionComponent && fiber.tag !== FiberTag.ForwardRef) return;
   let hook = fiber.memoizedState;
   while (hook) {
-    const create = hook.state[key];
-    if (typeof create === 'function') create();
+    const fn = hook.state && typeof hook.state === 'object' ? hook.state[key] : null;
+    if (typeof fn === 'function') fn();
     hook = hook.next;
   }
 }
@@ -958,52 +921,65 @@ function commitPlacement(fiber) {
     const before = getHostSibling(fiber);
     const node = fiber.stateNode;
     if (before) domParent.insertBefore(node, before);else domParent.appendChild(node);
-    if (fiber.ref) fiber.ref.current = fiber.stateNode;
   } else if (fiber.tag === FiberTag.ClassComponent) {
     fiber.stateNode.componentDidMount();
-  } else if (fiber.tag === FiberTag.FunctionComponent) {
-    callEffect(fiber);
   }
+  callEffect(fiber);
   fiber.flags &= ~FiberFlags.Placement;
 }
 function commitUpdate(fiber) {
   if (fiber.tag === FiberTag.HostComponent || fiber.tag === FiberTag.HostText) {
     updateDomProperties(fiber.stateNode, fiber.alternate.pendingProps, fiber.pendingProps);
-  } else if (fiber.tag === FiberTag.FunctionComponent) {
-    callEffect(fiber);
   } else if (fiber.tag === FiberTag.ClassComponent && fiber.stateNode instanceof Component) {
     const oldFiber = fiber.alternate;
     if (oldFiber) {
-      fiber.stateNode.componentDidUpdate(oldFiber.pendingProps, oldFiber.stateNode.state);
+      batchedUpdates(() => {
+        fiber.updateQueue?.onCommit?.();
+        fiber.stateNode.componentDidUpdate(oldFiber.pendingProps, oldFiber.stateNode.state);
+      });
     }
-  }
+  } else if (fiber.tag === FiberTag.Portal && fiber.pendingProps.container !== fiber.stateNode) ;
+  callEffect(fiber);
   fiber.flags &= ~FiberFlags.Update;
 }
-function commitDeletion(fiber) {
+const deleteChild = (domParent, fiber) => {
   let node = fiber;
-  const domParent = getHostParent(fiber);
-  while (domParent) {
-    if (!node) break;
-    if (node.tag !== FiberTag.HostComponent && node.tag !== FiberTag.HostText) {
-      node = node.child;
-      continue;
-    }
-    domParent.removeChild(node.stateNode);
-    while (node !== fiber && !node.sibling) node = node.parent;
-    if (node === fiber) break;
-    node = node.sibling;
+  while (node) {
+    node = traverseFiber(node, f => {
+      if (f.tag === FiberTag.Portal) return true;
+      if (f.tag === FiberTag.HostComponent || f.tag === FiberTag.HostText) {
+        domParent.removeChild(f.stateNode);
+        return true;
+      }
+      return false;
+    }, f => f === fiber);
   }
-  const goStep = node => {
-    if (node.child) return node.child;
-    let cursor = node;
-    while (cursor && cursor != fiber) {
-      if (cursor.tag === FiberTag.FunctionComponent) callEffect(cursor, 'destroy');
-      if (cursor.stateNode instanceof Component) cursor.stateNode.destory();
-      if (cursor.sibling) return cursor.sibling;
-      cursor = cursor.parent;
+};
+function commitDeletion(fiber) {
+  const domParent = getHostParent(fiber);
+  const deleteChildren = (domParent, fiber) => {
+    let node = fiber.child;
+    while (domParent && node) {
+      deleteChild(domParent, node);
+      node = node.sibling;
     }
   };
-  while (node) node = goStep(node);
+  let node = fiber.child;
+  while (node) {
+    switch (node.tag) {
+      case FiberTag.Portal:
+        deleteChildren(node.stateNode, node);
+        break;
+      case FiberTag.FunctionComponent:
+        callEffect(node, 'destroy');
+        break;
+      case FiberTag.ClassComponent:
+        node.stateNode.destory();
+        break;
+    }
+    node = traverseFiber(node, f => false, f => f === fiber);
+  }
+  deleteChildren(domParent, fiber);
   fiber.flags &= ~FiberFlags.Deletion;
 }
 function commitWork(fiber) {
@@ -1028,7 +1004,8 @@ function createHooks(state) {
     baseState: null,
     baseUpdate: null,
     queue: null,
-    next: null
+    next: null,
+    fiber: workInProgress
   };
 }
 function createWorkInProgressHook(state) {
@@ -1040,6 +1017,7 @@ function createWorkInProgressHook(state) {
   }
   lastWorkInProgressHook = workInProgressHook;
   workInProgressHook = workInProgressHook.next;
+  lastWorkInProgressHook.fiber = workInProgress;
   return lastWorkInProgressHook;
 }
 function processHookState(hook) {
@@ -1050,7 +1028,8 @@ function createUpdateQueue(hook) {
   hook.queue.dispatch = dispatchState.bind(null, workInProgress, hook);
 }
 function dispatchState(fiber, hook, state) {
-  if (!fiber) return;
+  // const { fiber } = hook;
+  if (!fiber || hook.state === state) return;
   const current = getLatestFiber(fiber);
   const lane = requestUpdateLane();
   current.lanes |= lane;
@@ -1061,12 +1040,12 @@ function dispatchState(fiber, hook, state) {
 
 function mountClassComponent(wipFiber, lanes) {
   const instance = wipFiber.stateNode = createInstance(wipFiber);
+  putRef(wipFiber);
   const Ctor = wipFiber.type;
   let nextState = Object.assign({}, instance.state);
   const nextContext = Ctor.contextType?.currentValue;
-  if (Ctor.getDerivedStateFromProps) nextState = Ctor.getDerivedStateFromProps(wipFiber.pendingProps, nextState);
+  if (Ctor.getDerivedStateFromProps) nextState = Object.assign({}, nextState, Ctor.getDerivedStateFromProps(wipFiber.pendingProps, nextState));
   instance.context = nextContext;
-  instance.props = wipFiber.pendingProps;
   instance.state = nextState;
   wipFiber.memoizedState = nextState;
   reconcileChildrenArray(wipFiber, instance.render(), lanes);
@@ -1104,6 +1083,7 @@ function mountSuspensePrimaryChildren(fiber, primaryChildren, lanes) {
 function beginWork(wipFiber, renderLanes) {
   createWorkInProgress(wipFiber);
   if (!intersectLanes(wipFiber.lanes, renderLanes) && !intersectLanes(wipFiber.childLanes, renderLanes)) {
+    wipFiber.flags &= ~FiberFlags.Update;
     cloneFiberChildren(wipFiber.alternate?.child || null, wipFiber);
     return true;
   }
@@ -1124,15 +1104,28 @@ function beginWork(wipFiber, renderLanes) {
     case FiberTag.Fragment:
       reconcileChildrenArray(wipFiber, wipFiber.pendingProps?.children, renderLanes);
       break;
+    case FiberTag.ForwardRef:
+      processForwardRefComponent(wipFiber, renderLanes);
+      break;
     case FiberTag.HostRoot:
     case FiberTag.HostComponent:
     case FiberTag.HostText:
+    case FiberTag.Portal:
       processHostComponent(wipFiber, renderLanes);
       break;
   }
   return false;
 }
 let flag = false;
+function processForwardRefComponent(fiber, lanes) {
+  const {
+    render,
+    ...props
+  } = fiber.pendingProps;
+  let children = [];
+  if (typeof render === 'function') children = render(props, fiber.ref);
+  reconcileChildrenArray(fiber, children, lanes);
+}
 function processOffscreenComponent(fiber, lanes) {
   let children = fiber.pendingProps.children;
   if (fiber.pendingProps.mode === 'hidden') {
@@ -1177,9 +1170,13 @@ function processClassComponent(wipFiber, lanes) {
   if (wipFiber.alternate) updateClassComponent(wipFiber, lanes);else mountClassComponent(wipFiber, lanes);
 }
 function processHostComponent(wipFiber, lanes) {
+  if (wipFiber.tag === FiberTag.Portal) {
+    wipFiber.stateNode = wipFiber.pendingProps.container;
+  }
   if (!wipFiber.stateNode) {
     wipFiber.stateNode = createDomElement(wipFiber);
-    if (wipFiber.ref) wipFiber.ref.current = wipFiber.stateNode;
+    putRef(wipFiber);
+    // if (wipFiber.ref) wipFiber.ref.current = wipFiber.stateNode;
   }
   domMap.set(wipFiber.stateNode, wipFiber);
   const newChildElements = wipFiber.pendingProps.children;
@@ -1194,7 +1191,7 @@ let currentBatchConfig = {
 };
 let unwindWorks = [];
 let cloneChildrenHandlers = [];
-if (typeof window !== 'undefined') registerEvent(document.body);
+if (typeof window !== 'undefined') registerEvent(document);
 function render(children, containerDom) {
   if (!containerDom) containerDom = document.createElement('div');
   let {
@@ -1306,6 +1303,7 @@ function performWork(root, workLoop) {
     try {
       return workLoop(root);
     } catch (error) {
+      console.error(error, 'error');
       nextUnitOfWork = catchError(error, nextUnitOfWork);
     }
   }
@@ -1362,135 +1360,281 @@ function beforeCommit() {
 }
 function commitAllWork(fiber) {
   beforeCommit();
-  (fiber.effects || []).forEach(f => commitWork(f));
   const root = fiber.stateNode;
   root.current = fiber;
+  const effects = fiber.effects || [];
+  fiber.effects = [];
   root.finishedWork = null;
   nextUnitOfWork = null;
+  const previousIsBatchingUpdates = isBatchingUpdates;
+  setBatchingUpdates(true);
+  effects.forEach(f => commitWork(f));
+  setBatchingUpdates(previousIsBatchingUpdates);
   ensureRootIsScheduled(root);
 }
 
-function getNearestSuspense(fiber) {
-  let node = fiber;
-  while (node && node.tag !== FiberTag.Suspense) node = node.parent;
-  return node ? getLatestFiber(node) : null;
-}
-function attachPingListener(fiber, promise) {
-  const ping = () => {
-    const suspense = getNearestSuspense(fiber);
-    if (suspense) suspense.lanes |= fiber.lanes;
-    const root = suspense ? markUpdateFromFiberToRoot(suspense) : null;
-    root && ensureRootIsScheduled(root);
+function createUpdate(payload, eventTime, lane) {
+  let tag = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : UpdateState.updateState;
+  return {
+    eventTime,
+    lane,
+    tag,
+    payload,
+    next: null
   };
-  promise.then(ping, ping);
 }
-function catchError(error, fiber, lanes, errorInfo) {
-  let component, ctor, handled;
-  let needPing = true;
-  if (error instanceof SuspenseException) {
-    error = error.promise;
-    const suspenseBoundary = getSuspenseHander();
-    if (suspenseBoundary) {
-      suspenseBoundary.flags |= Flags.ShouldCapture;
-      if (suspenseBoundary.memoizedState === error) needPing = false;
-      suspenseBoundary.memoizedState = error;
-    }
+class Updater {
+  constructor(instance) {
+    this.instance = instance;
   }
-  if (error instanceof Promise && needPing) {
-    attachPingListener(fiber, error);
+  setState(fiber, state, callback) {
+    fiber = getLatestFiber(fiber);
+    const lane = requestUpdateLane();
+    fiber.lanes |= lane;
+    const update = createUpdate(state, getCurrentTime(), lane, UpdateState.updateState);
+    if (!fiber.updateQueue) fiber.updateQueue = initializeUpdateQueue(this.instance.state);
+    if (callback) fiber.updateQueue.onCommit = callback;
+    enqueueUpdate(fiber.updateQueue, update);
+    scheduleUpdateOnFiber(fiber);
   }
-  for (let current = fiber; current; current = current.parent) {
-    current.effects = []; // reset effect
-    const next = unwindWork(current);
-    if (next) return next;
-    if ((component = fiber.stateNode) && component instanceof Component) {
-      try {
-        ctor = fiber.type;
-        if (ctor && ctor.getDerivedStateFromError) {
-          component.setState(ctor.getDerivedStateFromError(error));
-          handled = true;
-        }
-        if (component.componentDidCatch) {
-          component.componentDidCatch(error, errorInfo || {});
-          handled = true;
-        }
-        if (handled) {
-          return;
-        }
-      } catch (e) {
-        error = e;
+}
+function enqueueUpdate(queue, update) {
+  const sharedQueue = queue.shared;
+  const pending = sharedQueue.pending;
+  if (!pending) {
+    update.next = update;
+  } else {
+    update.next = pending.next;
+    pending.next = update;
+  }
+  sharedQueue.pending = update;
+}
+function getStateFromUpdate(update, prevState, nextProps) {
+  switch (update.tag) {
+    case UpdateState.replaceState:
+    case UpdateState.updateState:
+      {
+        const payload = update.payload;
+        const partialState = typeof payload === 'function' ? payload(prevState, nextProps) : payload;
+        return update.tag === UpdateState.replaceState ? partialState : Object.assign({}, prevState, partialState);
       }
+    default:
+      return prevState;
+  }
+}
+function initializeUpdateQueue(memoizedState) {
+  return {
+    baseState: memoizedState,
+    firstBaseUpdate: null,
+    lastBaseUpdate: null,
+    shared: {
+      pending: null
+    },
+    effects: []
+  };
+}
+function processUpdateQueue(wip, hooks, queue, renderLanes) {
+  if (!queue) return;
+  let {
+    firstBaseUpdate,
+    lastBaseUpdate,
+    shared
+  } = queue;
+  let pendingQueue = shared.pending;
+  if (pendingQueue) {
+    shared.pending = null;
+    const lastPendingUpdate = pendingQueue;
+    const firstPendingUpdate = lastPendingUpdate.next;
+    lastPendingUpdate.next = null;
+    if (lastBaseUpdate) {
+      lastBaseUpdate.next = firstPendingUpdate;
+    } else {
+      firstBaseUpdate = firstPendingUpdate;
+    }
+    lastBaseUpdate = lastPendingUpdate;
+  }
+  if (firstBaseUpdate) {
+    let newState = queue.baseState;
+    let newBaseState = null;
+    let newFirstBaseUpdate = null;
+    let newLastBaseUpdate = null;
+    let update = firstBaseUpdate;
+    do {
+      const updateLane = update.lane;
+      if (!isSubsetOfLanes(renderLanes, updateLane)) {
+        const clone = {
+          eventTime: update.eventTime,
+          lane: updateLane,
+          tag: update.tag,
+          payload: update.payload,
+          next: null
+        };
+        if (!newLastBaseUpdate) {
+          newFirstBaseUpdate = newLastBaseUpdate = clone;
+          newBaseState = newState;
+        } else {
+          newLastBaseUpdate.next = clone;
+          newLastBaseUpdate = newLastBaseUpdate.next;
+        }
+      } else {
+        newState = getStateFromUpdate(update, newState, wip.pendingProps);
+      }
+      update = update.next;
+    } while (update);
+    if (!newLastBaseUpdate) {
+      newBaseState = newState;
+    }
+    if (typeof hooks === 'function') {
+      hooks(newBaseState);
+    } else if (hooks) {
+      hooks.state = newBaseState;
+    } else ;
+    queue.baseState = newBaseState;
+    queue.firstBaseUpdate = newFirstBaseUpdate;
+    queue.lastBaseUpdate = newLastBaseUpdate;
+  }
+}
+function markUpdateFromFiberToRoot(fiber) {
+  let parent = fiber.parent,
+    node = fiber;
+  while (parent) {
+    parent.childLanes |= mergeLanes(node.lanes, node.childLanes);
+    node = parent;
+    parent = parent.parent;
+  }
+  if (node.tag !== FiberTag.HostRoot) {
+    return null;
+  }
+  const root = node.stateNode;
+  root.pendingLanes = mergeLanes(node.lanes, node.childLanes);
+  return root;
+}
+let isBatchingUpdates = false;
+const setBatchingUpdates = e => isBatchingUpdates = e;
+function batchedUpdates(fn) {
+  const previousIsBatchingUpdates = isBatchingUpdates;
+  isBatchingUpdates = true;
+  try {
+    for (var _len = arguments.length, a = new Array(_len > 1 ? _len - 1 : 0), _key = 1; _key < _len; _key++) {
+      a[_key - 1] = arguments[_key];
+    }
+    return fn(...a);
+  } finally {
+    isBatchingUpdates = previousIsBatchingUpdates;
+    if (!isBatchingUpdates) {
+      workInProgressRoot && ensureRootIsScheduled(workInProgressRoot);
     }
   }
-  throw error;
 }
-class SuspenseException {
-  constructor(promise) {
-    this.promise = promise;
+function updateClassComponent(wipFiber, lanes) {
+  const instance = wipFiber.stateNode;
+  const Ctor = wipFiber.type;
+  let nextState = wipFiber.memoizedState;
+  const nextContext = Ctor.contextType?.currentValue;
+  const pendingProps = Object.assign({}, Ctor.defaultProps, wipFiber.pendingProps);
+  if (Ctor.getDerivedStateFromProps) {
+    nextState = Object.assign({}, nextState, Ctor.getDerivedStateFromProps(pendingProps, nextState));
   }
+  processUpdateQueue(wipFiber, state => Object.assign(nextState, state), wipFiber.updateQueue, lanes);
+  if (!instance.shouldComponentUpdate(pendingProps, nextState, nextContext)) {
+    return cloneChildren(wipFiber);
+  }
+  const prevState = instance.state;
+  const prevProps = instance.props;
+  instance.context = nextContext;
+  instance.props = pendingProps;
+  instance.state = nextState;
+  wipFiber.memoizedState = nextState;
+  reconcileChildrenArray(wipFiber, instance.render(), lanes);
+  if (instance.getSnapshotBeforeUpdate) {
+    instance._snapshot = instance.getSnapshotBeforeUpdate(prevProps, prevState);
+  }
+}
+function updateSuspenseFallbackChildren(fiber, primaryChildren, fallbackChildren, lanes) {
+  const oldFiber = fiber.alternate?.child;
+  const offscreen = cloneFiberNode(oldFiber, {
+    mode: 'hidden',
+    children: primaryChildren
+  }, {
+    parent: fiber,
+    index: 0,
+    lanes,
+    alternate: oldFiber
+  });
+  oldFiber.alternate = offscreen;
+  const fallback = oldFiber.sibling ? cloneFiberNode(oldFiber.sibling, {
+    children: fallbackChildren
+  }, {
+    parent: fiber,
+    index: 1,
+    lanes: mergeLanes(oldFiber.lanes, lanes)
+  }) : createFiberNode(FiberTag.Fragment, {
+    children: fallbackChildren
+  }, {
+    parent: fiber,
+    index: 1,
+    lanes
+  });
+  if (oldFiber.sibling) deleteChild$1(oldFiber.sibling, fiber);
+  offscreen.sibling = fallback;
+  fiber.child = offscreen;
+}
+function updateSuspensePrimaryChildren(fiber, primaryChildren, lanes) {
+  const oldFiber = fiber.alternate?.child;
+  const offscreen = cloneFiberNode(oldFiber, {
+    mode: 'visible',
+    children: primaryChildren
+  }, {
+    parent: fiber,
+    index: 0,
+    lanes,
+    alternate: oldFiber
+  });
+  oldFiber.alternate = offscreen;
+  oldFiber.sibling && deleteChild$1(oldFiber.sibling, fiber);
+  fiber.child = offscreen;
 }
 
-function isSubclassOf(subClass, superClass) {
-  let prototype = subClass.prototype ? Object.getPrototypeOf(subClass.prototype) : void 0;
-  while (prototype) {
-    if (prototype === superClass.prototype) {
-      return true;
-    }
-    prototype = Object.getPrototypeOf(prototype);
+class Component {
+  constructor(props, context) {
+    this.props = props || {};
+    this.context = context;
+    this.updater = new Updater(this);
   }
-  return false;
+  shouldComponentUpdate(props, state, nextContext) {
+    return true;
+  }
+  componentDidMount() {}
+  componentDidUpdate(props, state, snapshot) {}
+  getSnapshotBeforeUpdate(prevProps, prevState) {}
+  componentDidCatch(error, errorInfo) {}
+  componentWillUnmount() {}
+  destory() {
+    this.componentWillUnmount();
+  }
+  setState(state, callback) {
+    // batchedUpdates(() => {
+    if (this.__fiber) this.updater.setState(this.__fiber, state, callback);
+    // });
+  }
+  render() {
+    throw new Error('render method should be implemented');
+  }
 }
-const wait = (fn, time) => function () {
-  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-    args[_key] = arguments[_key];
-  }
-  return new Promise(resolve => {
-    setTimeout(() => resolve(fn(...args)), time);
-  });
-};
-const createRef = initialVal => {
-  return {
-    current: initialVal
-  };
-};
-const forwardRef = render => props => render(props, props.ref);
-const wrapPromise = promise => {
-  let status = 'pending',
-    result;
-  const next = promise.then(res => {
-    status = 'fulfilled';
-    result = res;
-  }, reason => {
-    status = 'rejected';
-    result = reason;
-  });
-  return {
-    read() {
-      switch (status) {
-        case 'pending':
-          throw new SuspenseException(next);
-        case 'fulfilled':
-          return result;
-        case 'rejected':
-        default:
-          throw result;
-      }
-    }
-  };
-};
-const lazy = load => {
-  const p = load();
-  const {
-    read
-  } = wrapPromise(p);
-  return props => createElement(read().default, props);
-};
+function createInstance(fiber) {
+  const Ctor = fiber.type;
+  const instance = new Ctor(Object.assign({}, Ctor.defaultProps, fiber.pendingProps), Ctor.contextType?.currentValue);
+  instance.__fiber = fiber;
+  return instance;
+}
 
 const TEXT_ELEMENT = 'TEXT_ELEMENT';
-const FRAGMENT = Symbol.for('srender.Fragment');
+const Fragment = Symbol.for('srender.Fragment');
 const ELEMENT = Symbol.for('srender.Element');
-const SUSPENSE = Symbol.for('srender.Suspense');
-const OFFSCREEN = Symbol.for('srender.Offscreen');
+const Suspense = Symbol.for('srender.Suspense');
+const Offscreen = Symbol.for('srender.Offscreen');
+const ForwardRef = Symbol.for('srender.ForwardRef');
+const Portal = Symbol.for('srender.Portal');
 const ContextProvider = Symbol.for('srender.ContextProvider');
 const getTag = _ref => {
   let {
@@ -1498,14 +1642,18 @@ const getTag = _ref => {
     $$typeof
   } = _ref;
   switch ($$typeof) {
-    case FRAGMENT:
+    case Fragment:
       return FiberTag.Fragment;
-    case SUSPENSE:
+    case Suspense:
       return FiberTag.Suspense;
-    case OFFSCREEN:
+    case Offscreen:
       return FiberTag.Offscreen;
     case ContextProvider:
       return FiberTag.ContextProvider;
+    case Portal:
+      return FiberTag.Portal;
+    case ForwardRef:
+      return FiberTag.ForwardRef;
   }
   if (typeof type === 'string') return type === TEXT_ELEMENT ? FiberTag.HostText : FiberTag.HostComponent;
   if (typeof type === 'function') return isSubclassOf(type, Component) ? FiberTag.ClassComponent : FiberTag.FunctionComponent;
@@ -1535,18 +1683,47 @@ function createElement(type) {
     children: null
   }, config);
   // if (props.className) props.class = props.className;
-  props.children = children.filter(c => c != undefined && c != null && c !== false).map(c => c?.$$typeof ? c : createTextElement(c));
+  props.children = children.filter(c => c != undefined && c != null && c !== false).map(c => {
+    if (isValidElement(c) || typeof c === 'function') return c;
+    return createTextElement(c);
+  });
+  props.children = props.children.length === 1 ? props.children[0] : props.children;
   let node = {
     $$typeof: ELEMENT,
     props,
-    type
+    type,
+    key: props.key,
+    ref: props.ref
   };
   if (typeof type === 'symbol') node.$$typeof = type;
   if (typeof type === 'function' && type.displayType === ContextProvider) node.$$typeof = ContextProvider;
+  if (type && type instanceof ExtendedComponent) {
+    node.$$typeof = type.type;
+    node.type = node.$$typeof;
+    node.props = Object.assign({}, props, type.props);
+  }
   return node;
 }
+function createPortal(children, container) {
+  return createElement(Portal, {
+    children,
+    container
+  });
+}
+function forwardRef(render) {
+  return new ExtendedComponent(ForwardRef, {
+    render
+  });
+}
+class ExtendedComponent {
+  constructor(type, props) {
+    this.type = type;
+    this.props = props;
+  }
+}
+const filter = e => e !== null && !['undefined', 'boolean'].includes(typeof e);
 function arrify(val) {
-  return val == null ? [] : Array.isArray(val) ? val : [val];
+  return (Array.isArray(val) ? val : [val]).filter(filter);
 }
 function createTextElement(value) {
   return createElement(TEXT_ELEMENT, {
@@ -1575,6 +1752,10 @@ const map = (children, callback) => {
   }
   return newChildren;
 };
+const only = children => {
+  return Array.isArray(children) ? children[0] : children;
+};
+const toArray = arrify;
 const isValidElement = val => {
   if (typeof val !== 'object') return false;
   if (val.$$typeof) return true;
@@ -1606,9 +1787,7 @@ function areDependenciesEqual(prevDeps, deps) {
 }
 function callbackWrapper(callback, effectHook, deps) {
   let sync = arguments.length > 3 && arguments[3] !== undefined ? arguments[3] : true;
-  const res = areDependenciesEqual(effectHook.deps, deps) ? () => {} : sync ? () => {
-    effectHook.destroy = callback();
-  } : wait(() => effectHook.destroy = callback(), 17);
+  const res = areDependenciesEqual(effectHook.deps, deps) ? () => {} : sync ? () => effectHook.destroy = callback() : wait(() => effectHook.destroy = callback(), 17);
   effectHook.deps = deps;
   return res;
 }
@@ -1624,6 +1803,7 @@ const useEffect = (callback, deps) => {
     create: callback
   };
   const hook = createWorkInProgressHook(effectHook);
+  hook.state.deps;
   hook.state.create = callbackWrapper(callback, hook.state, deps, false);
 };
 const useMemo = (callback, deps) => {
@@ -1638,6 +1818,11 @@ const useMemo = (callback, deps) => {
   return hook.state.value;
 };
 const useCallback = (callback, deps) => useMemo(() => callback, deps);
+const useImperativeHandle = (ref, getRef, deps) => {
+  if (!ref) return;
+  const res = useMemo(getRef, deps);
+  typeof ref === 'function' ? ref(res) : ref.current = res;
+};
 const useContext = context => {
   return context.currentValue;
 };
@@ -1656,18 +1841,22 @@ const useTransition = () => {
   const [isPending, setPending] = useState(false);
   return [isPending, _startTransition.bind(null, setPending)];
 };
+const useDebugValue = () => {};
 
 // export * from './interface';
 const Children = {
   map,
-  forEach
+  forEach,
+  toArray,
+  only
 };
 var index = {
   createElement,
+  createPortal,
   cloneElement,
   render,
   createRoot,
-  Fragment: FRAGMENT,
+  Fragment,
   Component,
   forwardRef,
   Children,
@@ -1681,12 +1870,15 @@ var index = {
   useRef,
   useContext,
   useTransition,
+  useImperativeHandle,
+  useDebugValue,
+  useId,
   startTransition,
   createContext,
-  Offscreen: OFFSCREEN,
-  Suspense: SUSPENSE,
+  Offscreen,
+  Suspense,
   lazy
 };
 
-export { Children, Component, FRAGMENT as Fragment, OFFSCREEN as Offscreen, SUSPENSE as Suspense, cloneElement, createContext, createElement, createRef, createRoot, index as default, forwardRef, isValidElement, lazy, render, startTransition, useCallback, useContext, useEffect, useLayoutEffect, useMemo, useRef, useState, useTransition, wrapPromise };
+export { Children, Component, Fragment, Offscreen, Suspense, cloneElement, createContext, createElement, createPortal, createRef, createRoot, index as default, forwardRef, isValidElement, lazy, render, startTransition, useCallback, useContext, useDebugValue, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, useTransition, wrapPromise };
 //# sourceMappingURL=index.mjs.map

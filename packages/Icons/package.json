@@ -14,11 +14,13 @@
 	"author": "",
 	"license": "ISC",
 	"devDependencies": {
+		"@types/react": "^18",
 		"typescript": "^5"
 	},
 	"dependencies": {
 		"@fontsource-variable/material-symbols-rounded": "^5.1.0",
 		"@material-design-icons/svg": "^0.14.13",
-		"@svgr/cli": "^8.1.0"
+		"@svgr/cli": "^8.1.0",
+		"react": "^18.3.1"
 	}
 }

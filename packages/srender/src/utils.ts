@@ -31,9 +31,7 @@ export const wait =
 		});
 	};
 
-export const createRef = <T = any>(initialVal: T): { current: T } => {
-	return { current: initialVal };
-};
+export const createRef = <T = any>(initialVal?: T) => ({ current: initialVal });
 
 export const forwardRef =
 	<P = {}, T = any>(
@@ -80,3 +78,9 @@ export const lazy = <P extends IProps, T extends ComponentType<P>>(
 
 	return (props: P) => createElement(read().default as any, props);
 };
+
+let counter = 0;
+
+export function useId() {
+	return `srender_unique_${counter++}`;
+}

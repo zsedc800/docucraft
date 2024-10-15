@@ -21,19 +21,24 @@ import {
 	RootFiberNode,
 	State,
 	Update,
+	UpdatePayload,
 	UpdateQueue,
 	UpdateState
 } from '../interface';
 import { getCurrentTime } from '../scheduler';
 import { cloneFiberNode, createFiberNode } from './fiber';
-import { cloneChildren, deleteChild, reconcileChildrenArray } from './utils';
-
-export function createUpdate(
-	payload: any,
+import {
+	cloneChildren,
+	deleteChild,
+	getLatestFiber,
+	reconcileChildrenArray
+} from './utils';
+export function createUpdate<S extends State = State, P = {}>(
+	payload: UpdatePayload<S, P>,
 	eventTime: number,
 	lane: Lane,
 	tag = UpdateState.updateState
-): Update {
+): Update<S, P> {
 	return {
 		eventTime,
 		lane,
@@ -43,7 +48,30 @@ export function createUpdate(
 	};
 }
 
-export function enqueueUpdate(queue: UpdateQueue, update: Update) {
+export class Updater<S extends State = State, P = {}> {
+	constructor(private instance: Component<P, S, any>) {}
+	setState(fiber: Fiber, state: UpdatePayload<S, P>, callback?: () => void) {
+		fiber = getLatestFiber(fiber);
+		const lane = requestUpdateLane();
+		fiber.lanes |= lane;
+		const update = createUpdate<S, P>(
+			state,
+			getCurrentTime(),
+			lane,
+			UpdateState.updateState
+		);
+		if (!fiber.updateQueue)
+			fiber.updateQueue = initializeUpdateQueue(this.instance.state);
+		if (callback) fiber.updateQueue.onCommit = callback;
+		enqueueUpdate<S, P>(fiber.updateQueue, update);
+		scheduleUpdateOnFiber(fiber);
+	}
+}
+
+export function enqueueUpdate<S extends State = State, P = {}>(
+	queue: UpdateQueue<S, P>,
+	update: Update<S, P>
+) {
 	const sharedQueue = queue.shared;
 	const pending = sharedQueue.pending;
 	if (!pending) {
@@ -71,9 +99,9 @@ function getStateFromUpdate(update: Update, prevState: any, nextProps: any) {
 	}
 }
 
-export function initializeUpdateQueue<T = State>(
+export function initializeUpdateQueue<T = State, P = {}>(
 	memoizedState: T
-): UpdateQueue<T> {
+): UpdateQueue<T, P> {
 	return {
 		baseState: memoizedState,
 		firstBaseUpdate: null,
@@ -85,7 +113,7 @@ export function initializeUpdateQueue<T = State>(
 
 export function processUpdateQueue(
 	wip: Fiber,
-	hooks: Hooks | null,
+	hooks: Hooks | ((e: any) => void) | null,
 	queue: UpdateQueue | null,
 	renderLanes: Lanes
 ) {
@@ -140,10 +168,12 @@ export function processUpdateQueue(
 		if (!newLastBaseUpdate) {
 			newBaseState = newState;
 		}
-		if (hooks) {
+		if (typeof hooks === 'function') {
+			hooks(newBaseState);
+		} else if (hooks) {
 			hooks.state = newBaseState;
 		} else {
-			wip.memoizedState = newBaseState;
+			// wip.memoizedState = newBaseState;
 		}
 		queue.baseState = newBaseState!;
 		queue.firstBaseUpdate = newFirstBaseUpdate;
@@ -169,23 +199,29 @@ export function markUpdateFromFiberToRoot(fiber: Fiber) {
 	return root;
 }
 
-export function enqueueSetState<T = any>(fiber: Fiber, state: T) {
+export function enqueueSetState<T extends State = any, P = {}>(
+	fiber: Fiber,
+	state: UpdatePayload<T, P>
+) {
 	const lane = requestUpdateLane();
-	const update = createUpdate(state, getCurrentTime(), lane);
+	const update = createUpdate<T, P>(state, getCurrentTime(), lane);
 	fiber.lanes |= lane;
 	if (!fiber.updateQueue)
 		fiber.updateQueue = initializeUpdateQueue(fiber.memoizedState);
-	enqueueUpdate(fiber.updateQueue, update);
+	enqueueUpdate<T, P>(fiber.updateQueue, update);
 	scheduleUpdateOnFiber(fiber);
 }
 
 export let isBatchingUpdates = false;
-
-export function batchedUpdates<A = any, R = any>(fn: (a: A) => R, a: A): R {
+export const setBatchingUpdates = (e: boolean) => (isBatchingUpdates = e);
+export function batchedUpdates<R = any>(
+	fn: (...a: any[]) => R,
+	...a: any[]
+): R {
 	const previousIsBatchingUpdates = isBatchingUpdates;
 	isBatchingUpdates = true;
 	try {
-		return fn(a);
+		return fn(...a);
 	} finally {
 		isBatchingUpdates = previousIsBatchingUpdates;
 		if (!isBatchingUpdates) {
@@ -197,28 +233,38 @@ export function batchedUpdates<A = any, R = any>(fn: (a: A) => R, a: A): R {
 export function updateClassComponent(wipFiber: Fiber, lanes: Lanes) {
 	const instance: Component = wipFiber.stateNode as Component;
 	const Ctor = wipFiber.type as ClassComponent;
-	processUpdateQueue(wipFiber, null, wipFiber.updateQueue, lanes);
 	let nextState = wipFiber.memoizedState as State;
 	const nextContext = Ctor.contextType?.currentValue;
-	if (
-		!instance.shouldComponentUpdate(
-			wipFiber.pendingProps,
-			nextState,
-			nextContext
-		)
-	) {
-		return cloneChildren(wipFiber);
-	}
+	const pendingProps = Object.assign(
+		{},
+		Ctor.defaultProps,
+		wipFiber.pendingProps
+	);
 
 	if (Ctor.getDerivedStateFromProps) {
-		nextState = Ctor.getDerivedStateFromProps(wipFiber.pendingProps, nextState);
+		nextState = Object.assign(
+			{},
+			nextState,
+			Ctor.getDerivedStateFromProps(pendingProps, nextState)
+		);
+	}
+
+	processUpdateQueue(
+		wipFiber,
+		(state) => Object.assign(nextState, state),
+		wipFiber.updateQueue,
+		lanes
+	);
+
+	if (!instance.shouldComponentUpdate(pendingProps, nextState, nextContext)) {
+		return cloneChildren(wipFiber);
 	}
 
 	const prevState = instance.state;
 	const prevProps = instance.props;
 
 	instance.context = nextContext;
-	instance.props = wipFiber.pendingProps;
+	instance.props = pendingProps;
 	instance.state = nextState;
 	wipFiber.memoizedState = nextState;
 

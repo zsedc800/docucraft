@@ -122,7 +122,6 @@ function hideAllChildren(fiber: Fiber) {
 	let node: Fiber | undefined | null = fiber.child;
 
 	while (node) {
-		console.log(node.stateNode, 'node');
 		if (node.tag === FiberTag.HostComponent) {
 			(node.stateNode as HTMLElement).style.display = 'none';
 		} else {
@@ -212,4 +211,32 @@ export function getLatestFiber(fiber: Fiber): Fiber {
 	}
 
 	return node;
+}
+
+export function putRef(fiber: Fiber) {
+	const { ref } = fiber;
+
+	if (ref && fiber.stateNode)
+		typeof ref === 'function'
+			? ref(fiber.stateNode)
+			: (ref.current = fiber.stateNode);
+}
+
+function defaultShouldSkip(node: Fiber) {
+	return false;
+}
+type SkipFn = (n: Fiber) => boolean;
+export function traverseFiber(
+	root: Fiber,
+	shouldSkip: SkipFn = defaultShouldSkip,
+	check?: SkipFn
+) {
+	if (!shouldSkip(root) && root.child) return root.child;
+	let cursor: Fiber | null = root;
+	while (cursor) {
+		if (check && check(cursor)) break;
+		if (cursor.sibling) return cursor.sibling;
+		cursor = cursor.parent;
+	}
+	return null;
 }

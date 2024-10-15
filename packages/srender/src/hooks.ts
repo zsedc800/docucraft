@@ -1,4 +1,4 @@
-import { Context, Fiber, HookEffect } from './interface';
+import { Context, Fiber, HookEffect, Ref, RefObject } from './interface';
 import { currentBatchConfig } from './reconciler/core';
 import {
 	createUpdateQueue,
@@ -7,7 +7,7 @@ import {
 } from './reconciler/fiberHooks';
 import { wait } from './utils';
 
-export const useRef: <T = any>(initValue?: T) => { current?: T } = (
+export const useRef: <T = any>(initValue?: T) => RefObject<T | undefined> = (
 	initValue
 ) => {
 	const hook = createWorkInProgressHook({ current: initValue });
@@ -45,9 +45,7 @@ function callbackWrapper(
 	const res = areDependenciesEqual(effectHook.deps, deps)
 		? () => {}
 		: sync
-			? () => {
-					effectHook.destroy = callback();
-				}
+			? () => (effectHook.destroy = callback())
 			: wait(() => (effectHook.destroy = callback()), 17);
 	effectHook.deps = deps;
 	return res;
@@ -70,6 +68,7 @@ export const useEffect = (
 		create: callback
 	};
 	const hook = createWorkInProgressHook(effectHook);
+	const oldDeps = hook.state.deps;
 	hook.state.create = callbackWrapper(callback, hook.state, deps, false);
 };
 
@@ -88,6 +87,16 @@ export const useMemo = <T = any>(callback: () => T, deps?: any[]): T => {
 
 export const useCallback = (callback: (...args: any[]) => any, deps?: any[]) =>
 	useMemo(() => callback, deps);
+
+export const useImperativeHandle = <T, R extends T>(
+	ref: Ref<T> | undefined,
+	getRef: () => R,
+	deps?: any[]
+) => {
+	if (!ref) return;
+	const res = useMemo(getRef, deps);
+	typeof ref === 'function' ? ref(res) : (ref.current = res);
+};
 
 export const useContext = <T>(context: Context<T>): T => {
 	return context.currentValue;
@@ -111,3 +120,5 @@ export const useTransition = () => {
 
 	return [isPending, _startTransition.bind(null, setPending)];
 };
+
+export const useDebugValue = () => {};

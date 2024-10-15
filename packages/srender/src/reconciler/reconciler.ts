@@ -21,17 +21,18 @@ import {
 import {
 	cloneFiberChildren,
 	pushSuspenseHander,
+	putRef,
 	reconcileChildrenArray
 } from './utils';
 import { Lanes, PingLane, TransitionLanes, intersectLanes } from '../Lanes';
 
 export function beginWork(wipFiber: Fiber, renderLanes: Lanes) {
 	createWorkInProgress(wipFiber);
-
 	if (
 		!intersectLanes(wipFiber.lanes, renderLanes) &&
 		!intersectLanes(wipFiber.childLanes, renderLanes)
 	) {
+		wipFiber.flags &= ~FiberFlags.Update;
 		cloneFiberChildren(wipFiber.alternate?.child || null, wipFiber);
 		return true;
 	}
@@ -56,15 +57,29 @@ export function beginWork(wipFiber: Fiber, renderLanes: Lanes) {
 				renderLanes
 			);
 			break;
+		case FiberTag.ForwardRef:
+			processForwardRefComponent(wipFiber, renderLanes);
+			break;
 		case FiberTag.HostRoot:
 		case FiberTag.HostComponent:
 		case FiberTag.HostText:
+		case FiberTag.Portal:
 			processHostComponent(wipFiber, renderLanes);
 			break;
 	}
 	return false;
 }
 let flag = false;
+
+function processForwardRefComponent(fiber: Fiber, lanes: Lanes) {
+	const { render, ...props } = fiber.pendingProps;
+
+	let children = [];
+
+	if (typeof render === 'function') children = render(props, fiber.ref);
+	reconcileChildrenArray(fiber, children, lanes);
+}
+
 function processOffscreenComponent(fiber: Fiber, lanes: Lanes) {
 	let children = fiber.pendingProps.children;
 
@@ -141,10 +156,14 @@ function processClassComponent(wipFiber: Fiber, lanes: Lanes) {
 }
 
 function processHostComponent(wipFiber: Fiber, lanes: Lanes) {
+	if (wipFiber.tag === FiberTag.Portal) {
+		wipFiber.stateNode = wipFiber.pendingProps.container;
+	}
+
 	if (!wipFiber.stateNode) {
 		wipFiber.stateNode = createDomElement(wipFiber) as Element;
-
-		if (wipFiber.ref) wipFiber.ref.current = wipFiber.stateNode;
+		putRef(wipFiber);
+		// if (wipFiber.ref) wipFiber.ref.current = wipFiber.stateNode;
 	}
 	domMap.set(wipFiber.stateNode as HTMLElement, wipFiber);
 	const newChildElements = wipFiber.pendingProps.children;

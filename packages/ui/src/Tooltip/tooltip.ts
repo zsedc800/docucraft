@@ -1,3 +1,5 @@
+import { ReactElement, isValidElement } from 'react';
+import { Root, createRoot } from 'react-dom/client';
 import { prefixName } from '../consts';
 import { createElement } from '../utils';
 
@@ -13,6 +15,7 @@ export interface Rect {
 export class Tooltip {
 	static container: HTMLElement;
 	static instance?: Tooltip;
+	renderRoot: Root;
 	tooltip: HTMLElement;
 	visible: boolean = false;
 
@@ -26,14 +29,17 @@ export class Tooltip {
 			document.body.appendChild(container);
 		}
 		Tooltip.container.appendChild(this.tooltip);
+		this.renderRoot = createRoot(this.tooltip);
 		this.tooltip.addEventListener('mouseup', (e) => {
 			e.stopPropagation();
 			e.preventDefault();
 		});
 	}
 
-	content(dom: HTMLElement) {
-		this.tooltip.replaceChildren(dom);
+	content(content?: HTMLElement | string | ReactElement) {
+		if (typeof content === 'string') this.tooltip.innerHTML = content;
+		else if (content instanceof Element) this.tooltip.replaceChildren(content);
+		else if (isValidElement(content)) this.renderRoot.render(content);
 	}
 
 	showAt(rect: Rect) {
@@ -48,13 +54,9 @@ export class Tooltip {
 		this.tooltip.style.left = left + 'px';
 	}
 
-	show(target: HTMLElement, content?: string | HTMLElement) {
+	show(target: HTMLElement, content?: string | HTMLElement | ReactElement) {
 		if (!this.tooltip) return;
-		if (!content) {
-		} else if (typeof content === 'string') this.tooltip.innerHTML = content;
-		else {
-			this.tooltip.replaceChildren(content);
-		}
+		this.content(content);
 		this.tooltip.style.visibility = 'visible';
 		this.tooltip.style.opacity = '1';
 		this.visible = true;

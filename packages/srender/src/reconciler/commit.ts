@@ -8,12 +8,15 @@ import {
 	Hooks,
 	RootFiberNode
 } from '../interface';
+import { batchedUpdates } from './update';
+import { traverseFiber } from './utils';
 
 function getHostParent(fiber: Fiber): HTMLElement | null {
 	let domParentFiber = fiber.parent;
 	while (
 		domParentFiber &&
 		domParentFiber.parent &&
+		domParentFiber.tag !== FiberTag.Portal &&
 		domParentFiber.tag !== FiberTag.HostComponent &&
 		domParentFiber.tag !== FiberTag.HostText
 	) {
@@ -53,10 +56,17 @@ function getHostSibling(fiber: Fiber): Element | null {
 }
 
 function callEffect(fiber: Fiber, key: keyof HookEffect = 'create') {
+	if (
+		fiber.tag !== FiberTag.FunctionComponent &&
+		fiber.tag !== FiberTag.ForwardRef
+	)
+		return;
 	let hook: Hooks | null = fiber.memoizedState as Hooks;
+
 	while (hook) {
-		const create = hook.state[key];
-		if (typeof create === 'function') create();
+		const fn =
+			hook.state && typeof hook.state === 'object' ? hook.state[key] : null;
+		if (typeof fn === 'function') fn();
 		hook = hook.next;
 	}
 }
@@ -72,12 +82,12 @@ function commitPlacement(fiber: Fiber) {
 
 		if (before) domParent.insertBefore(node, before);
 		else domParent.appendChild(node);
-		if (fiber.ref) fiber.ref.current = fiber.stateNode;
 	} else if (fiber.tag === FiberTag.ClassComponent) {
 		(fiber.stateNode as Component).componentDidMount();
-	} else if (fiber.tag === FiberTag.FunctionComponent) {
-		callEffect(fiber);
 	}
+
+	callEffect(fiber);
+
 	fiber.flags &= ~FiberFlags.Placement;
 }
 
@@ -88,53 +98,86 @@ function commitUpdate(fiber: Fiber) {
 			(fiber.alternate as Fiber).pendingProps,
 			fiber.pendingProps
 		);
-	} else if (fiber.tag === FiberTag.FunctionComponent) {
-		callEffect(fiber);
 	} else if (
 		fiber.tag === FiberTag.ClassComponent &&
 		fiber.stateNode instanceof Component
 	) {
 		const oldFiber = fiber.alternate;
 		if (oldFiber) {
-			fiber.stateNode.componentDidUpdate(
-				oldFiber.pendingProps,
-				(oldFiber.stateNode as Component).state!
-			);
+			batchedUpdates(() => {
+				fiber.updateQueue?.onCommit?.();
+				(fiber.stateNode as Component).componentDidUpdate(
+					oldFiber.pendingProps,
+					(oldFiber.stateNode as Component).state!
+				);
+			});
 		}
+	} else if (
+		fiber.tag === FiberTag.Portal &&
+		fiber.pendingProps.container !== fiber.stateNode
+	) {
+		// const oldNode = fiber.stateNode as HTMLElement;
+		// fiber.stateNode = fiber.pendingProps.container as HTMLElement;
+		// console.log(fiber.stateNode, 'stddd');
+		// while (oldNode.firstChild) {
+		// 	fiber.stateNode.appendChild(oldNode.firstChild);
+		// }
 	}
+
+	callEffect(fiber);
 	fiber.flags &= ~FiberFlags.Update;
 }
 
+const deleteChild = (domParent: HTMLElement, fiber: Fiber) => {
+	let node: Fiber | null = fiber;
+	while (node) {
+		node = traverseFiber(
+			node,
+			(f) => {
+				if (f.tag === FiberTag.Portal) return true;
+				if (f.tag === FiberTag.HostComponent || f.tag === FiberTag.HostText) {
+					domParent.removeChild(f.stateNode as Element);
+					return true;
+				}
+				return false;
+			},
+			(f) => f === fiber
+		);
+	}
+};
+
 function commitDeletion(fiber: Fiber) {
-	let node: Fiber | null | undefined = fiber;
 	const domParent = getHostParent(fiber);
 
-	while (true && domParent) {
-		if (!node) break;
-		if (node.tag !== FiberTag.HostComponent && node.tag !== FiberTag.HostText) {
-			node = node.child;
-			continue;
-		}
-
-		domParent.removeChild(node.stateNode as Element);
-		while (node !== fiber && !node.sibling) node = node.parent!;
-		if (node === fiber) break;
-		node = node.sibling;
-	}
-
-	const goStep = (node: Fiber): Fiber | undefined => {
-		if (node.child) return node.child;
-		let cursor: Fiber | null | undefined = node;
-		while (cursor && cursor != fiber) {
-			if (cursor.tag === FiberTag.FunctionComponent)
-				callEffect(cursor, 'destroy');
-			if (cursor.stateNode instanceof Component) cursor.stateNode.destory();
-
-			if (cursor.sibling) return cursor.sibling;
-			cursor = cursor.parent;
+	const deleteChildren = (domParent: HTMLElement | null, fiber: Fiber) => {
+		let node = fiber.child;
+		while (domParent && node) {
+			deleteChild(domParent, node);
+			node = node.sibling;
 		}
 	};
-	while (node) node = goStep(node);
+
+	let node = fiber.child;
+	while (node) {
+		switch (node.tag) {
+			case FiberTag.Portal:
+				deleteChildren(node.stateNode as HTMLElement, node);
+				break;
+			case FiberTag.FunctionComponent:
+				callEffect(node, 'destroy');
+				break;
+			case FiberTag.ClassComponent:
+				(node.stateNode as Component).destory();
+				break;
+		}
+		node = traverseFiber(
+			node,
+			(f) => false,
+			(f) => f === fiber
+		);
+	}
+
+	deleteChildren(domParent, fiber);
 	fiber.flags &= ~FiberFlags.Deletion;
 }
 

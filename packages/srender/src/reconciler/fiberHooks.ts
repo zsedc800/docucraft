@@ -1,5 +1,5 @@
 import { requestUpdateLane } from '../Lanes';
-import { Fiber, Hooks, UpdateState } from '../interface';
+import { Fiber, Hooks, State, UpdatePayload, UpdateState } from '../interface';
 import { getCurrentTime } from '../scheduler';
 import { scheduleUpdateOnFiber, workInProgressRootRenderLanes } from './core';
 import {
@@ -23,7 +23,8 @@ function createHooks<T = any>(state: T): Hooks<T> {
 		baseState: null,
 		baseUpdate: null,
 		queue: null,
-		next: null
+		next: null,
+		fiber: workInProgress
 	};
 }
 
@@ -36,6 +37,7 @@ export function createWorkInProgressHook<T = any>(state: T): Hooks<T> {
 	}
 	lastWorkInProgressHook = workInProgressHook;
 	workInProgressHook = workInProgressHook.next;
+	lastWorkInProgressHook.fiber = workInProgress;
 	return lastWorkInProgressHook;
 }
 
@@ -54,12 +56,15 @@ export function createUpdateQueue(hook: Hooks) {
 	hook.queue.dispatch = dispatchState.bind(null, workInProgress, hook);
 }
 
-export function dispatchState<T = {}>(
+export function dispatchState<T extends State = State, P = {}>(
 	fiber: Fiber | null,
 	hook: Hooks,
-	state: T | ((e: T) => T)
+	state: UpdatePayload<T, P>
 ) {
-	if (!fiber) return;
+	// const { fiber } = hook;
+
+	if (!fiber || hook.state === state) return;
+
 	const current = getLatestFiber(fiber);
 	const lane = requestUpdateLane();
 	current.lanes |= lane;
@@ -69,6 +74,6 @@ export function dispatchState<T = {}>(
 		lane,
 		UpdateState.replaceState
 	);
-	enqueueUpdate(hook.queue!, update);
+	enqueueUpdate<T, P>(hook.queue!, update);
 	scheduleUpdateOnFiber(current);
 }
