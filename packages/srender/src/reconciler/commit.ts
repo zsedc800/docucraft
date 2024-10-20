@@ -33,7 +33,11 @@ function getHostSibling(fiber: Fiber): Element | null {
 	let node: Fiber = fiber;
 	siblings: while (true) {
 		while (!node.sibling) {
-			if (!node.parent || node.parent.tag === FiberTag.HostComponent)
+			if (
+				!node.parent ||
+				node.parent.tag === FiberTag.HostComponent ||
+				node.parent.tag === FiberTag.Portal
+			)
 				return null;
 			node = node.parent;
 		}
@@ -73,6 +77,7 @@ function callEffect(fiber: Fiber, key: keyof HookEffect = 'create') {
 
 function commitPlacement(fiber: Fiber) {
 	const domParent = getHostParent(fiber);
+
 	if (
 		(fiber.tag === FiberTag.HostComponent || fiber.tag === FiberTag.HostText) &&
 		domParent

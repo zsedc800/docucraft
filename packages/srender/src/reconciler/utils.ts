@@ -46,6 +46,11 @@ export function cloneChildren(wipFiber: Fiber) {
 	}
 }
 
+function getKey(key: number | string | null | undefined, def: number) {
+	if (key || typeof key === 'number') return key;
+	return def;
+}
+
 export function reconcileChildrenArray(
 	wipFiber: Fiber,
 	newChildElements: any,
@@ -57,15 +62,16 @@ export function reconcileChildrenArray(
 	let oldFiber = wipFiber.alternate ? wipFiber.alternate.child : null;
 	let newFiber: Fiber | null = null;
 	const map = new Map<any, Fiber>();
+
 	for (let node = oldFiber, i = 0; node; node = node.sibling, i++) {
-		const key = node.key || node.index;
+		const key = getKey(node.key, i);
 		map.set(key, node);
 	}
-
+	let lastIndex = 0;
 	for (let index = 0; index < elements.length; index++) {
 		const prevFiber = newFiber;
 		const element = elements[index];
-		const key = element ? element.props.key || index : null;
+		const key = element ? getKey(element.props.key, index) : null;
 		const oldFiber = map.get(key);
 		if (oldFiber && oldFiber.type === element.type) {
 			newFiber = cloneFiberNode(oldFiber, element.props, {
@@ -75,6 +81,11 @@ export function reconcileChildrenArray(
 				index,
 				lanes: needUpdate ? mergeLanes(lanes, oldFiber.lanes) : oldFiber.lanes
 			});
+
+			if (oldFiber.index < lastIndex) newFiber!.flags |= FiberFlags.Placement;
+
+			lastIndex = Math.max(oldFiber.index, lastIndex);
+
 			map.delete(key);
 		} else {
 			newFiber = createFiberNode(getTag(element), element.props, {
@@ -147,6 +158,7 @@ export function unwindWork(fiber: Fiber, lanes?: Lanes) {
 	const flags = fiber.flags;
 	if (lanes || lanes === NoLanes) {
 		unwindWorks.push(fiber);
+
 		if (fiber.parent) {
 			const childEffects = fiber.effects || [];
 			const thisEffect = fiber.flags > FiberFlags.PerformWork ? [fiber] : [];

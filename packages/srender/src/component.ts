@@ -37,10 +37,7 @@ export class Component<P = Props, S extends State = State, C = any> {
 	}
 
 	setState(state: any, callback?: () => void) {
-		// batchedUpdates(() => {
-
 		if (this.__fiber) this.updater.setState(this.__fiber, state, callback);
-		// });
 	}
 	render(): ComponentChildren {
 		throw new Error('render method should be implemented');

@@ -134,7 +134,7 @@ export const registerEvent = (root: HTMLElement | Document) => {
 			while (current) {
 				if (current.tag === FiberTag.HostComponent) {
 					const handler = current.pendingProps[eventName];
-					handler &&
+					if (handler) {
 						batchedUpdates(
 							handler,
 							cloneEventWithCustomProperties(e, {
@@ -142,6 +142,7 @@ export const registerEvent = (root: HTMLElement | Document) => {
 								currentTarget: current.stateNode
 							})
 						);
+					}
 					if (capture) break;
 				}
 				current = current.parent;

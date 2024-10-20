@@ -89,8 +89,7 @@ export function renderOnRootFiber(
 
 	const root = current
 		? cloneFiberNode(current, pendingProps, {
-				child: current.child,
-				sibling: current.sibling
+				child: current.child
 			})
 		: createFiberNode(FiberTag.HostRoot, pendingProps, {
 				stateNode: rootFiberNode,
@@ -168,8 +167,8 @@ function performWork(
 ) {
 	let { current } = root;
 	if (!current) return;
-
 	prepareStack();
+	setBatchingUpdates(true);
 	nextUnitOfWork = cloneFiberNode(current, current.pendingProps, {
 		alternate: current
 	});
@@ -201,6 +200,7 @@ function workLoop(root: RootFiberNode) {
 	while (nextUnitOfWork && !shouldYield()) {
 		nextUnitOfWork = performUnitOfWork(nextUnitOfWork);
 	}
+
 	const { finishedWork } = root;
 	if (finishedWork) {
 		commitAllWork(finishedWork);
@@ -251,9 +251,8 @@ function commitAllWork(fiber: Fiber) {
 	root.finishedWork = null;
 	nextUnitOfWork = null;
 
-	const previousIsBatchingUpdates = isBatchingUpdates;
-	setBatchingUpdates(true);
-	effects.forEach((f) => commitWork(f));
-	setBatchingUpdates(previousIsBatchingUpdates);
+	effects.forEach(commitWork);
+	setBatchingUpdates(false);
+
 	ensureRootIsScheduled(root);
 }

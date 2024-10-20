@@ -535,6 +535,10 @@ function cloneChildren(wipFiber) {
     oldChild.alternate = null;
   }
 }
+function getKey(key, def) {
+  if (key || typeof key === 'number') return key;
+  return def;
+}
 function reconcileChildrenArray(wipFiber, newChildElements, lanes) {
   const elements = arrify(newChildElements);
   const needUpdate = !!intersectLanes(wipFiber.lanes, lanes);
@@ -542,13 +546,14 @@ function reconcileChildrenArray(wipFiber, newChildElements, lanes) {
   let newFiber = null;
   const map = new Map();
   for (let node = oldFiber, i = 0; node; node = node.sibling, i++) {
-    const key = node.key || node.index;
+    const key = getKey(node.key, i);
     map.set(key, node);
   }
+  let lastIndex = 0;
   for (let index = 0; index < elements.length; index++) {
     const prevFiber = newFiber;
     const element = elements[index];
-    const key = element ? element.props.key || index : null;
+    const key = element ? getKey(element.props.key, index) : null;
     const oldFiber = map.get(key);
     if (oldFiber && oldFiber.type === element.type) {
       newFiber = cloneFiberNode(oldFiber, element.props, {
@@ -558,6 +563,7 @@ function reconcileChildrenArray(wipFiber, newChildElements, lanes) {
         index,
         lanes: needUpdate ? mergeLanes(lanes, oldFiber.lanes) : oldFiber.lanes
       });
+      if (oldFiber.index !== index && oldFiber.index < lastIndex) newFiber.flags |= FiberFlags.Placement;
       map.delete(key);
     } else {
       newFiber = createFiberNode(getTag(element), element.props, {
@@ -811,10 +817,12 @@ const registerEvent = root => {
       while (current) {
         if (current.tag === FiberTag.HostComponent) {
           const handler = current.pendingProps[eventName];
-          handler && batchedUpdates(handler, cloneEventWithCustomProperties(e, {
-            target: e.target,
-            currentTarget: current.stateNode
-          }));
+          if (handler) {
+            batchedUpdates(handler, cloneEventWithCustomProperties(e, {
+              target: e.target,
+              currentTarget: current.stateNode
+            }));
+          }
           if (capture) break;
         }
         current = current.parent;
@@ -890,7 +898,7 @@ function getHostSibling(fiber) {
   let node = fiber;
   siblings: while (true) {
     while (!node.sibling) {
-      if (!node.parent || node.parent.tag === FiberTag.HostComponent) return null;
+      if (!node.parent || node.parent.tag === FiberTag.HostComponent || node.parent.tag === FiberTag.Portal) return null;
       node = node.parent;
     }
     node.sibling.parent = node.parent;
@@ -1233,8 +1241,7 @@ function renderOnRootFiber(children) {
     children
   };
   const root = current ? cloneFiberNode(current, pendingProps, {
-    child: current.child,
-    sibling: current.sibling
+    child: current.child
   }) : createFiberNode(FiberTag.HostRoot, pendingProps, {
     stateNode: rootFiberNode,
     mode
@@ -1296,6 +1303,7 @@ function performWork(root, workLoop) {
   } = root;
   if (!current) return;
   prepareStack();
+  setBatchingUpdates(true);
   nextUnitOfWork = cloneFiberNode(current, current.pendingProps, {
     alternate: current
   });
@@ -1366,10 +1374,8 @@ function commitAllWork(fiber) {
   fiber.effects = [];
   root.finishedWork = null;
   nextUnitOfWork = null;
-  const previousIsBatchingUpdates = isBatchingUpdates;
-  setBatchingUpdates(true);
-  effects.forEach(f => commitWork(f));
-  setBatchingUpdates(previousIsBatchingUpdates);
+  effects.forEach(commitWork);
+  setBatchingUpdates(false);
   ensureRootIsScheduled(root);
 }
 
@@ -1613,9 +1619,7 @@ class Component {
     this.componentWillUnmount();
   }
   setState(state, callback) {
-    // batchedUpdates(() => {
     if (this.__fiber) this.updater.setState(this.__fiber, state, callback);
-    // });
   }
   render() {
     throw new Error('render method should be implemented');

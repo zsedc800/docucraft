@@ -28,6 +28,7 @@ import { Lanes, PingLane, TransitionLanes, intersectLanes } from '../Lanes';
 
 export function beginWork(wipFiber: Fiber, renderLanes: Lanes) {
 	createWorkInProgress(wipFiber);
+
 	if (
 		!intersectLanes(wipFiber.lanes, renderLanes) &&
 		!intersectLanes(wipFiber.childLanes, renderLanes)

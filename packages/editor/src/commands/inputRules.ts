@@ -6,6 +6,7 @@ import {
 } from 'prosemirror-inputrules';
 import { schema } from '../model';
 import { outlineTreeKey } from '../components/outline';
+import { Fragment } from 'prosemirror-model';
 
 // 定义输入规则
 const headingRules = [
@@ -65,17 +66,14 @@ const rules = [
 		const parent = $start.parent;
 		if (parent.type !== schema.nodes.heading) return null;
 		const level = parent.attrs.level;
-		const outineTree = outlineTreeKey.getState(state);
+		const outlineTree = outlineTreeKey.getState(state);
 
-		outineTree &&
-			tr.replaceWith(
-				start,
-				end,
-				schema.nodes.listSymbol.create(
-					{ level },
-					schema.text(outineTree.calculateOrderNumber(parent.attrs.id))
-				)
-			);
+		if (outlineTree) {
+			tr.delete(start, end);
+			setTimeout(() => {
+				outlineTree.setOrderType(1);
+			}, 17);
+		}
 		return tr;
 	})
 ];

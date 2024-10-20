@@ -27,10 +27,11 @@ export type OrderType = 0 | 1 | 2 | 3;
 export class OutlineTree {
 	root: OutlineNode;
 	private map: Map<string, OutlineNode>;
-	orderType: OrderType = 3;
+	orderType: OrderType;
 	constructor(public decorations: DecorationSource) {
 		this.root = new OutlineNode('root', null, 0);
 		this.map = new Map();
+		this.orderType = 0;
 	}
 	setOrderType(type: OrderType) {
 		this.orderType = type;

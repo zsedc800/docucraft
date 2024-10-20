@@ -1,6 +1,6 @@
 import { NodeViewConstructor } from 'prosemirror-view';
 import { Node } from 'prosemirror-model';
-import { assignUniqueId } from '../../utils';
+import { assignUniqueId, shallowEqual } from '../../utils';
 import { OutlineTree, outlineTreeKey } from '../outline';
 import Heading from './Heading';
 import { BaseNodeView } from '../../utils/view';
@@ -40,8 +40,10 @@ export class HeadingView extends BaseNodeView {
 		console.log('update');
 
 		if (node.type !== this.node.type) return false;
+		const n = this.node;
 		this.node = node;
-		this.render({ view: this, ...node.attrs });
+		if (!shallowEqual(n.attrs, this.node.attrs))
+			this.render({ view: this, ...node.attrs });
 		return true;
 	}
 	destroy() {

@@ -41,3 +41,26 @@
 		flex-grow: 1;
 	}
 }
+
+.order-type-item {
+	width: 85px;
+	font-size: 12px;
+	padding: 0;
+	text-transform: none;
+	li {
+		display: flex;
+		align-items: center;
+	}
+	.order-symbol {
+		display: inline-block;
+		margin-right: 3px;
+		flex-shrink: 0;
+	}
+	.shape {
+		flex-grow: 1;
+		margin: 3px 0;
+		height: 3px;
+		background-color: #e7e8e9;
+		border-radius: 2px;
+	}
+}

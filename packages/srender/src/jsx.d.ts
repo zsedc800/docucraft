@@ -19,12 +19,10 @@ type Defaultize<Props, Defaults> =
 
 type Booleanish = boolean | 'true' | 'false';
 
-declare module 'react' {
-	export type ReactNode = ComponentChild;
-	export interface ReactElement extends VNode<any> {}
-}
-
 declare global {
+	namespace React {
+		export type ReactNode = ComponentChild;
+	}
 	namespace JSX {
 		export type LibraryManagedAttributes<Component, Props> = Component extends {
 			defaultProps: infer Defaults;
@@ -37,6 +35,31 @@ declare global {
 			[elename: string]: any;
 		}
 
+		type JSXElementConstructor<P> =
+			| ((props: P, deprecatedLegacyContext?: any) => ReactNode)
+			| (new (props: P, deprecatedLegacyContext?: any) => Component<any, any>);
+
+		interface ReactElement<
+			P = any,
+			T extends string | JSXElementConstructor<any> =
+				| string
+				| JSXElementConstructor<any>
+		> {
+			type: T;
+			props: P;
+			key: string | null;
+		}
+
+		type ReactNode =
+			| ReactElement
+			| string
+			| number
+			| Iterable<ReactNode>
+			| ReactPortal
+			| boolean
+			| null
+			| undefined;
+
 		export type ElementType<P = any> =
 			| {
 					[K in keyof IntrinsicElements]: P extends IntrinsicElements[K]
@@ -44,8 +67,7 @@ declare global {
 						: never;
 			  }[keyof IntrinsicElements]
 			| ComponentType<P>;
-		export interface Element extends VNode<any> {}
-		export interface Element extends Record<any, any> {}
+		export interface Element extends VNode<any>, ReactElement {}
 		export type ElementClass = Component<any, any> | FunctionComponent<any>;
 
 		export interface ElementAttributesProperty {
