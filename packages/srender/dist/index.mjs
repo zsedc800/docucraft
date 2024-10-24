@@ -563,7 +563,8 @@ function reconcileChildrenArray(wipFiber, newChildElements, lanes) {
         index,
         lanes: needUpdate ? mergeLanes(lanes, oldFiber.lanes) : oldFiber.lanes
       });
-      if (oldFiber.index !== index && oldFiber.index < lastIndex) newFiber.flags |= FiberFlags.Placement;
+      if (oldFiber.index < lastIndex) newFiber.flags |= FiberFlags.Placement;
+      lastIndex = Math.max(oldFiber.index, lastIndex);
       map.delete(key);
     } else {
       newFiber = createFiberNode(getTag(element), element.props, {
