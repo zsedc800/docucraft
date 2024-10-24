@@ -7,6 +7,7 @@ import {
 import { schema } from '../model';
 import { outlineTreeKey } from '../components/outline';
 import { Fragment } from 'prosemirror-model';
+import { languages } from '@codemirror/language-data';
 
 // 定义输入规则
 const headingRules = [
@@ -25,30 +26,13 @@ const listRules = [
 	})),
 	wrappingInputRule(/^\-\[\]\s$/, schema.nodes.taskList)
 ];
-const map: Record<string, string> = {
-	javascript: 'javascript',
-	typescript: 'typescript',
-	rust: 'rust',
-	golang: 'golang',
-	python: 'python',
-	ruby: 'ruby',
-	php: 'php',
-	html: 'html',
-	css: 'css',
-	markdown: 'markdown',
-	java: 'java',
-	'c++': 'c++',
-	'c#': 'c#',
-	c: 'c',
-	js: 'javascript',
-	ts: 'typescript',
-	py: 'python',
-	go: 'golang',
-	rs: 'rust',
-	plaintext: 'plaintext'
-};
+
 const mapTolang = (lang: string) => {
-	return map[lang] || 'plaintext';
+	return (
+		languages
+			.find(({ extensions }) => extensions.includes(lang))
+			?.name.toLowerCase() || 'plaintext'
+	);
 };
 
 const rules = [

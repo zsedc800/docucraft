@@ -3,13 +3,12 @@ import { NodeViewConstructor } from 'prosemirror-view';
 import { BaseNodeView } from '../../utils/view';
 import CodeBlock from './CodeBlock';
 import { shallowEqual } from '../../utils';
-import { basicSetup, EditorView } from 'codemirror';
-import { javascript } from '@codemirror/lang-javascript';
-import { EditorState, Compartment } from '@codemirror/state';
-import { oneDark } from './themes/theme-one-dark';
-import { baseTheme } from './themes/base';
-import { ViewUpdate } from '@codemirror/view';
-
+import { EditorView } from 'codemirror';
+import { EditorState } from '@codemirror/state';
+import { ViewUpdate, lineNumbers } from '@codemirror/view';
+import extensions, { lineNumberCompartment } from './extensions';
+import { detectLanguageFromCode, setLanguage } from './extensions/loadLanguage';
+import { isEditorEmpty, isFullSelection } from './utils';
 type GetPos = () => number | undefined;
 export class CodeBlockView extends BaseNodeView {
 	name = 'blockCode';
@@ -24,22 +23,33 @@ export class CodeBlockView extends BaseNodeView {
 		this.component = CodeBlock;
 		this.render({ nodeView: this, ...node.attrs });
 
-		let language = new Compartment(),
-			tabSize = new Compartment();
 		const state = EditorState.create({
-			extensions: [
-				basicSetup,
-				language.of(javascript()),
-				tabSize.of(EditorState.tabSize.of(2)),
+			extensions: extensions.concat([
+				lineNumberCompartment.of(
+					node.attrs.showLineNumber ? lineNumbers() : []
+				),
 				EditorView.updateListener.of(this.onCMUpdate.bind(this)),
-				baseTheme,
-				oneDark
-			]
+				EditorView.domEventHandlers({
+					paste: (event, view) => {
+						const pastedText = event.clipboardData?.getData('text/plain') || '';
+
+						if (isEditorEmpty(view) || isFullSelection(view)) {
+							detectLanguageFromCode(pastedText).then((lang) => {
+								setLanguage(lang, view);
+								this.updateAttrs('language', lang);
+							}); // 自动检测语言
+						}
+					}
+				})
+			])
 		});
 		this.cmv = new EditorView({
 			state,
 			parent: this.codeContainer
 		});
+
+		setLanguage(node.attrs.language, this.cmv);
+		setTimeout(() => this.cmv.focus(), 17);
 	}
 
 	onCMUpdate(update: ViewUpdate) {
@@ -57,12 +67,21 @@ export class CodeBlockView extends BaseNodeView {
 		}
 	}
 
+	updateAttrs(name: string, value: any) {
+		const pos = this.getPos() as number;
+		if (pos || pos == 0) {
+			const tr = this.view.state.tr.setNodeAttribute(pos, name, value);
+			this.view.dispatch(tr);
+		}
+	}
+
 	ignoreMutation(mutation: MutationRecord): boolean {
 		return true;
 	}
 
 	stopEvent(e: Event) {
-		return e.target === this.codeContainer || this.cmv.hasFocus;
+		// return e.target === this.codeContainer || this.cmv.hasFocus;
+		return true;
 	}
 
 	update(node: Node) {
@@ -71,7 +90,10 @@ export class CodeBlockView extends BaseNodeView {
 		if (type !== t) return false;
 
 		this.node = node;
-		if (!shallowEqual(props, attrs)) this.render({ nodeView: this, ...attrs });
+		if (!shallowEqual(props, attrs)) {
+			this.render({ nodeView: this, ...attrs });
+			setTimeout(() => this.cmv.focus(), 17);
+		}
 		return true;
 	}
 

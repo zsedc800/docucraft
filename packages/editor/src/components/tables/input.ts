@@ -175,6 +175,9 @@ export function handleMouseDown(
 	if (startEvent.ctrlKey || startEvent.metaKey) return;
 
 	const startDOMCell = domInCell(view, startEvent.target as Node);
+	if (!startDOMCell) {
+		return;
+	}
 	const $cell = cellUnderMouse(view, startEvent);
 	if (startDOMCell) {
 		startEvent.preventDefault();
@@ -192,8 +195,6 @@ export function handleMouseDown(
 	) {
 		setCellSelection($anchor, startEvent);
 		startEvent.preventDefault();
-	} else if (!startDOMCell) {
-		return;
 	}
 
 	function setCellSelection($anchor: ResolvedPos, event: MouseEvent): void {

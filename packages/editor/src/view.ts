@@ -73,6 +73,15 @@ export const setupEditor = (el: HTMLElement | null) => {
 			}
 			return false;
 		}
+		// handleDOMEvents: {
+		// 	mousedown(view, event) {
+		// 		if ((event.target as Element)?.tagName === 'INPUT') {
+		// 			event.stopPropagation();
+		// 			return true; // 阻止 ProseMirror 默认处理这个事件
+		// 		}
+		// 		return false;
+		// 	}
+		// }
 	});
 	addView(editorView);
 	return () => {
