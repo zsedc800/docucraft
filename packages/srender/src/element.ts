@@ -72,6 +72,7 @@ export function createElement(
 	// if (props.className) props.class = props.className;
 	props.children = children
 		.filter((c) => c != undefined && c != null && c !== false)
+		.reduce((pre: any[], cur) => pre.concat(cur), [])
 		.map((c: any) => {
 			if (isValidElement(c) || typeof c === 'function') return c;
 			return createTextElement(c);
@@ -112,7 +113,7 @@ export function forwardRef<R, P>(render: (props: P, ref: Ref<R>) => VNode) {
 	return new ExtendedComponent(ForwardRef, { render });
 }
 
-class ExtendedComponent {
+export class ExtendedComponent {
 	constructor(
 		public type: Symbol,
 		public props: Record<any, any>
@@ -124,6 +125,7 @@ const filter = (e: any) =>
 
 export function arrify<C = any>(val: C | readonly C[]): C[] {
 	return (Array.isArray(val) ? val : [val]).filter(filter);
+	// .reduce((pre, cur) => pre.concat(cur), []);
 }
 
 function createTextElement(value: string): VNode {

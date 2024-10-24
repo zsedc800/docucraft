@@ -139,7 +139,8 @@ export const registerEvent = (root: HTMLElement | Document) => {
 							handler,
 							cloneEventWithCustomProperties(e, {
 								target: e.target,
-								currentTarget: current.stateNode
+								currentTarget: current.stateNode,
+								nativeEvent: e
 							})
 						);
 					}

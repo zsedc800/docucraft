@@ -4,20 +4,25 @@ import {
 	newlineInCode,
 	createParagraphNear,
 	liftEmptyBlock,
-	baseKeymap
+	baseKeymap,
+	deleteSelection,
+	joinBackward,
+	selectNodeBackward
 } from 'prosemirror-commands';
-import { Attrs, Fragment, NodeType, Slice } from 'prosemirror-model';
+import { Attrs, Fragment, Node, NodeType, Slice } from 'prosemirror-model';
 import { canSplit } from 'prosemirror-transform';
 import {
 	Command,
 	EditorState,
 	NodeSelection,
-	Selection
+	Selection,
+	TextSelection
 } from 'prosemirror-state';
 import { schema } from '../model';
 import { redo, undo } from 'prosemirror-history';
-import { EditorView } from 'prosemirror-view';
+import { DecorationSet, EditorView } from 'prosemirror-view';
 import { createTaskList } from '../components/taskList';
+import { highlightCodePluginKey } from '../components/codeBlock/highlightCodePlugin';
 
 const splitListItem = (itemTypes: NodeType[], itemAttrs?: Attrs): Command => {
 	return (state, dispatch) => {
@@ -86,15 +91,86 @@ const splitListItem = (itemTypes: NodeType[], itemAttrs?: Attrs): Command => {
 	};
 };
 
+function findNextVisiblePos(doc: Node, pos: number) {
+	let currentPos = pos;
+	while (currentPos < doc.content.size) {
+		const node = doc.nodeAt(currentPos);
+		if (!node) break;
+		if (!node.attrs.hidden) return currentPos;
+		currentPos += node.nodeSize;
+	}
+	return currentPos;
+}
+
+const headingEnter: Command = (state, dispatch) => {
+	const { $from, $to } = state.selection;
+	if (!$from.sameParent($to) || $from.parent.type !== schema.nodes.heading)
+		return false;
+	const pos = $from.after();
+	const node = $from.parent;
+	if (dispatch && node.attrs.fold) {
+		const position = findNextVisiblePos(state.doc, pos);
+		let tr = state.tr.insert(
+			position,
+			schema.nodes.heading.create({ level: node.attrs.level })
+		);
+		tr = tr.setSelection(TextSelection.create(tr.doc, position + 1));
+		dispatch(tr);
+
+		return true;
+	}
+	return false;
+};
+
+function isAtWidget(state: EditorState, decorations?: DecorationSet) {
+	const { selection } = state;
+	const { $from } = selection;
+	const pos = $from.pos;
+
+	const [widget] = decorations?.find(pos, pos) || [];
+	// console.log(widget.inline);
+
+	return widget && !(widget as any).inline;
+}
+
 export const myKeymap: { [key: string]: Command } = {
 	...baseKeymap,
 	Enter: chainCommands(
+		headingEnter,
 		splitListItem([schema.nodes.list_item, schema.nodes.taskItem]),
 		newlineInCode,
 		createParagraphNear,
 		liftEmptyBlock,
 		splitBlock
 	),
+	// Backspace: chainCommands(
+	// 	deleteSelection,
+	// 	(state, dispatch) => {
+	// 		const { selection, doc } = state;
+	// 		const decorations = highlightCodePluginKey.getState(state)?.decorations;
+	// 		const { $from } = selection;
+	// 		const { pos } = $from;
+
+	// 		// 检查是否处在widget上（行号）
+	// 		if (
+	// 			$from.parent.type === schema.nodes.codeBlock &&
+	// 			isAtWidget(state, decorations) &&
+	// 			pos > $from.before() + 1
+	// 		) {
+	// 			const p = pos - 1;
+	// 			dispatch?.(
+	// 				state.tr
+	// 					.setSelection(TextSelection.create(state.doc, p))
+	// 					.delete(p, pos)
+	// 			);
+	// 		}
+
+	// 		// 默认行为
+	// 		return false;
+	// 	},
+	// 	joinBackward,
+	// 	selectNodeBackward
+	// ),
 	'Mod-z': undo,
 	'Mod-y': redo,
 	Tab: (state: EditorState, dispatch?: EditorView['dispatch']) => {

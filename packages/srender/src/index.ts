@@ -27,7 +27,8 @@ import {
 	useTransition,
 	startTransition,
 	useImperativeHandle,
-	useDebugValue
+	useDebugValue,
+	memo
 } from './hooks';
 
 import { createContext } from './context';
@@ -58,6 +59,7 @@ export default {
 	useImperativeHandle,
 	useDebugValue,
 	useId,
+	memo,
 	startTransition,
 	createContext,
 	Offscreen,
@@ -85,6 +87,7 @@ export {
 	useRef,
 	useContext,
 	useId,
+	memo,
 	createContext,
 	useTransition,
 	useImperativeHandle,

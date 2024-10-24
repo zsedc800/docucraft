@@ -9,7 +9,7 @@ import {
 	RootFiberNode
 } from '../interface';
 import { batchedUpdates } from './update';
-import { traverseFiber } from './utils';
+import { putRef, traverseFiber } from './utils';
 
 function getHostParent(fiber: Fiber): HTMLElement | null {
 	let domParentFiber = fiber.parent;
@@ -46,14 +46,15 @@ function getHostSibling(fiber: Fiber): Element | null {
 
 		while (
 			node.tag !== FiberTag.HostComponent &&
-			node.tag !== FiberTag.HostText
+			node.tag !== FiberTag.HostText &&
+			node.tag !== FiberTag.Portal
 		) {
 			if (node.flags & FiberFlags.Placement || !node.child) continue siblings;
 			node.child.parent = node;
 			node = node.child;
 		}
 
-		if (!(node.flags & FiberFlags.Placement)) {
+		if (!(node.flags & FiberFlags.Placement) && node.tag !== FiberTag.Portal) {
 			return node.stateNode as Element;
 		}
 	}
@@ -78,15 +79,15 @@ function callEffect(fiber: Fiber, key: keyof HookEffect = 'create') {
 function commitPlacement(fiber: Fiber) {
 	const domParent = getHostParent(fiber);
 
-	if (
-		(fiber.tag === FiberTag.HostComponent || fiber.tag === FiberTag.HostText) &&
-		domParent
-	) {
-		const before = getHostSibling(fiber);
-		const node = fiber.stateNode as Element;
+	if (fiber.tag === FiberTag.HostComponent || fiber.tag === FiberTag.HostText) {
+		putRef(fiber);
+		if (domParent) {
+			const before = getHostSibling(fiber);
+			const node = fiber.stateNode as Element;
 
-		if (before) domParent.insertBefore(node, before);
-		else domParent.appendChild(node);
+			if (before) domParent.insertBefore(node, before);
+			else domParent.appendChild(node);
+		}
 	} else if (fiber.tag === FiberTag.ClassComponent) {
 		(fiber.stateNode as Component).componentDidMount();
 	}

@@ -154,11 +154,15 @@ export default ({ view, level, fold, hidden, id }: Props) => {
 	const Tag = `h${level}`;
 
 	return (
-		<Tag ref={$heading} id={id} className={`heading ${hidden ? 'hidden' : ''}`}>
-			<div className="heading-tools" contentEditable="false">
+		<Tag
+			ref={$heading}
+			id={id}
+			className={`heading relative ${hidden ? 'hidden' : ''}`}
+		>
+			<div className="heading-tools tools" contentEditable="false">
 				<Icon
 					className="toggle-button"
-					name={fold ? 'arrow_drop_down' : 'arrow_right'}
+					name={fold ? 'arrow_right' : 'arrow_drop_down'}
 					onClick={() => {
 						const pos = view.getPos();
 

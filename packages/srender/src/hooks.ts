@@ -1,11 +1,12 @@
-import { Context, Fiber, HookEffect, Ref, RefObject } from './interface';
+import { ExtendedComponent } from './element';
+import { Context, FC, HookEffect, Ref, RefObject } from './interface';
 import { currentBatchConfig } from './reconciler/core';
 import {
 	createUpdateQueue,
 	createWorkInProgressHook,
 	processHookState
 } from './reconciler/fiberHooks';
-import { wait } from './utils';
+import { shallowEqual, wait } from './utils';
 
 export const useRef: <T = any>(initValue?: T) => RefObject<T | undefined> = (
 	initValue
@@ -122,3 +123,24 @@ export const useTransition = () => {
 };
 
 export const useDebugValue = () => {};
+
+const defaultEqualFn = (oldProps: any, newProps: any) =>
+	shallowEqual(oldProps, newProps);
+export function memo<P>(
+	component: FC<P> | ExtendedComponent,
+	arePropsEqual = defaultEqualFn
+) {
+	const fn =
+		typeof component === 'function' ? component : component.props.render;
+	const render = (p: P, ref: any) => {
+		const props = useRef<P>();
+		const res = useRef<any>();
+
+		if (arePropsEqual(props.current, p)) return res.current;
+		res.current = fn(p, ref);
+		props.current = p;
+		return res.current;
+	};
+	component.props.render = render;
+	return typeof component === 'function' ? render : component;
+}

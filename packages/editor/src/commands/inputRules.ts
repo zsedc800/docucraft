@@ -60,18 +60,21 @@ const rules = [
 		(match) => ({ language: mapTolang(match[1]) })
 	),
 	wrappingInputRule(/^(>|》)\s$/, schema.nodes.blockQuote),
-	new InputRule(/\d+\.\s$/, (state, match, start, end) => {
+	new InputRule(/(\d+|i)\.\s$/, (state, match, start, end) => {
 		let tr = state.tr;
 		const $start = state.doc.resolve(start);
 		const parent = $start.parent;
+
 		if (parent.type !== schema.nodes.heading) return null;
 		const level = parent.attrs.level;
 		const outlineTree = outlineTreeKey.getState(state);
+		const [_, key] = match;
+		const orderType = key === 'i' ? 3 : 1;
 
 		if (outlineTree) {
 			tr.delete(start, end);
 			setTimeout(() => {
-				outlineTree.setOrderType(1);
+				outlineTree.setOrderType(orderType);
 			}, 17);
 		}
 		return tr;

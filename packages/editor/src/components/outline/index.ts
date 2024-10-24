@@ -1,12 +1,18 @@
 import { Node, ResolvedPos } from 'prosemirror-model';
-import { Plugin, PluginKey, Transaction } from 'prosemirror-state';
+import {
+	Plugin,
+	PluginKey,
+	TextSelection,
+	Transaction
+} from 'prosemirror-state';
 import { DecorationSet, DecorationSource } from 'prosemirror-view';
 import { ReplaceStep } from 'prosemirror-transform';
 import { HeadingView } from '../heading';
 import {
 	convertToAlphabet,
 	convertToChineseNumber,
-	convertToRoman
+	convertToRoman,
+	generateUniqueId
 } from '../../utils';
 
 export class OutlineNode {
@@ -46,7 +52,8 @@ export class OutlineTree {
 		if (outlineNode) {
 			outlineNode.node = heading;
 			return outlineNode;
-		} else outlineNode = new OutlineNode(id, heading, level);
+		}
+		outlineNode = new OutlineNode(id, heading, level);
 		this.map.set(id, outlineNode);
 		let index = $pos.index($pos.depth);
 		let cursor,
@@ -64,14 +71,56 @@ export class OutlineTree {
 			if (l <= level) break;
 
 			if (l < lastLevel) lastLevel = l;
-			outlineNode.children.push(olNode);
-			const index = olNode.parent!.children.indexOf(olNode);
-			olNode.parent?.children.splice(index, 1);
+			let p = olNode;
+			while (p.parent && !p.parent.node && p.level > level) p = p.parent;
+
+			const index = p.parent!.children.indexOf(p);
+			const cc = p.parent!.children;
+			console.log(cc, p, index, 'i');
+
+			if (p.level > level) {
+				outlineNode.children.push(p);
+				cc.splice(index, 1);
+			} else if (p.level === level) {
+				outlineNode.children = p.children;
+				cc[index] = outlineNode;
+				outlineNode.parent = p.parent;
+			} else {
+				const [child] = p.children;
+				if (child && child.node) {
+					outlineNode.children.push(child);
+					p.children[0] = outlineNode;
+					outlineNode.parent = p;
+				} else if (child && !child.node) {
+					p.children[0] = outlineNode;
+					outlineNode.parent = p;
+					outlineNode.children = child.children;
+				}
+			}
 		}
 
 		for (const child of outlineNode.children) child.parent = outlineNode;
 
 		lastLevel = Infinity;
+		count = -1;
+
+		const findOffset = (start: number, end: number) => {
+			const cursor = parent.child(start);
+			let level = cursor.attrs.level,
+				count = 1;
+			for (let i = start + 1; i <= end; i++) {
+				const ele = parent.child(i);
+				if (ele.type.name !== 'heading') continue;
+				const l = ele.attrs.level;
+				if (l > level) continue;
+				else if (l === level) count++;
+				else {
+					level = l;
+					count++;
+				}
+			}
+			return count;
+		};
 		for (let i = index - 1; i >= 0; i--) {
 			cursor = parent.child(i);
 			if (cursor.type.name !== 'heading') continue;
@@ -79,31 +128,46 @@ export class OutlineTree {
 			const olNode = this.findNodeById(cursor.attrs.id);
 			if (!olNode) throw new Error('can not found node');
 
-			if (olNode.level > level) {
-				let l = olNode.level;
-				if (l < lastLevel) {
-					count = 1;
-					lastLevel = l;
-				} else if (l === lastLevel) count++;
-			} else if (olNode.level < level) {
-				olNode.children.unshift(outlineNode);
+			if (olNode.level < level) {
+				const offset = findOffset(i + 1, index - 1);
+				olNode.children.splice(offset, 0, outlineNode);
 				outlineNode.parent = olNode;
-				count = -1;
 				break;
-			} else {
+			} else if (olNode.level === level) {
 				const index = olNode.parent!.children.indexOf(olNode);
 				if (index !== -1)
 					olNode.parent?.children.splice(index + 1, 0, outlineNode);
-				count = -1;
 				outlineNode.parent = olNode.parent;
 				break;
 			}
 		}
 
-		if (count >= 0) {
-			this.root.children.splice(count, 0, outlineNode);
+		if (!outlineNode.parent) {
+			this.root.children.splice(findOffset(0, index - 1), 0, outlineNode);
 			outlineNode.parent = this.root;
 		}
+		//
+		index = outlineNode.parent!.children.indexOf(outlineNode);
+		const children = outlineNode.parent!.children;
+
+		for (let i = index - 1; i >= 0; i--) {
+			const node = children[i];
+			if (node.level > outlineNode.level) {
+				let l = node.level;
+				let newNode = node;
+				while (l > level) {
+					l--;
+					const t = new OutlineNode(generateUniqueId(), null, l);
+					t.children.push(newNode);
+					newNode.parent = t;
+					newNode = t;
+				}
+				children[i] = newNode;
+				newNode.parent = outlineNode.parent;
+			}
+		}
+
+		console.log(outlineNode, 'nn');
 
 		return outlineNode;
 	}
@@ -255,6 +319,9 @@ export const outlineTreePlugin = new Plugin({
 					);
 					offset += current.nodeSize;
 				}
+				tr = tr.setSelection(
+					TextSelection.create(tr.doc, pos + node.nodeSize - 1)
+				);
 				break;
 			}
 		}

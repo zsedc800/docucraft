@@ -119,6 +119,26 @@ let counter = 0;
 function useId() {
   return `srender_unique_${counter++}`;
 }
+function isNotEmpty(val) {
+  return val || val === 0;
+}
+function shallowEqual(obj1, obj2) {
+  if (obj1 === obj2) return true;
+  if (typeof obj1 !== 'object' || obj1 === null || typeof obj2 !== 'object' || obj2 === null) {
+    return false;
+  }
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+  if (keys1.length !== keys2.length) {
+    return false;
+  }
+  for (let key of keys1) {
+    if (obj1[key] !== obj2[key]) {
+      return false;
+    }
+  }
+  return true;
+}
 
 const resetHandlers = [];
 function resetContext() {
@@ -563,7 +583,7 @@ function reconcileChildrenArray(wipFiber, newChildElements, lanes) {
         index,
         lanes: needUpdate ? mergeLanes(lanes, oldFiber.lanes) : oldFiber.lanes
       });
-      if (oldFiber.index < lastIndex) newFiber.flags |= FiberFlags.Placement;
+      if (oldFiber.index < lastIndex && isNotEmpty(element.props.key)) newFiber.flags |= FiberFlags.Placement;
       lastIndex = Math.max(oldFiber.index, lastIndex);
       map.delete(key);
     } else {
@@ -821,7 +841,8 @@ const registerEvent = root => {
           if (handler) {
             batchedUpdates(handler, cloneEventWithCustomProperties(e, {
               target: e.target,
-              currentTarget: current.stateNode
+              currentTarget: current.stateNode,
+              nativeEvent: e
             }));
           }
           if (capture) break;
@@ -904,12 +925,12 @@ function getHostSibling(fiber) {
     }
     node.sibling.parent = node.parent;
     node = node.sibling;
-    while (node.tag !== FiberTag.HostComponent && node.tag !== FiberTag.HostText) {
+    while (node.tag !== FiberTag.HostComponent && node.tag !== FiberTag.HostText && node.tag !== FiberTag.Portal) {
       if (node.flags & FiberFlags.Placement || !node.child) continue siblings;
       node.child.parent = node;
       node = node.child;
     }
-    if (!(node.flags & FiberFlags.Placement)) {
+    if (!(node.flags & FiberFlags.Placement) && node.tag !== FiberTag.Portal) {
       return node.stateNode;
     }
   }
@@ -926,10 +947,13 @@ function callEffect(fiber) {
 }
 function commitPlacement(fiber) {
   const domParent = getHostParent(fiber);
-  if ((fiber.tag === FiberTag.HostComponent || fiber.tag === FiberTag.HostText) && domParent) {
-    const before = getHostSibling(fiber);
-    const node = fiber.stateNode;
-    if (before) domParent.insertBefore(node, before);else domParent.appendChild(node);
+  if (fiber.tag === FiberTag.HostComponent || fiber.tag === FiberTag.HostText) {
+    putRef(fiber);
+    if (domParent) {
+      const before = getHostSibling(fiber);
+      const node = fiber.stateNode;
+      if (before) domParent.insertBefore(node, before);else domParent.appendChild(node);
+    }
   } else if (fiber.tag === FiberTag.ClassComponent) {
     fiber.stateNode.componentDidMount();
   }
@@ -1184,7 +1208,7 @@ function processHostComponent(wipFiber, lanes) {
   }
   if (!wipFiber.stateNode) {
     wipFiber.stateNode = createDomElement(wipFiber);
-    putRef(wipFiber);
+    // putRef(wipFiber);
     // if (wipFiber.ref) wipFiber.ref.current = wipFiber.stateNode;
   }
   domMap.set(wipFiber.stateNode, wipFiber);
@@ -1305,6 +1329,7 @@ function performWork(root, workLoop) {
   if (!current) return;
   prepareStack();
   setBatchingUpdates(true);
+  console.log('perform');
   nextUnitOfWork = cloneFiberNode(current, current.pendingProps, {
     alternate: current
   });
@@ -1688,7 +1713,7 @@ function createElement(type) {
     children: null
   }, config);
   // if (props.className) props.class = props.className;
-  props.children = children.filter(c => c != undefined && c != null && c !== false).map(c => {
+  props.children = children.filter(c => c != undefined && c != null && c !== false).reduce((pre, cur) => pre.concat(cur), []).map(c => {
     if (isValidElement(c) || typeof c === 'function') return c;
     return createTextElement(c);
   });
@@ -1729,6 +1754,7 @@ class ExtendedComponent {
 const filter = e => e !== null && !['undefined', 'boolean'].includes(typeof e);
 function arrify(val) {
   return (Array.isArray(val) ? val : [val]).filter(filter);
+  // .reduce((pre, cur) => pre.concat(cur), []);
 }
 function createTextElement(value) {
   return createElement(TEXT_ELEMENT, {
@@ -1847,6 +1873,21 @@ const useTransition = () => {
   return [isPending, _startTransition.bind(null, setPending)];
 };
 const useDebugValue = () => {};
+const defaultEqualFn = (oldProps, newProps) => shallowEqual(oldProps, newProps);
+function memo(component) {
+  let arePropsEqual = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultEqualFn;
+  const fn = typeof component === 'function' ? component : component.props.render;
+  const render = (p, ref) => {
+    const props = useRef();
+    const res = useRef();
+    if (arePropsEqual(props.current, p)) return res.current;
+    res.current = fn(p, ref);
+    props.current = p;
+    return res.current;
+  };
+  component.props.render = render;
+  return typeof component === 'function' ? render : component;
+}
 
 // export * from './interface';
 const Children = {
@@ -1878,6 +1919,7 @@ var index = {
   useImperativeHandle,
   useDebugValue,
   useId,
+  memo,
   startTransition,
   createContext,
   Offscreen,
@@ -1885,5 +1927,5 @@ var index = {
   lazy
 };
 
-export { Children, Component, Fragment, Offscreen, Suspense, cloneElement, createContext, createElement, createPortal, createRef, createRoot, index as default, forwardRef, isValidElement, lazy, render, startTransition, useCallback, useContext, useDebugValue, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, useTransition, wrapPromise };
+export { Children, Component, Fragment, Offscreen, Suspense, cloneElement, createContext, createElement, createPortal, createRef, createRoot, index as default, forwardRef, isValidElement, lazy, memo, render, startTransition, useCallback, useContext, useDebugValue, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, useTransition, wrapPromise };
 //# sourceMappingURL=index.mjs.map

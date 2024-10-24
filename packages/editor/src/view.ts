@@ -5,7 +5,7 @@ import { schema } from './model';
 import { keymap } from 'prosemirror-keymap';
 import { history } from 'prosemirror-history';
 import { CodeBlockViewConstructor } from './components/codeBlock/codeBlockView';
-import { highlightCodePlugin } from './components/codeBlock/highlightCodePlugin';
+// import { highlightCodePlugin } from './components/codeBlock/highlightCodePlugin';
 import { myKeymap, buildInputRules } from './commands';
 import { buildToolbar } from './components/toolBar';
 import './themes/default.scss';
@@ -37,7 +37,7 @@ export const setupEditor = (el: HTMLElement | null) => {
 			keymap(myKeymap),
 			history(),
 			toolbar.plugin,
-			highlightCodePlugin(),
+			// highlightCodePlugin(),
 			columnResizing(),
 			tableEditing({}),
 			mathRender(),

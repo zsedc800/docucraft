@@ -13,6 +13,7 @@ import {
 } from '../interface';
 import { Lanes, NoLanes, intersectLanes, mergeLanes } from '../Lanes';
 import { cloneChildrenHandlers, unwindWorks } from './core';
+import { isNotEmpty } from '../utils';
 
 export function getRoot(fiber: Fiber): Fiber {
 	let node = fiber;
@@ -82,7 +83,8 @@ export function reconcileChildrenArray(
 				lanes: needUpdate ? mergeLanes(lanes, oldFiber.lanes) : oldFiber.lanes
 			});
 
-			if (oldFiber.index < lastIndex) newFiber!.flags |= FiberFlags.Placement;
+			if (oldFiber.index < lastIndex && isNotEmpty(element.props.key))
+				newFiber!.flags |= FiberFlags.Placement;
 
 			lastIndex = Math.max(oldFiber.index, lastIndex);
 

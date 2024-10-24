@@ -147,3 +147,14 @@ export function shallowEqual(obj1: any, obj2: any): boolean {
 
 	return true;
 }
+
+export function classnames(...args: (string | Record<string, boolean>)[]) {
+	return args
+		.map((item) => {
+			if (typeof item === 'string') return item;
+			return Object.keys(item)
+				.filter((key) => !!item[key])
+				.join(' ');
+		})
+		.join(' ');
+}

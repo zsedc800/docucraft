@@ -1,75 +1,84 @@
-import { Node } from 'prosemirror-model';
-import crel, { updateElement } from '../../createElement';
-import {
-	Decoration,
-	DecorationSource,
-	EditorView,
-	NodeView,
-	NodeViewConstructor
-} from 'prosemirror-view';
-// import { setup } from './menu';
+import { Fragment, Node } from 'prosemirror-model';
+import { NodeViewConstructor } from 'prosemirror-view';
 import { BaseNodeView } from '../../utils/view';
+import CodeBlock from './CodeBlock';
+import { shallowEqual } from '../../utils';
+import { basicSetup, EditorView } from 'codemirror';
+import { javascript } from '@codemirror/lang-javascript';
+import { EditorState, Compartment } from '@codemirror/state';
+import { oneDark } from './themes/theme-one-dark';
+import { baseTheme } from './themes/base';
+import { ViewUpdate } from '@codemirror/view';
+
 type GetPos = () => number | undefined;
 export class CodeBlockView extends BaseNodeView {
 	name = 'blockCode';
 	getPos: GetPos;
 	unmount?: () => void;
-	menu: HTMLElement;
-	// root: ReactDOM.Root;
-	contentDOM?: HTMLElement | null | undefined;
+	cmv: EditorView;
+	codeContainer?: HTMLElement;
 	constructor(...args: Parameters<NodeViewConstructor>) {
 		const [node, view, getPos] = args;
 		super(node, view);
 		this.getPos = getPos;
-		this.contentDOM = crel('code', {
-			class: 'scrollbar dc-block',
-			'data-language': node.attrs.language,
-			'data-theme': node.attrs.theme,
-			'data-show-line-number': node.attrs.showLineNumber,
-			'data-node-type': 'codeBlock'
+		this.component = CodeBlock;
+		this.render({ nodeView: this, ...node.attrs });
+
+		let language = new Compartment(),
+			tabSize = new Compartment();
+		const state = EditorState.create({
+			extensions: [
+				basicSetup,
+				language.of(javascript()),
+				tabSize.of(EditorState.tabSize.of(2)),
+				EditorView.updateListener.of(this.onCMUpdate.bind(this)),
+				baseTheme,
+				oneDark
+			]
 		});
-		this.menu = crel('div', { class: 'code-block-menu-container' });
-		this.dom = crel('pre', {
-			class: 'docucraft-codeblock hljs',
-			'data-language': node.attrs.language,
-			'data-theme': node.attrs.theme,
-			'data-show-line-number': node.attrs.showLineNumber,
-			'data-node-type': 'codeBlock'
+		this.cmv = new EditorView({
+			state,
+			parent: this.codeContainer
 		});
-		// this.root = ReactDOM.createRoot(this.menu);
-		this.dom.appendChild(this.menu);
-		this.dom.appendChild(this.contentDOM);
-		this.renderComponent();
 	}
 
-	renderComponent() {
-		// setup(this);
+	onCMUpdate(update: ViewUpdate) {
+		if (!update.docChanged) return;
+		const content = this.cmv.state.doc.toString();
+		const pos = this.getPos();
+
+		if ((pos || pos === 0) && content) {
+			const transaction = this.view.state.tr.replaceWith(
+				pos,
+				pos + this.node.nodeSize,
+				this.node.copy(Fragment.from(this.view.state.schema.text(content)))
+			);
+			this.view.dispatch(transaction);
+		}
+	}
+
+	ignoreMutation(mutation: MutationRecord): boolean {
+		return true;
+	}
+
+	stopEvent(e: Event) {
+		return e.target === this.codeContainer || this.cmv.hasFocus;
 	}
 
 	update(node: Node) {
-		const res = super.update(node);
-		if (!res) return false;
+		const { type, attrs } = node;
+		const { attrs: props, type: t } = this.node;
+		if (type !== t) return false;
+
 		this.node = node;
-		updateElement(this.dom, {
-			'data-language': node.attrs.language,
-			'data-theme': node.attrs.theme,
-			'data-show-line-number': node.attrs.showLineNumber
-		});
-		updateElement(this.contentDOM as HTMLElement, {
-			'data-language': node.attrs.language,
-			'data-theme': node.attrs.theme,
-			'data-show-line-number': node.attrs.showLineNumber
-		});
-
-		this.renderComponent();
-
+		if (!shallowEqual(props, attrs)) this.render({ nodeView: this, ...attrs });
 		return true;
 	}
 
 	destroy() {
 		console.log('destroy code');
-
-		// this.root.unmount();
+		this.cmv.destroy();
+		this.rootRender.unmount();
 	}
 }
 

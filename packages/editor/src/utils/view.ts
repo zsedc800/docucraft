@@ -14,7 +14,7 @@ import {
 } from '@docucraft/srender';
 export class BaseNodeView implements NodeView {
 	dom: HTMLElement;
-	contentDOM?: HTMLElement | null | undefined;
+	contentDOM?: HTMLElement;
 	container?: HTMLElement;
 	rootRender: RootRender;
 	component: ComponentType<any> = () => '';

@@ -169,6 +169,8 @@ function performWork(
 	if (!current) return;
 	prepareStack();
 	setBatchingUpdates(true);
+	console.log('perform');
+
 	nextUnitOfWork = cloneFiberNode(current, current.pendingProps, {
 		alternate: current
 	});
