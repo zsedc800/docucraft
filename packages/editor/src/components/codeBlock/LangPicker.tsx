@@ -13,7 +13,8 @@ import DoneIcon from '@docucraft/icons/svg/Done';
 import SettingsIcon from '@docucraft/icons/svg/Settings';
 import { languages } from '@codemirror/language-data';
 import { LanguageDescription } from '@codemirror/language';
-import { useState } from '@docucraft/srender';
+import { Fragment, VNode, useEffect, useState } from '@docucraft/srender';
+import SvgArticle from '@docucraft/icons/svg/Article';
 
 interface PopperComponentProps {
 	anchorEl?: any;
@@ -135,7 +136,11 @@ const Button = styled(ButtonBase as any)(({ theme }) => ({
 	})
 }));
 
-export default function LangPicker() {
+export interface LangPickerProps {
+	onChange?: (l: LanguageType | null) => void;
+}
+
+export default function LangPicker({ onChange }: LangPickerProps) {
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [value, setValue] = useState<LanguageType | null>(null);
 	const [inputValue, setInputValue] = useState('');
@@ -215,6 +220,7 @@ export default function LangPicker() {
 								}
 								setValue(newValue);
 								setInputValue(newValue?.name || '');
+								if (onChange) onChange(newValue);
 								handleClose();
 							}}
 							ListboxProps={{ className: 'scrollbar' }}
@@ -234,18 +240,22 @@ export default function LangPicker() {
 												visibility: selected ? 'visible' : 'hidden'
 											}}
 										/> */}
-										{/* <Box
+										<Box
 											component="span"
 											sx={{
-												width: 14,
-												height: 14,
+												'& svg': {
+													width: 24,
+													height: 24,
+													borderRadius: '3px'
+												},
 												flexShrink: 0,
-												borderRadius: '3px',
 												mr: 1,
 												mt: '2px'
 											}}
-											style={{ backgroundColor: option.color }}
-										/> */}
+											// style={{ backgroundColor: option.color }}
+										>
+											{(<LogoCmp name={option.name} />) as any}
+										</Box>
 										{/* @ts-ignore */}
 										<Box
 											sx={(t) => ({
@@ -303,9 +313,29 @@ export default function LangPicker() {
 
 interface LanguageType extends LanguageDescription {}
 
-const langMap = {
+function capitalizeFirstLetter(str: string) {
+	if (!str) return str; // 处理空字符串
+	return str.charAt(0).toUpperCase() + str.slice(1);
+}
+
+const cache = new Map<string, any>();
+
+const LogoCmp = ({ name }: { name: string }) => {
+	const [logo, setIcon] = useState({ Icon: SvgArticle });
+	useEffect(() => {
+		const filename = capitalizeFirstLetter(langMap[name] || name);
+		import('@docucraft/icons/logo/' + filename).then(
+			(m) => setIcon({ Icon: m.default }),
+			(e) => {}
+		);
+	}, []);
+
+	return <logo.Icon />;
+};
+
+const langMap: Record<string, string> = {
 	C: 'c',
-	'C++': 'cpp',
+	'C++': 'cplusplus',
 	CQL: 'cassandra',
 	CSS: 'css3',
 	Go: 'go',
@@ -388,5 +418,10 @@ const langMap = {
 	ActionScript: 'actionscript',
 	Haxe: 'haxe',
 	VBScript: 'vbscript',
-	AppleScript: 'applescript'
+	AppleScript: 'applescript',
+	Vue: 'vuejs',
+	'C#': 'csharp',
+	WebAssembly: 'wasm',
+	XML: 'xml',
+	ClojureScript: 'clojurescript'
 };

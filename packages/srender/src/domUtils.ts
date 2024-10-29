@@ -88,12 +88,10 @@ export function updateDomProperties(
 		.filter(isNew(prevProps, nextProps))
 		.forEach((name) => {
 			const value = nextProps[name];
+
 			if (dom.nodeType === Node.TEXT_NODE) {
 				(dom as IState)[name] = value;
-			} else if (
-				svgElements.has(dom.tagName.toLowerCase()) &&
-				name !== 'xmlns'
-			) {
+			} else if (svgElements.has(dom.tagName) && name !== 'xmlns') {
 				// const svgPropName = name.replace(/(a-z)(A-Z)/g, '$1-$2').toLowerCase();
 				dom.setAttributeNS(null, convertName(name), value);
 			}

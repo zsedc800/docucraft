@@ -92,69 +92,23 @@ export default ({
 				<div contentEditable={false} className="code-block-menu-container">
 					<div contentEditable={false} className="code-block-menu">
 						<div contentEditable={false} className="code-block-menu-content">
-							{/* <Autocomplete
-								size="small"
-								variant="filled"
-								className="code-type-select"
-								options={options}
-								inputValue={language}
-								renderInput={(params) => {
-									return (
-										<div ref={params.InputProps.ref}>
-											<input type="text" {...(params.inputProps as any)} />
-										</div>
-									) as any;
+							<LangPicker
+								onChange={(val) => {
+									const { state, dispatch } = nodeView.view;
+									const language = val?.name.toLowerCase() || 'plaintext';
+									const pos = nodeView.getPos() as number;
+									state.schema.cached.lastLanguage = language;
+									if (pos || pos == 0) {
+										const tr = state.tr.setNodeAttribute(
+											pos,
+											'language',
+											language
+										);
+										dispatch(tr);
+										setLanguage(language, nodeView.cmv);
+									}
 								}}
-								// sx={{
-								// 	'&': {
-								// 		borderRadius: '4px' // 保持圆角效果
-								// 	},
-								// 	'&:before': {
-								// 		borderBottom: 'none' // 移除未聚焦时的下划线
-								// 	},
-								// 	'&:after': {
-								// 		borderBottom: 'none' // 移除聚焦后的下划线
-								// 	},
-								// 	'&:hover:not(.Mui-disabled):before': {
-								// 		borderBottom: 'none' // 移除悬停时的下划线
-								// 	},
-								// 	'& .MuiSelect-select': {
-								// 		padding: '0 5px',
-								// 		paddingRight: '5px !important'
-								// 	}
-								// }}
-								onChange={(e: any, val) => {
-									console.log(e, val, 'e');
-
-									// const { state, dispatch } = nodeView.view;
-									// const language = e.target?.value;
-									// const pos = nodeView.getPos() as number;
-									// state.schema.cached.lastLanguage = language;
-									// if (pos || pos == 0) {
-									// 	const tr = state.tr.setNodeAttribute(
-									// 		pos,
-									// 		'language',
-									// 		language
-									// 	);
-									// 	dispatch(tr);
-									// 	setLanguage(language, nodeView.cmv);
-									// }
-								}}
-							>
-								{languages
-									.concat([{ name: 'plaintext' } as any])
-									.map(
-										(lang) =>
-											(
-												<MenuItem value={lang.name.toLowerCase()}>
-													{lang.name}
-												</MenuItem>
-											) as any
-									)}
-							</Autocomplete> */}
-							{/* <Example /> */}
-							<LangPicker />
-							{/* <CustomInputAutocomplete /> */}
+							/>
 						</div>
 						<div className="code-block-menu-tile">
 							<Switch
