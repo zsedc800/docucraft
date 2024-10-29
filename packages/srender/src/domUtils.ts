@@ -40,6 +40,36 @@ const booleanAttributes = new Set([
 	'autofocus',
 	'required'
 ]);
+
+const hyphenateStyleName = (name: string) => {
+	return name.replace(/[A-Z]/g, (match) => '-' + match.toLowerCase());
+};
+
+const isUnitlessNumber = [
+	'opacity',
+	'zIndex',
+	'lineHeight',
+	'flexGrow',
+	'flexShrink',
+	'fontWeight'
+];
+
+function setAttribute(element: HTMLElement, key: string, val: any) {
+	if (key in element) {
+		(element as any)[key] = val;
+	} else {
+		element.setAttribute(key, val);
+	}
+}
+
+function removeAttribute(element: HTMLElement, key: string) {
+	if (key in element) {
+		(element as any)[key] = null;
+	} else {
+		element.removeAttribute(key);
+	}
+}
+
 export function updateDomProperties(
 	dom: HTMLElement,
 	prevProps: IProps,
@@ -50,7 +80,7 @@ export function updateDomProperties(
 		.filter(isGone(nextProps))
 		.forEach((name) => {
 			// (dom as IState)[name] = null;
-			dom.removeAttribute(convertName(name));
+			removeAttribute(dom, convertName(name));
 		});
 
 	Object.keys(nextProps)
@@ -66,11 +96,13 @@ export function updateDomProperties(
 			) {
 				// const svgPropName = name.replace(/(a-z)(A-Z)/g, '$1-$2').toLowerCase();
 				dom.setAttributeNS(null, convertName(name), value);
-			} else if (booleanAttributes.has(name)) {
-				if (value) dom.setAttribute(name, 'true');
-				else dom.removeAttribute(name);
-			} else {
-				dom.setAttribute(convertName(name), value);
+			}
+			// else if (booleanAttributes.has(name)) {
+			// 	if (value) setAttribute(dom,name, 'true');
+			// 	else removeAttribute(dom, name);
+			// }
+			else {
+				setAttribute(dom, convertName(name), value);
 			}
 		});
 
@@ -81,13 +113,17 @@ export function updateDomProperties(
 		.filter(isNew(prevProps.style, nextProps.style))
 		.forEach((key) => {
 			const val = (nextProps as any).style[key];
-			dom.style.setProperty(key, val);
+			const finalVal =
+				typeof val === 'number' && !isUnitlessNumber.includes(key)
+					? val + 'px'
+					: val;
+			dom.style.setProperty(hyphenateStyleName(key), finalVal);
 		});
 
 	Object.keys(prevProps.style)
 		.filter(isGone(nextProps.style))
 		.forEach((key) => {
-			dom.style.setProperty(key, null);
+			dom.style.setProperty(hyphenateStyleName(key), null);
 		});
 }
 

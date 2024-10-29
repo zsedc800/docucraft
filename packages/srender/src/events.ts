@@ -101,29 +101,89 @@ const bubblingEvents = [
 	'onAnimationStart'
 ];
 
+class SytheticEvent {
+	private isPropStopped = false;
+	private isPrevented = false;
+	currentTarget: Element | null = null;
+	constructor(public nativeEvent: Event) {}
+
+	stopPropagation() {
+		this.isPropStopped = true;
+		this.nativeEvent.stopPropagation();
+	}
+	preventDefault() {
+		this.isPrevented = true;
+		this.nativeEvent.preventDefault();
+	}
+
+	get isPropagationStopped() {
+		return this.isPropStopped;
+	}
+	get isDefaultPrevented() {
+		return this.isPrevented;
+	}
+}
+
 function cloneEventWithCustomProperties(
 	originalEvent: Event,
 	customProps: Record<any, any>
 ) {
-	const clonedEvent = new (originalEvent.constructor as any)(
-		originalEvent.type,
-		originalEvent
-	);
+	// const clonedEvent = new (originalEvent.constructor as any)(
+	// 	originalEvent.type,
+	// 	originalEvent
+	// );
 
 	// 使用 defineProperty 添加不可枚举的自定义属性
-	Object.keys(customProps).forEach((key) => {
-		Object.defineProperty(clonedEvent, key, {
-			value: customProps[key],
-			enumerable: false, // 设为不可枚举
-			writable: true,
-			configurable: true
-		});
-	});
+	// Object.keys(customProps).forEach((key) => {
+	// 	Object.defineProperty(clonedEvent, key, {
+	// 		value: customProps[key],
+	// 		enumerable: false, // 设为不可枚举
+	// 		writable: true,
+	// 		configurable: true
+	// 	});
+	// });
 
-	return clonedEvent;
+	const event = new SytheticEvent(originalEvent);
+
+	return new Proxy(event, {
+		get(target, prop) {
+			if (prop in target) return (target as any)[prop];
+
+			if (prop in customProps) return (customProps as any)[prop];
+			return (originalEvent as any)[prop];
+		},
+		set(target, prop, val) {
+			(event as any)[prop] = val;
+			return true;
+		}
+	});
 }
 
 export const domMap = new WeakMap<HTMLElement, Fiber>();
+
+function isTextInput(element: HTMLInputElement) {
+	return (
+		element.tagName === 'INPUT' &&
+		(element.type === 'text' ||
+			element.type === 'password' ||
+			element.type === 'email' ||
+			element.type === 'search')
+	);
+}
+
+function getEventHandler(
+	eventName: string,
+	props: Record<string, any>,
+	e: Event
+) {
+	let handler = props[eventName];
+	if (isTextInput(e.target as HTMLInputElement)) {
+		if (eventName === 'onInput') handler = props['onChange'];
+		else if (eventName === 'onChange') handler = null;
+	}
+
+	return handler;
+}
 
 export const registerEvent = (root: HTMLElement | Document) => {
 	const listener =
@@ -131,18 +191,19 @@ export const registerEvent = (root: HTMLElement | Document) => {
 		(e: Event) => {
 			const fiber = domMap.get(e.target as HTMLElement);
 			let current: Fiber | null | undefined = fiber;
+
+			const clonedEvent = cloneEventWithCustomProperties(e, {
+				target: e.target
+			});
 			while (current) {
-				if (current.tag === FiberTag.HostComponent) {
-					const handler = current.pendingProps[eventName];
+				if (
+					current.tag === FiberTag.HostComponent &&
+					!clonedEvent.isPropagationStopped
+				) {
+					const handler = getEventHandler(eventName, current.pendingProps, e);
+					clonedEvent.currentTarget = current.stateNode as Element;
 					if (handler) {
-						batchedUpdates(
-							handler,
-							cloneEventWithCustomProperties(e, {
-								target: e.target,
-								currentTarget: current.stateNode,
-								nativeEvent: e
-							})
-						);
+						batchedUpdates(handler, clonedEvent);
 					}
 					if (capture) break;
 				}
@@ -154,8 +215,8 @@ export const registerEvent = (root: HTMLElement | Document) => {
 		const event = eventName.toLowerCase().slice(2);
 		root.addEventListener(event, listener(eventName), false);
 	}
-	// for (const eventName of nonBubblingEvents) {
-	// 	const event = eventName.toLowerCase().slice(2);
-	// 	root.addEventListener(event, listener(eventName, true), true);
-	// }
+	for (const eventName of nonBubblingEvents) {
+		const event = eventName.toLowerCase().slice(2);
+		root.addEventListener(event, listener(eventName, true), true);
+	}
 };

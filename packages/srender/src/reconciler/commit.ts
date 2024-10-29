@@ -80,7 +80,6 @@ function commitPlacement(fiber: Fiber) {
 	const domParent = getHostParent(fiber);
 
 	if (fiber.tag === FiberTag.HostComponent || fiber.tag === FiberTag.HostText) {
-		putRef(fiber);
 		if (domParent) {
 			const before = getHostSibling(fiber);
 			const node = fiber.stateNode as Element;
@@ -88,6 +87,7 @@ function commitPlacement(fiber: Fiber) {
 			if (before) domParent.insertBefore(node, before);
 			else domParent.appendChild(node);
 		}
+		putRef(fiber);
 	} else if (fiber.tag === FiberTag.ClassComponent) {
 		(fiber.stateNode as Component).componentDidMount();
 	}
@@ -183,7 +183,7 @@ function commitDeletion(fiber: Fiber) {
 		);
 	}
 
-	deleteChildren(domParent, fiber);
+	if (domParent) deleteChild(domParent, fiber);
 	fiber.flags &= ~FiberFlags.Deletion;
 }
 

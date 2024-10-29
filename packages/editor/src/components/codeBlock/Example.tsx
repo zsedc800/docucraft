@@ -1,5 +1,4 @@
 import * as React from 'react';
-import TextField from '@mui/material/TextField';
 import Autocomplete from '@mui/material/Autocomplete';
 import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
@@ -9,6 +8,8 @@ export default function AutocompleteHint() {
 	const [inputValue, setInputValue] = React.useState('');
 	return (
 		<Autocomplete
+			disableClearable
+			forcePopupIcon={false}
 			onKeyDown={(event) => {
 				if (event.key === 'Tab') {
 					if (hint.current) {
@@ -21,50 +22,56 @@ export default function AutocompleteHint() {
 				hint.current = '';
 			}}
 			onChange={(event, newValue) => {
+				console.log(event, 'e');
+
 				setInputValue(newValue && newValue.label ? newValue.label : '');
 			}}
-			disablePortal
+			// disablePortal
 			inputValue={inputValue}
 			id="combo-box-hint-demo"
 			options={top100Films}
 			sx={{ width: 300 }}
 			renderInput={(params) => {
-				console.log(params, 'p');
-				delete params.inputProps.value;
+				// delete params.inputProps.value;
 				// delete params.inputProps.onMouseDown;
-				delete params.inputProps.onFocus;
+				// delete params.inputProps.onFocus;
 				return (
 					<Box sx={{ position: 'relative' }}>
-						<Typography
-							sx={{
-								position: 'absolute',
-								opacity: 0.5,
-								left: 14,
-								top: 16,
-								overflow: 'hidden',
-								whiteSpace: 'nowrap',
-								width: 'calc(100% - 75px)' // Adjust based on padding of TextField
-							}}
-						>
-							{hint.current}
-						</Typography>
-						<TextField
-							{...(params as any)}
-							onChange={(event) => {
-								const newValue = event.target.value;
-								setInputValue(newValue);
-								const matchingOption = top100Films.find((option) =>
-									option.label.startsWith(newValue)
-								);
+						{
+							(
+								<Typography
+									sx={{
+										position: 'absolute',
+										opacity: 0.5,
+										left: 14,
+										top: 16,
+										overflow: 'hidden',
+										whiteSpace: 'nowrap',
+										width: 'calc(100% - 75px)' // Adjust based on padding of TextField
+									}}
+								>
+									{hint.current}
+								</Typography>
+							) as any
+						}
+						<div ref={params.InputProps.ref}>
+							<input
+								{...(params.inputProps as any)}
+								onChange={(event: any) => {
+									const newValue = event.target?.value;
+									setInputValue(newValue);
+									const matchingOption = top100Films.find((option) =>
+										option.label.startsWith(newValue)
+									);
 
-								if (newValue && matchingOption) {
-									hint.current = matchingOption.label;
-								} else {
-									hint.current = '';
-								}
-							}}
-							label="Movie"
-						/>
+									if (newValue && matchingOption) {
+										hint.current = matchingOption.label;
+									} else {
+										hint.current = '';
+									}
+								}}
+							/>
+						</div>
 					</Box>
 				) as any;
 			}}

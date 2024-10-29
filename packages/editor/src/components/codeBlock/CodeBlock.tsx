@@ -13,6 +13,7 @@ import Autocomplete from '@mui/material/Autocomplete';
 import TextField from '@mui/material/TextField';
 import './style.scss';
 import Example, { CustomInputAutocomplete } from './Example';
+import LangPicker from './LangPicker';
 interface Props {
 	nodeView: CodeBlockView;
 	language: string;
@@ -151,7 +152,8 @@ export default ({
 											) as any
 									)}
 							</Autocomplete> */}
-							<Example />
+							{/* <Example /> */}
+							<LangPicker />
 							{/* <CustomInputAutocomplete /> */}
 						</div>
 						<div className="code-block-menu-tile">
@@ -161,6 +163,7 @@ export default ({
 								checked={showLineNumber}
 								onChange={(e) => {
 									const { state, dispatch } = nodeView.view;
+									console.log(111);
 
 									const pos = nodeView.getPos();
 									if (pos || pos == 0) {

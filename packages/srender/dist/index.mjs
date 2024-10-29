@@ -788,6 +788,23 @@ class SuspenseException {
   }
 }
 
+const nonBubblingEvents = [
+// 焦点事件
+'onFocus', 'onBlur',
+// 鼠标事件
+'onMouseEnter', 'onMouseLeave',
+// 表单事件
+'onSubmit', 'onReset',
+// 媒体事件
+'onPlay', 'onPause', 'onPlaying', 'onWaiting', 'onSeeking', 'onSeeked', 'onEnded',
+// 滚动事件
+'onScroll',
+// 页面生命周期事件
+'onLoad', 'onUnload', 'onError', 'onBeforeUnload',
+// 拖拽事件
+'onDragEnter', 'onDragLeave',
+// 动画和转换事件
+'onAnimationStart', 'onAnimationEnd', 'onAnimationIteration', 'onTransitionStart', 'onTransitionEnd'];
 const bubblingEvents = [
 // 鼠标事件
 'onClick', 'onDoubleClick', 'onMouseDown', 'onMouseUp', 'onMouseMove', 'onMouseOver', 'onMouseOut', 'onContextMenu',
@@ -814,36 +831,81 @@ const bubblingEvents = [
 'onResize',
 // 窗口大小调整
 'onAnimationCancel', 'onAnimationEnd', 'onAnimationIteration', 'onAnimationStart'];
+class SytheticEvent {
+  isPropStopped = false;
+  isPrevented = false;
+  currentTarget = null;
+  constructor(nativeEvent) {
+    this.nativeEvent = nativeEvent;
+  }
+  stopPropagation() {
+    this.isPropStopped = true;
+    this.nativeEvent.stopPropagation();
+  }
+  preventDefault() {
+    this.isPrevented = true;
+    this.nativeEvent.preventDefault();
+  }
+  get isPropagationStopped() {
+    return this.isPropStopped;
+  }
+  get isDefaultPrevented() {
+    return this.isPrevented;
+  }
+}
 function cloneEventWithCustomProperties(originalEvent, customProps) {
-  const clonedEvent = new originalEvent.constructor(originalEvent.type, originalEvent);
+  // const clonedEvent = new (originalEvent.constructor as any)(
+  // 	originalEvent.type,
+  // 	originalEvent
+  // );
   // 使用 defineProperty 添加不可枚举的自定义属性
-  Object.keys(customProps).forEach(key => {
-    Object.defineProperty(clonedEvent, key, {
-      value: customProps[key],
-      enumerable: false,
-      // 设为不可枚举
-      writable: true,
-      configurable: true
-    });
+  // Object.keys(customProps).forEach((key) => {
+  // 	Object.defineProperty(clonedEvent, key, {
+  // 		value: customProps[key],
+  // 		enumerable: false, // 设为不可枚举
+  // 		writable: true,
+  // 		configurable: true
+  // 	});
+  // });
+  const event = new SytheticEvent(originalEvent);
+  return new Proxy(event, {
+    get(target, prop) {
+      if (prop in target) return target[prop];
+      if (prop in customProps) return customProps[prop];
+      return originalEvent[prop];
+    },
+    set(target, prop, val) {
+      event[prop] = val;
+      return true;
+    }
   });
-  return clonedEvent;
 }
 const domMap = new WeakMap();
+function isTextInput(element) {
+  return element.tagName === 'INPUT' && (element.type === 'text' || element.type === 'password' || element.type === 'email' || element.type === 'search');
+}
+function getEventHandler(eventName, props, e) {
+  let handler = props[eventName];
+  if (isTextInput(e.target)) {
+    if (eventName === 'onInput') handler = props['onChange'];else if (eventName === 'onChange') handler = null;
+  }
+  return handler;
+}
 const registerEvent = root => {
   const listener = function (eventName) {
     let capture = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
     return e => {
       const fiber = domMap.get(e.target);
       let current = fiber;
+      const clonedEvent = cloneEventWithCustomProperties(e, {
+        target: e.target
+      });
       while (current) {
-        if (current.tag === FiberTag.HostComponent) {
-          const handler = current.pendingProps[eventName];
+        if (current.tag === FiberTag.HostComponent && !clonedEvent.isPropagationStopped) {
+          const handler = getEventHandler(eventName, current.pendingProps, e);
+          clonedEvent.currentTarget = current.stateNode;
           if (handler) {
-            batchedUpdates(handler, cloneEventWithCustomProperties(e, {
-              target: e.target,
-              currentTarget: current.stateNode,
-              nativeEvent: e
-            }));
+            batchedUpdates(handler, clonedEvent);
           }
           if (capture) break;
         }
@@ -855,10 +917,10 @@ const registerEvent = root => {
     const event = eventName.toLowerCase().slice(2);
     root.addEventListener(event, listener(eventName), false);
   }
-  // for (const eventName of nonBubblingEvents) {
-  // 	const event = eventName.toLowerCase().slice(2);
-  // 	root.addEventListener(event, listener(eventName, true), true);
-  // }
+  for (const eventName of nonBubblingEvents) {
+    const event = eventName.toLowerCase().slice(2);
+    root.addEventListener(event, listener(eventName, true), true);
+  }
 };
 
 const blacklist = ['children', 'style', 'ref'];
@@ -871,11 +933,28 @@ function convertName(name) {
   return name === 'className' ? 'class' : name;
 }
 const svgElements = new Set(['svg', 'circle', 'rect', 'path', 'line', 'polygon', 'polyline', 'ellipse', 'g', 'text', 'tspan', 'defs', 'linearGradient', 'radialGradient', 'stop', 'use']);
-const booleanAttributes = new Set(['disabled', 'checked', 'readonly', 'selected', 'multiple', 'hidden', 'autofocus', 'required']);
+const hyphenateStyleName = name => {
+  return name.replace(/[A-Z]/g, match => '-' + match.toLowerCase());
+};
+const isUnitlessNumber = ['opacity', 'zIndex', 'lineHeight', 'flexGrow', 'flexShrink', 'fontWeight'];
+function setAttribute(element, key, val) {
+  if (key in element) {
+    element[key] = val;
+  } else {
+    element.setAttribute(key, val);
+  }
+}
+function removeAttribute(element, key) {
+  if (key in element) {
+    element[key] = null;
+  } else {
+    element.removeAttribute(key);
+  }
+}
 function updateDomProperties(dom, prevProps, nextProps) {
   Object.keys(prevProps).filter(isAttribute).filter(isGone(nextProps)).forEach(name => {
     // (dom as IState)[name] = null;
-    dom.removeAttribute(convertName(name));
+    removeAttribute(dom, convertName(name));
   });
   Object.keys(nextProps).filter(isAttribute).filter(isNew(prevProps, nextProps)).forEach(name => {
     const value = nextProps[name];
@@ -884,20 +963,24 @@ function updateDomProperties(dom, prevProps, nextProps) {
     } else if (svgElements.has(dom.tagName.toLowerCase()) && name !== 'xmlns') {
       // const svgPropName = name.replace(/(a-z)(A-Z)/g, '$1-$2').toLowerCase();
       dom.setAttributeNS(null, convertName(name), value);
-    } else if (booleanAttributes.has(name)) {
-      if (value) dom.setAttribute(name, 'true');else dom.removeAttribute(name);
-    } else {
-      dom.setAttribute(convertName(name), value);
+    }
+    // else if (booleanAttributes.has(name)) {
+    // 	if (value) setAttribute(dom,name, 'true');
+    // 	else removeAttribute(dom, name);
+    // }
+    else {
+      setAttribute(dom, convertName(name), value);
     }
   });
   prevProps.style = prevProps.style || {};
   nextProps.style = nextProps.style || {};
   Object.keys(nextProps.style).filter(isNew(prevProps.style, nextProps.style)).forEach(key => {
     const val = nextProps.style[key];
-    dom.style.setProperty(key, val);
+    const finalVal = typeof val === 'number' && !isUnitlessNumber.includes(key) ? val + 'px' : val;
+    dom.style.setProperty(hyphenateStyleName(key), finalVal);
   });
   Object.keys(prevProps.style).filter(isGone(nextProps.style)).forEach(key => {
-    dom.style.setProperty(key, null);
+    dom.style.setProperty(hyphenateStyleName(key), null);
   });
 }
 function createDomElement(fiber) {
@@ -948,12 +1031,12 @@ function callEffect(fiber) {
 function commitPlacement(fiber) {
   const domParent = getHostParent(fiber);
   if (fiber.tag === FiberTag.HostComponent || fiber.tag === FiberTag.HostText) {
-    putRef(fiber);
     if (domParent) {
       const before = getHostSibling(fiber);
       const node = fiber.stateNode;
       if (before) domParent.insertBefore(node, before);else domParent.appendChild(node);
     }
+    putRef(fiber);
   } else if (fiber.tag === FiberTag.ClassComponent) {
     fiber.stateNode.componentDidMount();
   }
@@ -1012,7 +1095,7 @@ function commitDeletion(fiber) {
     }
     node = traverseFiber(node, f => false, f => f === fiber);
   }
-  deleteChildren(domParent, fiber);
+  if (domParent) deleteChild(domParent, fiber);
   fiber.flags &= ~FiberFlags.Deletion;
 }
 function commitWork(fiber) {

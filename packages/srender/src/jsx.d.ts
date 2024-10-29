@@ -6,7 +6,9 @@ import {
 	ComponentType,
 	FunctionComponent,
 	SrenderDOMAttributes,
-	VNode
+	VNode,
+	ReactElement,
+	ReactNode
 } from './interface';
 import { Component } from './index';
 
@@ -20,9 +22,6 @@ type Defaultize<Props, Defaults> =
 type Booleanish = boolean | 'true' | 'false';
 
 declare global {
-	namespace React {
-		export type ReactNode = ComponentChild;
-	}
 	namespace JSX {
 		export type LibraryManagedAttributes<Component, Props> = Component extends {
 			defaultProps: infer Defaults;
@@ -34,31 +33,6 @@ declare global {
 			key?: any;
 			[elename: string]: any;
 		}
-
-		type JSXElementConstructor<P> =
-			| ((props: P, deprecatedLegacyContext?: any) => ReactNode)
-			| (new (props: P, deprecatedLegacyContext?: any) => Component<any, any>);
-
-		interface ReactElement<
-			P = any,
-			T extends string | JSXElementConstructor<any> =
-				| string
-				| JSXElementConstructor<any>
-		> {
-			type: T;
-			props: P;
-			key: string | null;
-		}
-
-		type ReactNode =
-			| ReactElement
-			| string
-			| number
-			| Iterable<ReactNode>
-			| ReactPortal
-			| boolean
-			| null
-			| undefined;
 
 		export type ElementType<P = any> =
 			| {

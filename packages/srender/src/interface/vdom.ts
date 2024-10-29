@@ -11,17 +11,48 @@ export interface State {
 	[k: string]: any;
 }
 
+type JSXElementConstructor<P> =
+	| ((props: P, deprecatedLegacyContext?: any) => ReactNode)
+	| (new (props: P, deprecatedLegacyContext?: any) => Component<any, any>);
+
+export interface ReactElement<
+	P = any,
+	T extends string | JSXElementConstructor<any> =
+		| string
+		| JSXElementConstructor<any>
+> {
+	type: T;
+	props: P;
+	key: string | null;
+}
+
+interface ReactPortal extends ReactElement {
+	children: ReactNode;
+}
+
+export type ReactNode =
+	| ReactElement
+	| string
+	| number
+	| Iterable<ReactNode>
+	| ReactPortal
+	| boolean
+	| null
+	| undefined;
+
+interface VPortal extends VNode {
+	children: ComponentChild;
+}
+
 export type ComponentChild =
-	| IVNode
-	| IVNode[]
+	| VNode
+	| ComponentChild[]
 	| string
 	| null
 	| boolean
 	| bigint
 	| number
 	| undefined;
-
-export type ReactNode = ComponentChild;
 
 export type ComponentChildren = ComponentChild | ComponentChild[];
 export interface BaseProps {
@@ -56,14 +87,14 @@ export interface ClassComponent<P = Props, S = State, C = any> {
 	defaultProps?: P;
 }
 
-export interface VNode<P = Props> {
-	$$typeof: Symbol;
+export interface VNode<P = any> {
+	$$typeof?: Symbol;
 	type: ComponentType<P>;
 	props: P & {
-		children?: ComponentChildren;
+		children?: ComponentChild;
 	};
 	key: string | null;
-	ref: Ref<any> | null;
+	ref?: Ref<any> | null;
 }
 
 export type Key = string | number | any;
@@ -83,6 +114,8 @@ export type IVNode<P = Props> = VNode<P>;
 export type ComponentType<P = any> =
 	| string
 	| Symbol
+	| ((props: P) => ComponentChild)
+	| (new (props: P, context?: any) => Component<any, any>)
 	| FunctionComponent<P>
 	| ClassComponent<P>;
 
