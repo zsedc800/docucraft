@@ -138,9 +138,10 @@ const Button = styled(ButtonBase as any)(({ theme }) => ({
 
 export interface LangPickerProps {
 	onChange?: (l: LanguageType | null) => void;
+	value?: string;
 }
 
-export default function LangPicker({ onChange }: LangPickerProps) {
+export default function LangPicker({ onChange, value: val }: LangPickerProps) {
 	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
 	const [value, setValue] = useState<LanguageType | null>(null);
 	const [inputValue, setInputValue] = useState('');
@@ -159,6 +160,14 @@ export default function LangPicker({ onChange }: LangPickerProps) {
 		}
 		setAnchorEl(null);
 	};
+
+	useEffect(() => {
+		console.log(1);
+		if (val && val !== value) {
+			const lang = languages.find((item) => item.name.toLowerCase() === val);
+			if (lang) setValue(lang);
+		}
+	}, [val]);
 
 	const open = Boolean(anchorEl);
 	const id = open ? 'language-picker' : undefined;
@@ -219,7 +228,7 @@ export default function LangPicker({ onChange }: LangPickerProps) {
 									return;
 								}
 								setValue(newValue);
-								setInputValue(newValue?.name || '');
+								// setInputValue(newValue?.name || '');
 								if (onChange) onChange(newValue);
 								handleClose();
 							}}
@@ -359,9 +368,10 @@ const langMap: Record<string, string> = {
 	SCSS: 'sass',
 	SQL: 'mysql',
 	SQLite: 'sqlite',
-	TSX: 'typescript',
+	TSX: 'react',
 	TypeScript: 'typescript',
 	Shell: 'bash',
+	PowerShell: 'powershell',
 	Dockerfile: 'docker',
 	YAML: 'yaml',
 	Perl: 'perl',
@@ -373,7 +383,7 @@ const langMap: Record<string, string> = {
 	Haskell: 'haskell',
 	Elixir: 'elixir',
 	Dart: 'dart',
-	'VB.NET': 'dot-net',
+	'VB.NET': 'vbnet',
 	'Objective-C': 'objectivec',
 	Groovy: 'groovy',
 	Apache: 'apache',
@@ -403,7 +413,7 @@ const langMap: Record<string, string> = {
 	LaTeX: 'latex',
 	reStructuredText: 'restructuredtext',
 	Textile: 'textile',
-	Toml: 'toml',
+	TOML: 'toml',
 	Nim: 'nim',
 	OCaml: 'ocaml',
 	AutoHotkey: 'autohotkey',
@@ -423,5 +433,23 @@ const langMap: Record<string, string> = {
 	'C#': 'csharp',
 	WebAssembly: 'wasm',
 	XML: 'xml',
-	ClojureScript: 'clojurescript'
+	ClojureScript: 'clojurescript',
+	'Angular Template': 'angularjs',
+	Pascal: 'pascal',
+	HTTP: 'http',
+	ProtoBuf: 'protobuf',
+	Asterisk: 'asterisk',
+	Cypher: 'cypher',
+	Cython: 'cython',
+	DTD: 'dtd',
+	IDL: 'idl',
+	'Web IDL': 'idl',
+	'Properties files': 'ini',
+	'JSON-LD': 'jsonld',
+	LiveScript: 'livescript',
+	PGP: 'pgp',
+	'RPM Changes': 'rpm',
+	'RPM Spec': 'rpm',
+	Solr: 'solr',
+	APL: 'apl'
 };

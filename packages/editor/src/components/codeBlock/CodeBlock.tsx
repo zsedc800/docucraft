@@ -93,6 +93,7 @@ export default ({
 					<div contentEditable={false} className="code-block-menu">
 						<div contentEditable={false} className="code-block-menu-content">
 							<LangPicker
+								value={language}
 								onChange={(val) => {
 									const { state, dispatch } = nodeView.view;
 									const language = val?.name.toLowerCase() || 'plaintext';

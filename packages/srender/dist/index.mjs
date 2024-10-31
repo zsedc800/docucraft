@@ -572,7 +572,11 @@ function reconcileChildrenArray(wipFiber, newChildElements, lanes) {
   let lastIndex = 0;
   for (let index = 0; index < elements.length; index++) {
     const prevFiber = newFiber;
-    const element = elements[index];
+    let element = elements[index];
+    if (typeof element === 'string') {
+      // 兼容react纯host组件
+      element = createTextElement(element);
+    }
     const key = element ? getKey(element.props.key, index) : null;
     const oldFiber = map.get(key);
     if (oldFiber && oldFiber.type === element.type) {

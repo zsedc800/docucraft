@@ -68,8 +68,8 @@ export function createElement(
 	if (config && (config.children || config.children === 0))
 		children = children.concat(config.children);
 	const props: IProps = Object.assign({ children: null }, config);
-
 	// if (props.className) props.class = props.className;
+
 	props.children = children
 		.filter((c) => c != undefined && c != null && c !== false)
 		.reduce((pre: any[], cur) => pre.concat(cur), [])
@@ -128,7 +128,7 @@ export function arrify<C = any>(val: C | readonly C[]): C[] {
 	// .reduce((pre, cur) => pre.concat(cur), []);
 }
 
-function createTextElement(value: string): VNode {
+export function createTextElement(value: string): VNode {
 	return createElement(TEXT_ELEMENT, { nodeValue: value });
 }
 
