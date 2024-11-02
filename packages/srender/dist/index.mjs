@@ -1246,11 +1246,10 @@ function beginWork(wipFiber, renderLanes) {
 let flag = false;
 function processForwardRefComponent(fiber, lanes) {
   const {
-    render,
-    ...props
-  } = fiber.pendingProps;
-  let children = [];
-  if (typeof render === 'function') children = render(props, fiber.ref);
+    render
+  } = fiber.type;
+  let children;
+  if (typeof render === 'function') children = render(fiber.pendingProps, fiber.ref);
   reconcileChildrenArray(fiber, children, lanes);
 }
 function processOffscreenComponent(fiber, lanes) {
@@ -1437,7 +1436,7 @@ function performWork(root, workLoop) {
   if (!current) return;
   prepareStack();
   setBatchingUpdates(true);
-  console.log('perform', root.deletedAt);
+  console.log('perform');
   nextUnitOfWork = cloneFiberNode(current, current.pendingProps, {
     alternate: current
   });
@@ -1777,7 +1776,9 @@ const ContextProvider = Symbol.for('srender.ContextProvider');
 const getTag = _ref => {
   let {
     type,
-    $$typeof
+    $$typeof,
+    ref,
+    props
   } = _ref;
   switch ($$typeof) {
     case Fragment:
@@ -1792,6 +1793,13 @@ const getTag = _ref => {
       return FiberTag.Portal;
     case ForwardRef:
       return FiberTag.ForwardRef;
+  }
+  if (props && !props.ref) {
+    console.log(props, ref, 'tt');
+  }
+  // 兼容react element
+  if (typeof type === 'object' && '$$typeof' in type && typeof type.render === 'function') {
+    return FiberTag.ForwardRef;
   }
   if (typeof type === 'string') return type === TEXT_ELEMENT ? FiberTag.HostText : FiberTag.HostComponent;
   if (typeof type === 'function') return isSubclassOf(type, Component) ? FiberTag.ClassComponent : FiberTag.FunctionComponent;
@@ -1837,8 +1845,6 @@ function createElement(type) {
   if (typeof type === 'function' && type.displayType === ContextProvider) node.$$typeof = ContextProvider;
   if (type && type instanceof ExtendedComponent) {
     node.$$typeof = type.type;
-    node.type = node.$$typeof;
-    node.props = Object.assign({}, props, type.props);
   }
   return node;
 }
@@ -1849,14 +1855,12 @@ function createPortal(children, container) {
   });
 }
 function forwardRef(render) {
-  return new ExtendedComponent(ForwardRef, {
-    render
-  });
+  return new ExtendedComponent(ForwardRef, render);
 }
 class ExtendedComponent {
-  constructor(type, props) {
+  constructor(type, render) {
     this.type = type;
-    this.props = props;
+    this.render = render;
   }
 }
 const filter = e => e !== null && !['undefined', 'boolean'].includes(typeof e);
@@ -1984,7 +1988,7 @@ const useDebugValue = () => {};
 const defaultEqualFn = (oldProps, newProps) => shallowEqual(oldProps, newProps);
 function memo(component) {
   let arePropsEqual = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultEqualFn;
-  const fn = typeof component === 'function' ? component : component.props.render;
+  const fn = typeof component === 'function' ? component : component.render;
   const render = (p, ref) => {
     const props = useRef();
     const res = useRef();
@@ -1993,7 +1997,7 @@ function memo(component) {
     props.current = p;
     return res.current;
   };
-  component.props.render = render;
+  component.render = render;
   return typeof component === 'function' ? render : component;
 }
 

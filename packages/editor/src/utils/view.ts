@@ -100,10 +100,7 @@ export class BaseNodeView implements NodeView {
 		return true;
 	}
 	destroy() {
-		console.log('to destroy====');
-		console.log(this.dom.parentNode, 'dom');
-
-		this.dom.remove();
 		this.rootRender.unmount();
+		this.dom.remove();
 	}
 }

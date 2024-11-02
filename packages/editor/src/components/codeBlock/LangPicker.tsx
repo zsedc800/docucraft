@@ -317,6 +317,8 @@ const cache = new Map<string, any>();
 
 const LogoCmp = ({ name }: { name: string }) => {
 	const [logo, setIcon] = useState({ Icon: SvgArticle });
+	console.log(logo, 'xcxx');
+
 	useEffect(() => {
 		const filename = capitalizeFirstLetter(langMap[name] || name);
 		import('@docucraft/icons/logo/' + filename).then(

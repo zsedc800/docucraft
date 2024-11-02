@@ -1,5 +1,6 @@
 import { Lane, Lanes } from '../Lanes';
 import { Component } from '../component';
+import { ExtendedComponent } from '../element';
 import { Task } from '../scheduler';
 import { FiberFlags, FiberTag, Mode, UpdateState } from './enums';
 
@@ -120,7 +121,8 @@ export type ComponentType<P = any> =
 	| ((props: P) => ComponentChild)
 	| (new (props: P, context?: any) => Component<any, any>)
 	| FunctionComponent<P>
-	| ClassComponent<P>;
+	| ClassComponent<P>
+	| ExtendedComponent<any, P>;
 
 export type UpdatePayload<S, P> = S | ((prev: S, props: P) => S) | null;
 
@@ -189,6 +191,10 @@ export interface Fiber {
 	alternate: Fiber | null;
 
 	effects: Fiber[] | null;
+}
+
+export interface ForwardRender<R, P> {
+	(props: P, ref: Ref<R>): ComponentChildren;
 }
 
 export interface RootFiberNode {

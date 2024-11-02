@@ -130,8 +130,7 @@ export function memo<P>(
 	component: FC<P> | ExtendedComponent,
 	arePropsEqual = defaultEqualFn
 ) {
-	const fn =
-		typeof component === 'function' ? component : component.props.render;
+	const fn = typeof component === 'function' ? component : component.render;
 	const render = (p: P, ref: any) => {
 		const props = useRef<P>();
 		const res = useRef<any>();
@@ -141,6 +140,6 @@ export function memo<P>(
 		props.current = p;
 		return res.current;
 	};
-	component.props.render = render;
+	component.render = render;
 	return typeof component === 'function' ? render : component;
 }

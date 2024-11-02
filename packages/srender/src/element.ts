@@ -1,8 +1,10 @@
 import { Component } from './component';
 import {
+	ComponentChild,
 	ComponentChildren,
 	ComponentType,
 	FiberTag,
+	ForwardRender,
 	FunctionComponent,
 	IProps,
 	Ref,
@@ -20,7 +22,7 @@ export const ForwardRef = Symbol.for('srender.ForwardRef');
 export const Portal = Symbol.for('srender.Portal');
 export const ContextProvider = Symbol.for('srender.ContextProvider');
 
-export const getTag = ({ type, $$typeof }: VNode) => {
+export const getTag = ({ type, $$typeof, ref, props }: VNode) => {
 	switch ($$typeof) {
 		case Fragment:
 			return FiberTag.Fragment;
@@ -34,6 +36,19 @@ export const getTag = ({ type, $$typeof }: VNode) => {
 			return FiberTag.Portal;
 		case ForwardRef:
 			return FiberTag.ForwardRef;
+	}
+
+	if (props && !props.ref) {
+		console.log(props, ref, 'tt');
+	}
+
+	// 兼容react element
+	if (
+		typeof type === 'object' &&
+		'$$typeof' in type &&
+		typeof (type as any).render === 'function'
+	) {
+		return FiberTag.ForwardRef;
 	}
 	if (typeof type === 'string')
 		return type === TEXT_ELEMENT ? FiberTag.HostText : FiberTag.HostComponent;
@@ -96,8 +111,6 @@ export function createElement(
 		node.$$typeof = ContextProvider;
 	if (type && type instanceof ExtendedComponent) {
 		node.$$typeof = type.type;
-		node.type = node.$$typeof;
-		node.props = Object.assign({}, props, type.props);
 	}
 
 	return node;
@@ -109,14 +122,14 @@ export function createPortal(
 ) {
 	return createElement(Portal, { children, container });
 }
-export function forwardRef<R, P>(render: (props: P, ref: Ref<R>) => VNode) {
-	return new ExtendedComponent(ForwardRef, { render });
+export function forwardRef<R, P>(render: ForwardRender<R, P>) {
+	return new ExtendedComponent(ForwardRef, render);
 }
 
-export class ExtendedComponent {
+export class ExtendedComponent<R = any, P = any> {
 	constructor(
 		public type: Symbol,
-		public props: Record<any, any>
+		public render: ForwardRender<R, P>
 	) {}
 }
 

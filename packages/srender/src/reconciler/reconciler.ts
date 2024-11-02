@@ -25,6 +25,7 @@ import {
 	reconcileChildrenArray
 } from './utils';
 import { Lanes, PingLane, TransitionLanes, intersectLanes } from '../Lanes';
+import { ExtendedComponent } from '../element';
 
 export function beginWork(wipFiber: Fiber, renderLanes: Lanes) {
 	createWorkInProgress(wipFiber);
@@ -73,11 +74,12 @@ export function beginWork(wipFiber: Fiber, renderLanes: Lanes) {
 let flag = false;
 
 function processForwardRefComponent(fiber: Fiber, lanes: Lanes) {
-	const { render, ...props } = fiber.pendingProps;
+	const { render } = fiber.type as ExtendedComponent;
 
-	let children = [];
+	let children;
 
-	if (typeof render === 'function') children = render(props, fiber.ref);
+	if (typeof render === 'function')
+		children = render(fiber.pendingProps, fiber.ref);
 	reconcileChildrenArray(fiber, children, lanes);
 }
 
