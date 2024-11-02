@@ -1,17 +1,19 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgVbnet = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgVbnet = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		xmlSpace="preserve"
 		width="1em"
 		height="1em"
 		viewBox="0 0 360 360"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path d="M345 123.612h-50V77.834L211.977 0H15v360h280v-53.66h50zM315 276.34H105V153.612h210z" />
 		<path d="m183.024 245.023 26.593-68.16h-13.92l-18.24 51.553-18.433-51.553h-13.919l26.784 68.16zM258.336 243.872q3.983-1.153 7.009-3.36a15.9 15.9 0 0 0 4.752-5.472q1.727-3.264 1.727-7.584 0-6.72-3.408-11.185-3.408-4.464-9.264-6.191 4.799-2.11 7.296-6.48 2.496-4.367 2.496-9.36 0-3.167-1.104-6.287t-3.12-5.568a16.1 16.1 0 0 0-4.897-3.984q-2.88-1.535-6.432-1.536h-36.48v68.16h32.929q4.512-.002 8.496-1.153m-28.176-55.681h18.24q3.168 0 5.328 2.305 2.16 2.304 2.16 6.239 0 4.033-2.353 6.336-2.353 2.305-5.712 2.305H230.16zm0 27.649h20.352q1.727 0 3.168.72a7.85 7.85 0 0 1 2.496 1.968q1.055 1.25 1.68 2.929a10 10 0 0 1 .624 3.504 9 9 0 0 1-.672 3.456 9 9 0 0 1-1.824 2.832 8.1 8.1 0 0 1-2.736 1.872 8.6 8.6 0 0 1-3.407.672H230.16z" />
 	</svg>
 );
-export default SvgVbnet;
+const ForwardRef = forwardRef(SvgVbnet);
+export default ForwardRef;

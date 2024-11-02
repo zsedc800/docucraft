@@ -2,6 +2,7 @@ module.exports = {
 	icon: true,
 	// dimensions: false,
 	typescript: true,
+	ref: true,
 	index: true,
 	svgProps: {
 		// 'data-micon': 'true'

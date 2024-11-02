@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgNuxtjs = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgNuxtjs = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path
@@ -33,4 +34,5 @@ const SvgNuxtjs = (props: SVGProps<SVGSVGElement>) => (
 		</g>
 	</svg>
 );
-export default SvgNuxtjs;
+const ForwardRef = forwardRef(SvgNuxtjs);
+export default ForwardRef;

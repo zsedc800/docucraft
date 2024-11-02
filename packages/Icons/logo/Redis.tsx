@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgRedis = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgRedis = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path
@@ -46,4 +47,5 @@ const SvgRedis = (props: SVGProps<SVGSVGElement>) => (
 		<path fill="#AD2115" d="m71.6 19.8 14.1-5.6v10.1l-1.3.5z" />
 	</svg>
 );
-export default SvgRedis;
+const ForwardRef = forwardRef(SvgRedis);
+export default ForwardRef;

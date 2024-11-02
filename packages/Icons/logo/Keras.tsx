@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgKeras = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgKeras = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path fill="#d00000" d="M38.53 83.27H0V44.74h38.53z" />
@@ -20,4 +21,5 @@ const SvgKeras = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgKeras;
+const ForwardRef = forwardRef(SvgKeras);
+export default ForwardRef;

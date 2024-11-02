@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgNimble = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgNimble = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
 		viewBox="0 0 128 128"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path
@@ -81,4 +82,5 @@ const SvgNimble = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgNimble;
+const ForwardRef = forwardRef(SvgNimble);
+export default ForwardRef;

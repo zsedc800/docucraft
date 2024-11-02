@@ -1,12 +1,17 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgUnfoldLessDouble = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgUnfoldLessDouble = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
 		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path d="m14.46 5.7-2.47 2.46L9.53 5.7a.996.996 0 1 0-1.41 1.41l3.17 3.18c.39.39 1.02.39 1.41 0l3.17-3.18a.996.996 0 1 0-1.41-1.41" />
@@ -14,4 +19,5 @@ const SvgUnfoldLessDouble = (props: SVGProps<SVGSVGElement>) => (
 		<path d="m9.54 18.29 2.47-2.45 2.46 2.46a.996.996 0 1 0 1.41-1.41l-3.17-3.18a.996.996 0 0 0-1.41 0l-3.17 3.17a.996.996 0 1 0 1.41 1.41" />
 	</svg>
 );
-export default SvgUnfoldLessDouble;
+const ForwardRef = forwardRef(SvgUnfoldLessDouble);
+export default ForwardRef;

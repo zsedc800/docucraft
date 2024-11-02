@@ -1,12 +1,17 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgNearbyError = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgNearbyError = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
 		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path d="m11.29 8.28-3.01 3.01a.996.996 0 0 0 0 1.41l3.01 3.01c.39.39 1.02.39 1.41 0l3.01-3.01a.996.996 0 0 0 0-1.41L12.7 8.28a.996.996 0 0 0-1.41 0" />
@@ -14,4 +19,5 @@ const SvgNearbyError = (props: SVGProps<SVGSVGElement>) => (
 		<circle cx={21} cy={21} r={1} />
 	</svg>
 );
-export default SvgNearbyError;
+const ForwardRef = forwardRef(SvgNearbyError);
+export default ForwardRef;

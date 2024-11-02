@@ -1,12 +1,17 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgAdonisjs = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgAdonisjs = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
-		fill="currentColor"
+		fill="none"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
+		ref={ref}
 		{...props}
 	>
 		<path
@@ -17,4 +22,5 @@ const SvgAdonisjs = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgAdonisjs;
+const ForwardRef = forwardRef(SvgAdonisjs);
+export default ForwardRef;

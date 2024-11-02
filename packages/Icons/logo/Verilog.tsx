@@ -1,12 +1,16 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgVerilog = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgVerilog = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
 		viewBox="0 0 32 32"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path
@@ -30,4 +34,5 @@ const SvgVerilog = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgVerilog;
+const ForwardRef = forwardRef(SvgVerilog);
+export default ForwardRef;

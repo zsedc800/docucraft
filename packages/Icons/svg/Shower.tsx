@@ -1,12 +1,14 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgShower = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgShower = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
 		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<circle cx={8} cy={17} r={1} />
@@ -18,4 +20,5 @@ const SvgShower = (props: SVGProps<SVGSVGElement>) => (
 		<circle cx={16} cy={20} r={1} />
 	</svg>
 );
-export default SvgShower;
+const ForwardRef = forwardRef(SvgShower);
+export default ForwardRef;

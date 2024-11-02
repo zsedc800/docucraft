@@ -1,13 +1,14 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgDtd = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgDtd = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		xmlSpace="preserve"
 		width="1em"
 		height="1em"
 		viewBox="0 0 550.801 550.801"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path d="M153.782 412.32c-6.054 0-9.959.543-12.263 1.064v78.4c2.31.533 6.043.533 9.418.533 24.532.185 40.521-13.332 40.521-41.945.177-24.89-14.396-38.052-37.676-38.052M369.995 412.32c-6.043 0-9.951.543-12.261 1.064v78.4c2.31.533 6.038.533 9.413.533 24.537.185 40.526-13.332 40.526-41.945.185-24.89-14.39-38.052-37.678-38.052" />
@@ -15,4 +16,5 @@ const SvgDtd = (props: SVGProps<SVGSVGElement>) => (
 		<path d="m236.962 217.369-72.457-36.273v-.454l72.457-36.266v-24.181l-95.805 50.867v19.613l95.805 50.867zM286.681 195.956l4.403-84.024h-31.738l4.59 84.024zM275.313 248.883c10.781 0 17.764-8.894 17.764-20.759-.2-12.084-7.183-20.762-17.764-20.762-10.589 0-17.972 8.672-17.972 20.762.001 11.857 7.193 20.759 17.972 20.759M313.644 120.195v24.181l74.049 36.266v.454l-74.049 36.273v24.173l95.818-50.182v-20.983zM155.25 274.225h240.3v16.199h-240.3zM155.25 320.572h240.3v16.2h-240.3z" />
 	</svg>
 );
-export default SvgDtd;
+const ForwardRef = forwardRef(SvgDtd);
+export default ForwardRef;

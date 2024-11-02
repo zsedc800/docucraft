@@ -1,12 +1,17 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgPushPin = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgPushPin = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
 		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path
@@ -15,4 +20,5 @@ const SvgPushPin = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgPushPin;
+const ForwardRef = forwardRef(SvgPushPin);
+export default ForwardRef;

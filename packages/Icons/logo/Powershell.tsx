@@ -1,13 +1,17 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgPowershell = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgPowershell = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		xmlSpace="preserve"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<linearGradient
@@ -64,4 +68,5 @@ const SvgPowershell = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgPowershell;
+const ForwardRef = forwardRef(SvgPowershell);
+export default ForwardRef;

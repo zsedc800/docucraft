@@ -1,12 +1,16 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgHardhat = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgHardhat = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<defs>
@@ -79,4 +83,5 @@ const SvgHardhat = (props: SVGProps<SVGSVGElement>) => (
 		<path fill="#0a0a0a" d="m19.467 67.06-4.173-2.567 4.173 5.917v-3.352z" />
 	</svg>
 );
-export default SvgHardhat;
+const ForwardRef = forwardRef(SvgHardhat);
+export default ForwardRef;

@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgGroovy = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgGroovy = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path d="M103.555 95.851 64 80.52 24.446 95.847l15.618-24.436L0 56.447l49.208.23L63.999 32.1l14.794 24.578L128 56.453l-40.065 14.96z" />
@@ -503,4 +504,5 @@ const SvgGroovy = (props: SVGProps<SVGSVGElement>) => (
 		</g>
 	</svg>
 );
-export default SvgGroovy;
+const ForwardRef = forwardRef(SvgGroovy);
+export default ForwardRef;

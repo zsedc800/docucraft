@@ -1,12 +1,16 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgDropwizard = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgDropwizard = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<defs>
@@ -71,4 +75,5 @@ const SvgDropwizard = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgDropwizard;
+const ForwardRef = forwardRef(SvgDropwizard);
+export default ForwardRef;

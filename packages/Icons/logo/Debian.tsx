@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgDebian = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgDebian = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path
@@ -17,4 +18,5 @@ const SvgDebian = (props: SVGProps<SVGSVGElement>) => (
 		<path fill="#A80030" d="m74.827 98.056-3.313 3.31-3.31-3.31 3.31-3.31z" />
 	</svg>
 );
-export default SvgDebian;
+const ForwardRef = forwardRef(SvgDebian);
+export default ForwardRef;

@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgCanva = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgCanva = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<g fill="#00c4cc">
@@ -15,4 +16,5 @@ const SvgCanva = (props: SVGProps<SVGSVGElement>) => (
 		</g>
 	</svg>
 );
-export default SvgCanva;
+const ForwardRef = forwardRef(SvgCanva);
+export default ForwardRef;

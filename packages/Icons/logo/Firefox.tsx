@@ -1,13 +1,17 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgFirefox = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgFirefox = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		xmlnsXlink="http://www.w3.org/1999/xlink"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<ellipse cx={63.861} cy={50.32} fill="#110070" rx={48.925} ry={48.956} />
@@ -1068,4 +1072,5 @@ const SvgFirefox = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgFirefox;
+const ForwardRef = forwardRef(SvgFirefox);
+export default ForwardRef;

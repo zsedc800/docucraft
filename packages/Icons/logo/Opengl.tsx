@@ -1,13 +1,14 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgOpengl = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgOpengl = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		fillRule="evenodd"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path
@@ -28,4 +29,5 @@ const SvgOpengl = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgOpengl;
+const ForwardRef = forwardRef(SvgOpengl);
+export default ForwardRef;

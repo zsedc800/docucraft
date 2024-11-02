@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgMeteor = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgMeteor = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path d="M10.3 67.8C8.7 65.2 7.1 62 5.5 60H1v19h4V66c1 .8 1.2 1.8 1.8 2.6.6.9 1.2 1.8 1.8 2.6s.9 1.7 1.5 2.6c1.7-2.7 2.9-5.2 4.9-8V79h5V60h-4.8c-1.6 2-3.2 5.2-4.9 7.8M123 71.9c.6-.4 1.2-.9 1.7-1.3 1.4-.9 2-2.4 2.2-4 .1-.7 0-1.5 0-2.2l-.1-.7c-.2-.8-.6-1.5-1.1-2.2-.5-.8-1.3-1-1.9-1.5-1.1-.3-2.2-.7-3.4-.7-2.7.1-5.6 0-8.4 0h-.9v19.6h5v-6h2.7c1.3 2 2.7 4 3.9 6h4.7c-1.4-1.9-3-4.8-4.4-7m-.6-5c-.4.7-.9 1.2-1.8 1.3-.6.1-.9.2-1.5.2h-3.2v-5.5h3.9c.5 0 .9.1 1.3.3.7.3 1.2.9 1.5 1.6.5.8.4 1.2-.2 2.1M25 79h14v-4H29v-4.4c0-.1.1.4.2.4H38v-3h-9v-4h10v-4H25zm43.9-4.7c.1-1.3.1-2.5.1-3.7 0-.1-.1.4 0 .4h9v-3h-9v-4h10v-4H65v19h14v-4.7zM44 63.1h5.7s.2 0 .2.1v14.6h4V63.9h5v-4h-15c.1 1.1.1 2 .1 3.2" />
@@ -16,4 +17,5 @@ const SvgMeteor = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgMeteor;
+const ForwardRef = forwardRef(SvgMeteor);
+export default ForwardRef;

@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgSchema = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgSchema = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
 		viewBox="0 0 16 16"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<g fill="none" fillRule="evenodd">
@@ -29,4 +30,5 @@ const SvgSchema = (props: SVGProps<SVGSVGElement>) => (
 		</g>
 	</svg>
 );
-export default SvgSchema;
+const ForwardRef = forwardRef(SvgSchema);
+export default ForwardRef;

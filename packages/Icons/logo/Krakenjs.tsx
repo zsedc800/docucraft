@@ -1,12 +1,16 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgKrakenjs = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgKrakenjs = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path
@@ -22,4 +26,5 @@ const SvgKrakenjs = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgKrakenjs;
+const ForwardRef = forwardRef(SvgKrakenjs);
+export default ForwardRef;

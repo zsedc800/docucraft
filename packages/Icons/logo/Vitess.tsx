@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgVitess = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgVitess = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 256 256"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path
@@ -52,4 +53,5 @@ const SvgVitess = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgVitess;
+const ForwardRef = forwardRef(SvgVitess);
+export default ForwardRef;

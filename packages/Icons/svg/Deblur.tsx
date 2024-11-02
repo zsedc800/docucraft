@@ -1,12 +1,14 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgDeblur = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgDeblur = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
 		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path d="M12 3v18a9 9 0 0 0 0-18" />
@@ -24,4 +26,5 @@ const SvgDeblur = (props: SVGProps<SVGSVGElement>) => (
 		<circle cx={10} cy={18} r={1} />
 	</svg>
 );
-export default SvgDeblur;
+const ForwardRef = forwardRef(SvgDeblur);
+export default ForwardRef;

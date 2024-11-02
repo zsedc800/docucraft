@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgNotion = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgNotion = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path
@@ -21,4 +22,5 @@ const SvgNotion = (props: SVGProps<SVGSVGElement>) => (
 		<path d="m78.113 68.14 8.907 13.567v-30.18l-4.707-.52c-.95-.054-1.114-.491-.989-1.284.258-1.645 1.54-3.059 3.23-3.18l15.551-.945c.594 2.78-.058 3.82-2.66 4.343-2.574.516-2.574.516-2.574 3.121l.031 44.5c.004 1.012-.304 1.551-1.207 1.844l-5.203 1.656c-2.828.606-5.344-.14-7.05-2.59a367 367 0 0 1-7.004-10.46l-15.47-24.153c-.109-.172-.234-.332-.5-.699v32.563l6.731 1.535c-.281 2.09-1.406 3.37-3.496 3.715-1.594.261-3.23.3-4.848.398l-12.308.707c-.543-1.738.148-3.098 1.762-3.574l3.64-1.027V54.184l-5.344-.457c-.687-2.418.813-4.75 3.293-4.977 3.356-.313 6.727-.504 10.09-.738 1.828-.125 3.664-.172 5.485-.371.828-.09 1.27.136 1.718.82zm0 0" />
 	</svg>
 );
-export default SvgNotion;
+const ForwardRef = forwardRef(SvgNotion);
+export default ForwardRef;

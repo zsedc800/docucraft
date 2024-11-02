@@ -1,12 +1,16 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgSqldeveloper = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgSqldeveloper = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path
@@ -32,4 +36,5 @@ const SvgSqldeveloper = (props: SVGProps<SVGSVGElement>) => (
 		<path fill="#fff" d="m88.063 105.906 24.027-13.87-24.028-13.872Zm0 0" />
 	</svg>
 );
-export default SvgSqldeveloper;
+const ForwardRef = forwardRef(SvgSqldeveloper);
+export default ForwardRef;

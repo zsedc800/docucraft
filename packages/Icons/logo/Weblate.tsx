@@ -1,12 +1,16 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgWeblate = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgWeblate = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<g transform="translate(50 76)">
@@ -66,4 +70,5 @@ const SvgWeblate = (props: SVGProps<SVGSVGElement>) => (
 		<path d="M51.2 59.8h2.1l1 5.7.3 1.8.3 1.8h.1c.1-.6.3-1.2.4-1.8s.2-1.2.4-1.8l1.4-5.7H59l1.4 5.7c.1.6.3 1.2.4 1.8s.3 1.2.4 1.8H61l.3-1.8.3-1.8 1-5.7h1.9l-2.2 11.3h-2.5l-1.4-6c-.1-.4-.2-.9-.3-1.3s-.2-.9-.2-1.3h-.1c-.1.4-.2.9-.3 1.3s-.2.9-.3 1.3l-1.4 6h-2.4zm16.3 0h6.8v1.7h-4.8v2.9h4.1v1.7h-4.1v3.3h5v1.7h-7zm10.6 0h3.6c.6 0 1.1 0 1.6.1s.9.3 1.3.5.6.5.8.9.3.8.3 1.3-.1 1-.4 1.5-.7.8-1.2 1v.1c.6.1 1.1.4 1.6.9q.6.6.6 1.8 0 .9-.3 1.5c-.2.4-.5.8-.9 1-.4.3-.8.5-1.4.6s-1.1.2-1.7.2h-3.9zm3.5 4.7c.8 0 1.4-.1 1.7-.4.4-.3.5-.7.5-1.2 0-.6-.2-.9-.6-1.2-.4-.2-.9-.3-1.7-.3H80v3.1zm.2 5.1c.8 0 1.5-.2 1.9-.5.5-.3.7-.8.7-1.4s-.2-1-.7-1.3c-.4-.3-1.1-.4-1.9-.4h-1.7v3.6zm8-9.8h2v9.6h4.7v1.7h-6.7zM105 68h-3.8l-.9 3.1h-2l3.7-11.3h2.4l3.7 11.3H106zm-.4-1.5-.4-1.4c-.2-.6-.4-1.2-.5-1.9-.2-.6-.3-1.3-.5-1.9h-.1c-.2.6-.3 1.3-.5 1.9s-.3 1.2-.5 1.8l-.4 1.4h2.9zm7.3-5h-3.3v-1.7h8.6v1.7h-3.3v9.6h-2zm8.5-1.7h6.8v1.7h-4.8v2.9h4.1v1.7h-4.1v3.3h5v1.7h-7z" />
 	</svg>
 );
-export default SvgWeblate;
+const ForwardRef = forwardRef(SvgWeblate);
+export default ForwardRef;

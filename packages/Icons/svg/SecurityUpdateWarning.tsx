@@ -1,12 +1,17 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgSecurityUpdateWarning = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgSecurityUpdateWarning = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
 		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<circle cx={12} cy={16} r={1} />
@@ -14,4 +19,5 @@ const SvgSecurityUpdateWarning = (props: SVGProps<SVGSVGElement>) => (
 		<path d="M17 1H7c-1.1 0-1.99.9-1.99 2v18c0 1.1.89 2 1.99 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-2-2-2m0 17H7V6h10z" />
 	</svg>
 );
-export default SvgSecurityUpdateWarning;
+const ForwardRef = forwardRef(SvgSecurityUpdateWarning);
+export default ForwardRef;

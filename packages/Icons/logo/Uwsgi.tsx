@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgUwsgi = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgUwsgi = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<rect fill="none" />
@@ -30,4 +31,5 @@ const SvgUwsgi = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgUwsgi;
+const ForwardRef = forwardRef(SvgUwsgi);
+export default ForwardRef;

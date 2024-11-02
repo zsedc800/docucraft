@@ -99,6 +99,7 @@ export { default as AddToDrive } from './AddToDrive';
 export { default as AddToHomeScreen } from './AddToHomeScreen';
 export { default as AddToPhotos } from './AddToPhotos';
 export { default as AddToQueue } from './AddToQueue';
+export { default as Addchart } from './AddChart';
 export { default as AdfScanner } from './AdfScanner';
 export { default as Adjust } from './Adjust';
 export { default as AdminPanelSettings } from './AdminPanelSettings';

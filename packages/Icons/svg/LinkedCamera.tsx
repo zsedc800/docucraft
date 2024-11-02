@@ -1,12 +1,17 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgLinkedCamera = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgLinkedCamera = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
 		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<circle cx={12} cy={13} r={2.5} />
@@ -14,4 +19,5 @@ const SvgLinkedCamera = (props: SVGProps<SVGSVGElement>) => (
 		<path d="M17 8c0-1.1-.9-2-2-2V4c0-.55-.45-1-1-1H9.88c-.56 0-1.1.24-1.48.65L7.17 5H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2v-9c0-1.1-.9-2-2-2zm-5 9.5c-2.48 0-4.5-2.02-4.5-4.5S9.52 8.5 12 8.5s4.5 2.02 4.5 4.5-2.02 4.5-4.5 4.5" />
 	</svg>
 );
-export default SvgLinkedCamera;
+const ForwardRef = forwardRef(SvgLinkedCamera);
+export default ForwardRef;

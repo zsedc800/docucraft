@@ -1,6 +1,7 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgPug = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgPug = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		xmlSpace="preserve"
@@ -10,7 +11,7 @@ const SvgPug = (props: SVGProps<SVGSVGElement>) => (
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<style>
@@ -130,4 +131,5 @@ const SvgPug = (props: SVGProps<SVGSVGElement>) => (
 		<circle cx={80.1} cy={70.5} r={0.8} className="pug_svg__st8" />
 	</svg>
 );
-export default SvgPug;
+const ForwardRef = forwardRef(SvgPug);
+export default ForwardRef;

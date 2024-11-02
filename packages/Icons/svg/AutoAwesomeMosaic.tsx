@@ -1,15 +1,21 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgAutoAwesomeMosaic = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgAutoAwesomeMosaic = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
 		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path d="M3 5v14a2 2 0 0 0 2 2h6V3H5a2 2 0 0 0-2 2m16-2h-6v8h8V5c0-1.1-.9-2-2-2m-6 18h6c1.1 0 2-.9 2-2v-6h-8z" />
 	</svg>
 );
-export default SvgAutoAwesomeMosaic;
+const ForwardRef = forwardRef(SvgAutoAwesomeMosaic);
+export default ForwardRef;

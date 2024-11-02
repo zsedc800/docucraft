@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgDrupal = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgDrupal = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path
@@ -43,4 +44,5 @@ const SvgDrupal = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgDrupal;
+const ForwardRef = forwardRef(SvgDrupal);
+export default ForwardRef;

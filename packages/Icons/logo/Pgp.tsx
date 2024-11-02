@@ -1,11 +1,12 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgPgp = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgPgp = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<desc>
@@ -14,4 +15,5 @@ const SvgPgp = (props: SVGProps<SVGSVGElement>) => (
 		<path d="M29.094 11.234c-3.184 0-5.719 2.567-5.719 5.75v94.032c0 3.183 2.535 5.75 5.719 5.75h69.812c3.184 0 5.719-2.567 5.719-5.75V40.359H83.594c-4.306 0-8.063-3.14-8.063-7.312V11.234zm50.437 0v21.813c0 1.714 1.632 3.312 4.063 3.312h21.031zM64 45.641c8.463 0 15.375 6.912 15.375 15.375v9.125a7.47 7.47 0 0 1 5.844 7.312v17.531c0 4.155-3.314 7.5-7.469 7.5h-27.5a7.484 7.484 0 0 1-7.5-7.5v-17.53a7.47 7.47 0 0 1 5.875-7.313v-9.125c0-8.463 6.912-15.375 15.375-15.375m0 5.125a10.21 10.21 0 0 0-10.25 10.25v8.968h20.5v-8.968A10.21 10.21 0 0 0 64 50.766" />
 	</svg>
 );
-export default SvgPgp;
+const ForwardRef = forwardRef(SvgPgp);
+export default ForwardRef;

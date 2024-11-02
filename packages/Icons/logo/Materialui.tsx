@@ -1,12 +1,16 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgMaterialui = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgMaterialui = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path fill="#1FA6CA" d="M.2 68.6V13.4L48 41v18.4L16.1 41v36.8z" />
@@ -21,4 +25,5 @@ const SvgMaterialui = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgMaterialui;
+const ForwardRef = forwardRef(SvgMaterialui);
+export default ForwardRef;

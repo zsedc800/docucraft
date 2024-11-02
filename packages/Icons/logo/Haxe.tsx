@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgHaxe = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgHaxe = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path fill="#F6B214" d="m15.7 64 48.4-48.4L0 0z" />
@@ -21,4 +22,5 @@ const SvgHaxe = (props: SVGProps<SVGSVGElement>) => (
 		<path fill="#EA8220" d="M128 128H96l-32-15.7z" />
 	</svg>
 );
-export default SvgHaxe;
+const ForwardRef = forwardRef(SvgHaxe);
+export default ForwardRef;

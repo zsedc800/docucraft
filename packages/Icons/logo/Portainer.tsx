@@ -1,12 +1,17 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgPortainer = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgPortainer = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		fill="#3BBCED"
 		viewBox="0 0 128 128"
+		ref={ref}
 		{...props}
 	>
 		<path d="M12.07 51.78h-.67v3.45h.67zm2.86 0h-.67v3.45h.67zm3.9-6.57-.68-1.18L6.78 50.6l.68 1.18z" />
@@ -16,4 +21,5 @@ const SvgPortainer = (props: SVGProps<SVGSVGElement>) => (
 		<path d="M7.63 74.1a4.65 4.65 0 0 1 4.52-3.58c1.41 0 2.68.63 3.54 1.63.75-.52 1.65-.81 2.63-.81 2.56 0 4.64 2.08 4.64 4.64 0 .53-.08 1.03-.25 1.51.56.77.91 1.73.91 2.76 0 2.56-2.08 4.64-4.64 4.64-1.13 0-2.16-.4-2.96-1.07a4.67 4.67 0 0 1-3.79 1.96 4.67 4.67 0 0 1-4.14-2.53c-.31.07-.63.1-.96.1-2.56 0-4.66-2.08-4.66-4.64s2.08-4.64 4.66-4.64c.16 0 .33 0 .5.03" />
 	</svg>
 );
-export default SvgPortainer;
+const ForwardRef = forwardRef(SvgPortainer);
+export default ForwardRef;

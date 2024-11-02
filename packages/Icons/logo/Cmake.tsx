@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgCmake = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgCmake = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path fill="#064F8C" d="m.1 80.1 18.4-15.6-1.6-17.7z" />
@@ -19,4 +20,5 @@ const SvgCmake = (props: SVGProps<SVGSVGElement>) => (
 		<path fill="#CDCDCE" d="m11.3 71.6 8.1 3.2-.8-9.4z" />
 	</svg>
 );
-export default SvgCmake;
+const ForwardRef = forwardRef(SvgCmake);
+export default ForwardRef;

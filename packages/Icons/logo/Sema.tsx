@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgSema = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgSema = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
 		viewBox="0 0 128 128"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<defs>
@@ -36,4 +37,5 @@ const SvgSema = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgSema;
+const ForwardRef = forwardRef(SvgSema);
+export default ForwardRef;

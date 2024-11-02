@@ -1,13 +1,17 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgComposer = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgComposer = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		data-name="composer-original"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<g data-name="layer101">
@@ -58,4 +62,5 @@ const SvgComposer = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgComposer;
+const ForwardRef = forwardRef(SvgComposer);
+export default ForwardRef;

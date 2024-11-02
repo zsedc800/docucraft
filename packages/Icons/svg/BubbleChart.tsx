@@ -1,12 +1,17 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgBubbleChart = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgBubbleChart = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
 		viewBox="0 0 24 24"
 		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<circle cx={7.2} cy={14.4} r={3.2} />
@@ -14,4 +19,5 @@ const SvgBubbleChart = (props: SVGProps<SVGSVGElement>) => (
 		<circle cx={15.2} cy={8.8} r={4.8} />
 	</svg>
 );
-export default SvgBubbleChart;
+const ForwardRef = forwardRef(SvgBubbleChart);
+export default ForwardRef;

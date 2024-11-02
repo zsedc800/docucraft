@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgGit = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgGit = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path
@@ -20,4 +21,5 @@ const SvgGit = (props: SVGProps<SVGSVGElement>) => (
 		<path fill="none" d="M1.58 37.928h124.84v52.143H1.58z" />
 	</svg>
 );
-export default SvgGit;
+const ForwardRef = forwardRef(SvgGit);
+export default ForwardRef;

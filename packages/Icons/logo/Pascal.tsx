@@ -1,12 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgPascal = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgPascal = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
 		viewBox="0 0 32 32"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<g fill="none">
@@ -18,4 +19,5 @@ const SvgPascal = (props: SVGProps<SVGSVGElement>) => (
 		</g>
 	</svg>
 );
-export default SvgPascal;
+const ForwardRef = forwardRef(SvgPascal);
+export default ForwardRef;

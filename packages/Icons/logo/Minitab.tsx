@@ -1,12 +1,16 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgMinitab = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgMinitab = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path fill="#8DC63F" d="M0 0h128v128H0z" />
@@ -36,4 +40,5 @@ const SvgMinitab = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgMinitab;
+const ForwardRef = forwardRef(SvgMinitab);
+export default ForwardRef;

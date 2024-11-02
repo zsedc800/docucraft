@@ -1,12 +1,16 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgPhalcon = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgPhalcon = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path fill="#22A882" d="M36.5 56 39 45.2 30.5 62z" />
@@ -74,4 +78,5 @@ const SvgPhalcon = (props: SVGProps<SVGSVGElement>) => (
 		<path fill="#178D6D" d="m90 111.3-.1 8.2-2.4 1.6 1.3-6.6z" />
 	</svg>
 );
-export default SvgPhalcon;
+const ForwardRef = forwardRef(SvgPhalcon);
+export default ForwardRef;

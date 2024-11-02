@@ -1,12 +1,16 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgSubversion = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgSubversion = (
+	props: SVGProps<SVGSVGElement>,
+	ref: Ref<SVGSVGElement>
+) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		viewBox="0 0 128 128"
 		width="1em"
 		height="1em"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path fill="#fff" d="M0 55.795h128v16.41H0Zm0 0" />
@@ -24,4 +28,5 @@ const SvgSubversion = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgSubversion;
+const ForwardRef = forwardRef(SvgSubversion);
+export default ForwardRef;

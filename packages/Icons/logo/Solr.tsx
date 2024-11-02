@@ -1,13 +1,14 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgSolr = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgSolr = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
 		preserveAspectRatio="xMidYMid"
 		viewBox="0 -63 256 256"
-		fill="currentColor"
+		ref={ref}
 		{...props}
 	>
 		<path
@@ -20,4 +21,5 @@ const SvgSolr = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgSolr;
+const ForwardRef = forwardRef(SvgSolr);
+export default ForwardRef;

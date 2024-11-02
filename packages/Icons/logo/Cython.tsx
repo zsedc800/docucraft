@@ -1,11 +1,13 @@
 import * as React from 'react';
 import type { SVGProps } from 'react';
-const SvgCython = (props: SVGProps<SVGSVGElement>) => (
+import { Ref, forwardRef } from 'react';
+const SvgCython = (props: SVGProps<SVGSVGElement>, ref: Ref<SVGSVGElement>) => (
 	<svg
 		xmlns="http://www.w3.org/2000/svg"
 		width="1em"
 		height="1em"
 		viewBox="0 0 32 32"
+		ref={ref}
 		{...props}
 	>
 		<defs>
@@ -73,4 +75,5 @@ const SvgCython = (props: SVGProps<SVGSVGElement>) => (
 		/>
 	</svg>
 );
-export default SvgCython;
+const ForwardRef = forwardRef(SvgCython);
+export default ForwardRef;
