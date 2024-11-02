@@ -7,7 +7,8 @@ import {
 	Fiber,
 	RootFiberNode,
 	Mode,
-	RootRender
+	RootRender,
+	FiberFlags
 } from '../interface';
 import { commitWork } from './commit';
 import { beginWork } from './reconciler';
@@ -27,6 +28,7 @@ import {
 	setBatchingUpdates
 } from './update';
 import { resetContext } from '../context';
+import { nextTick } from '../utils';
 let nextUnitOfWork: Fiber | null | undefined = null;
 export let rootFiberNode: RootFiberNode | null = null;
 export let workInProgressRoot: RootFiberNode | null = null;
@@ -58,7 +60,18 @@ export function createRoot(): RootRender {
 	return {
 		render: (children: ComponentChildren, dom?: HTMLElement) =>
 			renderOnRootFiber(children, dom, rootFiberNode),
-		unmount() {}
+		unmount() {
+			const { current } = rootFiberNode;
+			rootFiberNode.deletedAt = Date.now();
+			if (current) {
+				let child = current.child;
+				while (child) {
+					child.flags |= FiberFlags.Deletion;
+					commitWork(child);
+					child = child.sibling;
+				}
+			}
+		}
 	};
 }
 
@@ -115,6 +128,7 @@ export function scheduleUpdateOnFiber(fiber: Fiber) {
 }
 
 export function ensureRootIsScheduled(root: RootFiberNode) {
+	if (root.deletedAt) return;
 	const lanes = getNextLanes(root);
 	workInProgressRootRenderLanes = lanes;
 	root.pendingLanes &= ~lanes;
@@ -169,7 +183,7 @@ function performWork(
 	if (!current) return;
 	prepareStack();
 	setBatchingUpdates(true);
-	console.log('perform');
+	console.log('perform', root.deletedAt);
 
 	nextUnitOfWork = cloneFiberNode(current, current.pendingProps, {
 		alternate: current
@@ -255,6 +269,5 @@ function commitAllWork(fiber: Fiber) {
 
 	effects.forEach(commitWork);
 	setBatchingUpdates(false);
-
-	ensureRootIsScheduled(root);
+	nextTick(() => ensureRootIsScheduled(root));
 }

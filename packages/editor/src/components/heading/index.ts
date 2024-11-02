@@ -12,12 +12,10 @@ export class HeadingView extends BaseNodeView {
 	node: Node;
 	id: string;
 	outlineTree?: OutlineTree;
-	getPos: () => number | undefined;
 	constructor(...args: Parameters<NodeViewConstructor>) {
 		const [node, view, getPos] = args;
-		super(node, view);
+		super(node, view, getPos);
 		this.node = node;
-		this.getPos = getPos;
 		assignUniqueId(this.node);
 		const { id } = node.attrs;
 		this.id = id;

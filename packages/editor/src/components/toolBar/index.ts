@@ -14,6 +14,7 @@ import {
 } from './commands';
 import { FloatBar } from './floatBar';
 import { Tooltip } from '../tooltip';
+import './style.scss';
 
 export interface ToolBarSpec {
 	groups: MenuGroupSpec[];

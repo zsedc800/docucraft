@@ -10,6 +10,7 @@ import { codeBlock } from './components/codeBlock';
 import { taskItem, taskList } from './components/taskList';
 import { tableNodes } from './components/tables';
 import { mathNodeSpec } from './components/katex';
+import { blockTileSpec } from './components/blockTile';
 
 function createNodeSpec(config: NodeSpec): NodeSpec {
 	config.attrs = { ...config.attrs, hidden: { default: false } };
@@ -43,14 +44,16 @@ const nodes = {
 		group: 'inline'
 	},
 
-	math: createNodeSpec(mathNodeSpec),
-
 	// 文档段落
 	paragraph: createNodeSpec({
 		// 段落内容规定必须是 inline 类型的节点（inline 与 HTML 中 inline 概念差不多）, `*` 号代表可以有 0 个或多个（规则类似正则）
 		content: 'inline*',
 		// 分组：当前节点所在的分组为 block，意味着它是个 block 节点
 		group: 'block',
+
+		attrs: {
+			placeholder: { default: '输入 / 唤起命令' }
+		},
 		// 渲染为 html 时候，使用 p 标签渲染，第二个参数 0 念做 “洞”，类似 vue 中 slot 插槽的概念，
 		// 证明它有子节点，以后子节点就填充在 p 标签中
 		toDOM: () => {
@@ -63,6 +66,8 @@ const nodes = {
 			}
 		]
 	}),
+	blockTile: createNodeSpec(blockTileSpec),
+	math: createNodeSpec(mathNodeSpec),
 	codeBlock: createNodeSpec(codeBlock),
 	blockQuote: createNodeSpec({
 		content: 'paragraph block*',
@@ -114,35 +119,7 @@ const nodes = {
 			{ tag: 'h6', attrs: { level: 6 } }
 		]
 	}),
-	// listSymbol: {
-	// 	group: 'inline',
-	// 	inline: true,
-	// 	attrs: {
-	// 		level: { default: 1 },
-	// 		type: { default: 0 }
-	// 	},
-	// 	toDOM({ attrs }) {
-	// 		return [
-	// 			'span',
-	// 			{
-	// 				class: 'list-symbol',
-	// 				'data-level': attrs.level,
-	// 				'data-type': attrs.type
-	// 			}
-	// 		];
-	// 	},
-	// 	parseDOM: [
-	// 		{
-	// 			tag: 'span[class="list-symbol"]',
-	// 			getAttrs(dom) {
-	// 				return {
-	// 					level: dom.getAttribute('data-level'),
-	// 					type: dom.getAttribute('data-type')
-	// 				};
-	// 			}
-	// 		}
-	// 	]
-	// },
+
 	ordered_list: createNodeSpec({
 		content: 'list_item+',
 		group: 'block',
@@ -174,7 +151,7 @@ const nodes = {
 		}
 	}),
 	list_item: createNodeSpec({
-		content: 'paragraph block*',
+		content: 'block*',
 		parseDOM: [{ tag: 'li' }],
 		toDOM() {
 			return ['li', 0];

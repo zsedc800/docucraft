@@ -41,8 +41,10 @@ declare global {
 						: never;
 			  }[keyof IntrinsicElements]
 			| ComponentType<P>;
-		export interface Element extends VNode<any>, ReactElement {}
+		// export interface Element extends VNode<any>, ReactElement {}
 		export type ElementClass = Component<any, any> | FunctionComponent<any>;
+
+		export interface Element extends VNode {}
 
 		export interface ElementAttributesProperty {
 			props: any;
@@ -2240,7 +2242,7 @@ declare global {
 
 		type AriaRole = WAIAriaRole | DPubAriaRole;
 
-		export interface HTMLAttributes<RefType extends EventTarget = EventTarget>
+		export interface HTMLAttributes<RefType extends EventTarget = Element>
 			extends ClassAttributes<RefType>,
 				DOMAttributes<RefType>,
 				AriaAttributes {

@@ -10,7 +10,8 @@ import {
 	isValidElement,
 	cloneElement,
 	createPortal,
-	forwardRef
+	forwardRef,
+	ExtendedComponent
 } from './element';
 import { render, createRoot } from './reconciler';
 import { Component } from './component';
@@ -64,7 +65,8 @@ export default {
 	createContext,
 	Offscreen,
 	Suspense,
-	lazy
+	lazy,
+	ExtendedComponent
 };
 
 export {
@@ -96,5 +98,6 @@ export {
 	Offscreen,
 	Suspense,
 	lazy,
-	wrapPromise
+	wrapPromise,
+	ExtendedComponent
 };

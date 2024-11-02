@@ -158,3 +158,7 @@ export function classnames(...args: (string | Record<string, boolean>)[]) {
 		})
 		.join(' ');
 }
+
+export function isNotEmpty(val: any) {
+	return !!val || val === 0;
+}

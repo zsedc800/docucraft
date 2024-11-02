@@ -70,7 +70,10 @@ export interface FunctionComponent<P = {}> {
 	(
 		props: P,
 		context?: any
-	): ComponentChildren | JSX.Element | ((props: any) => JSX.Element);
+	):
+		| ComponentChildren
+		| JSX.Element
+		| ((props: any) => ComponentChildren | JSX.Element);
 	displayType?: Symbol;
 	displayName?: string;
 	defaultProps?: P;
@@ -198,6 +201,7 @@ export interface RootFiberNode {
 	finishedWork: Fiber | null;
 	callbackNode: Task | null;
 	callbackId: Lanes;
+	deletedAt?: number;
 }
 
 export interface RootRender {

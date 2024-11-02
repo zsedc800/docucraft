@@ -116,3 +116,11 @@ export function shallowEqual(obj1: any, obj2: any): boolean {
 
 	return true;
 }
+
+export function nextTick(fn: () => void) {
+	if (requestAnimationFrame) {
+		requestAnimationFrame(fn);
+	} else {
+		setTimeout(fn, 17);
+	}
+}

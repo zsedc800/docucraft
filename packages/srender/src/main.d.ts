@@ -9,7 +9,7 @@ export * from './index';
 
 export const Suspense: ExoticComponent<SuspenseProps>;
 
-export const forwardRef: <R, P>() => ForwardRefExoticComponent<R & P>;
+export const forwardRef: <R, P>(r: R) => ForwardRefExoticComponent<R & P>;
 
 // export = Srender;
 // types/index.d.ts

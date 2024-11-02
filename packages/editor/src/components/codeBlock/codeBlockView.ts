@@ -9,19 +9,16 @@ import { ViewUpdate, lineNumbers } from '@codemirror/view';
 import extensions, { lineNumberCompartment } from './extensions';
 import { detectLanguageFromCode, setLanguage } from './extensions/loadLanguage';
 import { isEditorEmpty, isFullSelection } from './utils';
-type GetPos = () => number | undefined;
 export class CodeBlockView extends BaseNodeView {
 	name = 'blockCode';
-	getPos: GetPos;
 	unmount?: () => void;
 	cmv: EditorView;
 	codeContainer?: HTMLElement;
 	constructor(...args: Parameters<NodeViewConstructor>) {
 		const [node, view, getPos] = args;
-		super(node, view);
-		this.getPos = getPos;
+		super(node, view, getPos);
 		this.component = CodeBlock;
-		this.render({ nodeView: this, ...node.attrs });
+		this.render();
 
 		const state = EditorState.create({
 			extensions: extensions.concat([
@@ -75,25 +72,11 @@ export class CodeBlockView extends BaseNodeView {
 		}
 	}
 
-	ignoreMutation(mutation: MutationRecord): boolean {
+	ignoreMutation(mutation: MutationRecord) {
 		return true;
 	}
 
 	stopEvent(e: Event) {
-		// return e.target === this.codeContainer || this.cmv.hasFocus;
-		return true;
-	}
-
-	update(node: Node) {
-		const { type, attrs } = node;
-		const { attrs: props, type: t } = this.node;
-		if (type !== t) return false;
-
-		this.node = node;
-		if (!shallowEqual(props, attrs)) {
-			this.render({ nodeView: this, ...attrs });
-			setTimeout(() => this.cmv.focus(), 17);
-		}
 		return true;
 	}
 

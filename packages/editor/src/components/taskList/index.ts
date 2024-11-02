@@ -12,7 +12,7 @@ import createElement, { updateElement } from '../../createElement';
 import { BaseNodeView } from '../../utils/view';
 
 export const taskItem: NodeSpec = {
-	content: 'paragraph block*',
+	content: 'paragraph*',
 	group: 'block',
 	attrs: {
 		checked: { default: false }
@@ -69,10 +69,9 @@ export const createTaskList: Command = (state, dispatch) => {
 };
 
 export class TaskItemView extends BaseNodeView {
-	contentDOM?: HTMLElement | null | undefined;
 	constructor(...args: Parameters<NodeViewConstructor>) {
 		const [node, view, getPos] = args;
-		super(node, view);
+		super(node, view, getPos);
 		this.contentDOM = createElement('div', { class: 'task-item-content' });
 		this.view = view;
 		this.dom = createElement(

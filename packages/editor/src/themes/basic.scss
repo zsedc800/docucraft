@@ -61,3 +61,21 @@ pre {
 	top: 0;
 	right: 100%;
 }
+
+[placeholder] {
+	&:empty {
+		&::after {
+			content: attr(placeholder);
+			pointer-events: none;
+		}
+	}
+}
+
+.iconButton {
+	display: inline-block;
+	cursor: pointer;
+	border-radius: 5px;
+	&:hover {
+		background-color: #ededed;
+	}
+}

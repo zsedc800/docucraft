@@ -178,7 +178,7 @@ function commitDeletion(fiber: Fiber) {
 		}
 		node = traverseFiber(
 			node,
-			(f) => false,
+			() => false,
 			(f) => f === fiber
 		);
 	}

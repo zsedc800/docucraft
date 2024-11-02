@@ -15,6 +15,11 @@ import { addView } from './utils';
 import { mathRender } from './components/katex';
 import { HeadingViewConstructor } from './components/heading';
 import { outlineTreePlugin } from './components/outline';
+import {
+	ParagraphViewConstructor,
+	textblockPlugin
+} from './components/paragraph';
+import { BlockTileViewConstructor } from './components/blockTile';
 
 export class Editor {
 	constructor(container?: HTMLElement) {
@@ -36,12 +41,13 @@ export const setupEditor = (el: HTMLElement | null) => {
 			buildInputRules(),
 			keymap(myKeymap),
 			history(),
-			toolbar.plugin,
+			// toolbar.plugin,
 			// highlightCodePlugin(),
 			columnResizing(),
 			tableEditing({}),
 			mathRender(),
-			outlineTreePlugin
+			outlineTreePlugin,
+			textblockPlugin
 		]
 	});
 
@@ -56,7 +62,9 @@ export const setupEditor = (el: HTMLElement | null) => {
 		nodeViews: {
 			codeBlock: CodeBlockViewConstructor,
 			taskItem: TaskItemViewConstructor,
-			heading: HeadingViewConstructor
+			heading: HeadingViewConstructor,
+			paragraph: ParagraphViewConstructor,
+			blockTile: BlockTileViewConstructor
 		},
 		handleClickOn(view, pos, node, nodePos, event, direct) {
 			const markType = view.state.schema.marks.link;

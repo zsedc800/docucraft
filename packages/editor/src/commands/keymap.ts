@@ -22,7 +22,6 @@ import { schema } from '../model';
 import { redo, undo } from 'prosemirror-history';
 import { DecorationSet, EditorView } from 'prosemirror-view';
 import { createTaskList } from '../components/taskList';
-import { highlightCodePluginKey } from '../components/codeBlock/highlightCodePlugin';
 
 const splitListItem = (itemTypes: NodeType[], itemAttrs?: Attrs): Command => {
 	return (state, dispatch) => {

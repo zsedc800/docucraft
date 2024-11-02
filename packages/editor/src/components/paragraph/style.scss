@@ -1,0 +1,9 @@
+.text-block {
+	padding: 3px 2px;
+	& > p {
+		min-height: 1em;
+		&::after {
+			opacity: 0.5;
+		}
+	}
+}

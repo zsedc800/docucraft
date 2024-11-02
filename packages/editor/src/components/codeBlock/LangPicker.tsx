@@ -242,13 +242,6 @@ export default function LangPicker({ onChange, value: val }: LangPickerProps) {
 								return (
 									// @ts-ignore
 									<li key={key} {...optionProps}>
-										{/* <Box
-											component={DoneIcon}
-											sx={{ width: 17, height: 17, mr: '5px', ml: '-2px' }}
-											style={{
-												visibility: selected ? 'visible' : 'hidden'
-											}}
-										/> */}
 										<Box
 											component="span"
 											sx={{
@@ -283,13 +276,6 @@ export default function LangPicker({ onChange, value: val }: LangPickerProps) {
 												<span>ext: {option.extensions.join(', ')}</span>
 											)}
 										</Box>
-										{/* <Box
-											component={Close}
-											sx={{ opacity: 0.6, width: 18, height: 18 }}
-											style={{
-												visibility: selected ? 'visible' : 'hidden'
-											}}
-										/> */}
 									</li>
 								) as any;
 							}}

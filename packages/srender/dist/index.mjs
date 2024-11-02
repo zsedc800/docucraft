@@ -139,6 +139,13 @@ function shallowEqual(obj1, obj2) {
   }
   return true;
 }
+function nextTick(fn) {
+  if (requestAnimationFrame) {
+    requestAnimationFrame(fn);
+  } else {
+    setTimeout(fn, 17);
+  }
+}
 
 const resetHandlers = [];
 function resetContext() {
@@ -1097,7 +1104,7 @@ function commitDeletion(fiber) {
         node.stateNode.destory();
         break;
     }
-    node = traverseFiber(node, f => false, f => f === fiber);
+    node = traverseFiber(node, () => false, f => f === fiber);
   }
   if (domParent) deleteChild(domParent, fiber);
   fiber.flags &= ~FiberFlags.Deletion;
@@ -1325,7 +1332,20 @@ function createRoot() {
   const rootFiberNode = createRootFiber(null, Mode.Concurrent);
   return {
     render: (children, dom) => renderOnRootFiber(children, dom, rootFiberNode),
-    unmount() {}
+    unmount() {
+      const {
+        current
+      } = rootFiberNode;
+      rootFiberNode.deletedAt = Date.now();
+      if (current) {
+        let child = current.child;
+        while (child) {
+          child.flags |= FiberFlags.Deletion;
+          commitWork(child);
+          child = child.sibling;
+        }
+      }
+    }
   };
 }
 function createRootFiber(container, mode) {
@@ -1374,6 +1394,7 @@ function scheduleUpdateOnFiber(fiber) {
   if (!isBatchingUpdates) ensureRootIsScheduled(root);
 }
 function ensureRootIsScheduled(root) {
+  if (root.deletedAt) return;
   const lanes = getNextLanes(root);
   workInProgressRootRenderLanes = lanes;
   root.pendingLanes &= ~lanes;
@@ -1416,7 +1437,7 @@ function performWork(root, workLoop) {
   if (!current) return;
   prepareStack();
   setBatchingUpdates(true);
-  console.log('perform');
+  console.log('perform', root.deletedAt);
   nextUnitOfWork = cloneFiberNode(current, current.pendingProps, {
     alternate: current
   });
@@ -1489,7 +1510,7 @@ function commitAllWork(fiber) {
   nextUnitOfWork = null;
   effects.forEach(commitWork);
   setBatchingUpdates(false);
-  ensureRootIsScheduled(root);
+  nextTick(() => ensureRootIsScheduled(root));
 }
 
 function createUpdate(payload, eventTime, lane) {
@@ -2011,8 +2032,9 @@ var index = {
   createContext,
   Offscreen,
   Suspense,
-  lazy
+  lazy,
+  ExtendedComponent
 };
 
-export { Children, Component, Fragment, Offscreen, Suspense, cloneElement, createContext, createElement, createPortal, createRef, createRoot, index as default, forwardRef, isValidElement, lazy, memo, render, startTransition, useCallback, useContext, useDebugValue, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, useTransition, wrapPromise };
+export { Children, Component, ExtendedComponent, Fragment, Offscreen, Suspense, cloneElement, createContext, createElement, createPortal, createRef, createRoot, index as default, forwardRef, isValidElement, lazy, memo, render, startTransition, useCallback, useContext, useDebugValue, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, useTransition, wrapPromise };
 //# sourceMappingURL=index.mjs.map

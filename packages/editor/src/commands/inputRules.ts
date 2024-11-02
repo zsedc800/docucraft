@@ -36,14 +36,6 @@ const mapTolang = (lang: string) => {
 };
 
 const rules = [
-	...headingRules,
-	...listRules,
-	textblockTypeInputRule(
-		/^```([\w+#]*)\s$/,
-		schema.nodes.codeBlock,
-		(match) => ({ language: mapTolang(match[1]) })
-	),
-	wrappingInputRule(/^(>|》)\s$/, schema.nodes.blockQuote),
 	new InputRule(/(\d+|i)\.\s$/, (state, match, start, end) => {
 		let tr = state.tr;
 		const $start = state.doc.resolve(start);
@@ -62,7 +54,15 @@ const rules = [
 			}, 17);
 		}
 		return tr;
-	})
+	}),
+	...headingRules,
+	...listRules,
+	textblockTypeInputRule(
+		/^```([\w+#]*)\s$/,
+		schema.nodes.codeBlock,
+		(match) => ({ language: mapTolang(match[1]) })
+	),
+	wrappingInputRule(/^(>|》)\s$/, schema.nodes.blockQuote)
 ];
 
 export const buildInputRules = () => inputRules({ rules });
