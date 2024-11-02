@@ -8,7 +8,8 @@ import {
 	SrenderDOMAttributes,
 	VNode,
 	ReactElement,
-	ReactNode
+	ReactNode,
+	Ref
 } from './interface';
 import { Component } from './index';
 
@@ -20,6 +21,19 @@ type Defaultize<Props, Defaults> =
 		: never;
 
 type Booleanish = boolean | 'true' | 'false';
+
+import 'react';
+
+declare module 'react' {
+	type ReactNode = ComponentChild;
+	type LegacyRef = Ref;
+	interface RefObject<T> {
+		current: T;
+	}
+	interface RefCallback<T> {
+		(inst: T): void;
+	}
+}
 
 declare global {
 	namespace JSX {

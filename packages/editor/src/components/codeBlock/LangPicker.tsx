@@ -8,12 +8,9 @@ import Autocomplete, {
 import ButtonBase from '@mui/material/ButtonBase';
 import InputBase from '@mui/material/InputBase';
 import Box from '@mui/material/Box';
-import Close from '@docucraft/icons/svg/Close';
-import DoneIcon from '@docucraft/icons/svg/Done';
-import SettingsIcon from '@docucraft/icons/svg/Settings';
 import { languages } from '@codemirror/language-data';
 import { LanguageDescription } from '@codemirror/language';
-import { Fragment, VNode, useEffect, useState } from '@docucraft/srender';
+import { useEffect, useState } from '@docucraft/srender';
 import SvgArticle from '@docucraft/icons/svg/Article';
 
 interface PopperComponentProps {
@@ -142,7 +139,7 @@ export interface LangPickerProps {
 }
 
 export default function LangPicker({ onChange, value: val }: LangPickerProps) {
-	const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
+	const [anchorEl, setAnchorEl] = useState<HTMLElement>(null);
 	const [value, setValue] = useState<LanguageType | null>(null);
 	const [inputValue, setInputValue] = useState('');
 	// const [pendingValue, setPendingValue] = React.useState<[]>([]);
@@ -162,7 +159,6 @@ export default function LangPicker({ onChange, value: val }: LangPickerProps) {
 	};
 
 	useEffect(() => {
-		console.log(1);
 		if (val && val !== value) {
 			const lang = languages.find((item) => item.name.toLowerCase() === val);
 			if (lang) setValue(lang);
@@ -174,9 +170,7 @@ export default function LangPicker({ onChange, value: val }: LangPickerProps) {
 
 	return (
 		<>
-			{/* @ts-ignore */}
 			<Box sx={{ fontSize: 12 }}>
-				{/* @ts-ignore */}
 				<Button
 					sx={{ paddingBottom: 0 }}
 					disableRipple
@@ -186,16 +180,13 @@ export default function LangPicker({ onChange, value: val }: LangPickerProps) {
 					<span>{value?.name || 'plaintext'}</span>
 				</Button>
 			</Box>
-			{/* @ts-ignore */}
 			<StyledPopper
 				id={id}
 				open={open}
 				anchorEl={anchorEl}
 				placement="bottom-start"
 			>
-				{/* @ts-ignore */}
 				<ClickAwayListener onClickAway={handleClose}>
-					{/* @ts-ignore */}
 					<div>
 						<Box
 							sx={(t) => ({
@@ -233,14 +224,12 @@ export default function LangPicker({ onChange, value: val }: LangPickerProps) {
 								handleClose();
 							}}
 							ListboxProps={{ className: 'scrollbar' }}
-							// disableCloseOnSelect
 							renderTags={() => null}
 							noOptionsText="No option"
 							renderOption={(props, option, { selected }) => {
 								const { key, ...optionProps } = props;
 
 								return (
-									// @ts-ignore
 									<li key={key} {...optionProps}>
 										<Box
 											component="span"
@@ -254,11 +243,9 @@ export default function LangPicker({ onChange, value: val }: LangPickerProps) {
 												mr: 1,
 												mt: '2px'
 											}}
-											// style={{ backgroundColor: option.color }}
 										>
 											{(<LogoCmp name={option.name} />) as any}
 										</Box>
-										{/* @ts-ignore */}
 										<Box
 											sx={(t) => ({
 												flexGrow: 1,
@@ -281,20 +268,17 @@ export default function LangPicker({ onChange, value: val }: LangPickerProps) {
 							}}
 							options={[...languages]}
 							getOptionLabel={(option) => option.name}
-							renderInput={(params) =>
-								(
-									// @ts-ignore
-									<StyledInput
-										ref={params.InputProps.ref}
-										inputProps={params.inputProps}
-										autoFocus
-										placeholder="Filter language"
-										onChange={(e: any) => {
-											setInputValue(e.target?.value);
-										}}
-									/>
-								) as any
-							}
+							renderInput={(params) => (
+								<StyledInput
+									ref={params.InputProps.ref}
+									inputProps={params.inputProps}
+									autoFocus
+									placeholder="Filter language"
+									onChange={(e: any) => {
+										setInputValue(e.target?.value);
+									}}
+								/>
+							)}
 							slots={{
 								popper: PopperComponent as any
 							}}
@@ -313,11 +297,8 @@ function capitalizeFirstLetter(str: string) {
 	return str.charAt(0).toUpperCase() + str.slice(1);
 }
 
-const cache = new Map<string, any>();
-
 const LogoCmp = ({ name }: { name: string }) => {
 	const [logo, setIcon] = useState({ Icon: SvgArticle });
-	console.log(logo, 'xcxx');
 
 	useEffect(() => {
 		const filename = capitalizeFirstLetter(langMap[name] || name);

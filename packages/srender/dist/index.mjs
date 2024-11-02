@@ -1794,9 +1794,6 @@ const getTag = _ref => {
     case ForwardRef:
       return FiberTag.ForwardRef;
   }
-  if (props && !props.ref) {
-    console.log(props, ref, 'tt');
-  }
   // 兼容react element
   if (typeof type === 'object' && '$$typeof' in type && typeof type.render === 'function') {
     return FiberTag.ForwardRef;
@@ -1990,8 +1987,8 @@ function memo(component) {
   let arePropsEqual = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : defaultEqualFn;
   const fn = typeof component === 'function' ? component : component.render;
   const render = (p, ref) => {
-    const props = useRef();
-    const res = useRef();
+    const props = useRef(null);
+    const res = useRef(null);
     if (arePropsEqual(props.current, p)) return res.current;
     res.current = fn(p, ref);
     props.current = p;

@@ -3,24 +3,19 @@ import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import SvgAdd from '@docucraft/icons/svg/Add';
 import SvgDragIndicator from '@docucraft/icons/svg/DragIndicator';
-import './style.scss';
-import {
-	Children,
-	ComponentChild,
-	VNode,
-	cloneElement,
-	useContext
-} from '@docucraft/srender';
+import { ComponentChild, useContext } from '@docucraft/srender';
 import { EditorView } from 'prosemirror-view';
 import { BaseNodeView, nodeViewContext } from '../../utils/view';
 import { insert } from '../../commands/commands';
-import { isNotEmpty } from '../../utils';
 import { schema } from '../../model';
+import './style.scss';
+import { Typography } from '@mui/material';
+
 const HtmlTooltip = styled(
 	({ className, ...props }: TooltipProps) =>
 		(<Tooltip {...props} classes={{ popper: className }} />) as any
 )(({ theme }) => ({
-	[`& .${tooltipClasses.tooltip}`]: {
+	[`&  .${tooltipClasses.tooltip}.richTooltip`]: {
 		backgroundColor: 'transparent',
 		color: 'rgba(0, 0, 0, 0.87)',
 		fontSize: theme.typography.pxToRem(14),
@@ -31,9 +26,9 @@ const HtmlTooltip = styled(
 }));
 
 interface ToolbarProps {
-	view: EditorView;
+	view?: EditorView;
 }
-const Toolbar = ({ view }: ToolbarProps) => {
+const Toolbar = () => {
 	const { nodeView } = useContext(nodeViewContext);
 	return (
 		// @ts-ignore
@@ -42,21 +37,49 @@ const Toolbar = ({ view }: ToolbarProps) => {
 				'&': { fontSize: '22px', color: '#999' }
 			}}
 		>
-			<SvgAdd
-				className="iconButton"
-				onClick={() => {
-					const curPos = nodeView.getPos();
-					const { view } = nodeView;
-					if (curPos || curPos === 0) {
-						insert(curPos + nodeView.node.nodeSize, schema.nodes.paragraph, {})(
-							view.state,
-							view.dispatch,
-							view
-						);
-					}
-				}}
-			/>
-			<Tooltip title="kk" slotProps={{ popper: { disablePortal: true } }}>
+			<Tooltip
+				title={
+					(
+						<Typography textAlign="center">
+							点击向下插入{(<br />) as any}
+							按住alt键 + 点击将向上插入
+						</Typography>
+					) as any
+				}
+				arrow
+			>
+				{/* @ts-ignore */}
+				<SvgAdd
+					className="iconButton"
+					onClick={(e) => {
+						const before = e.altKey;
+
+						const curPos = nodeView.getPos();
+						const { view } = nodeView;
+						if (curPos || curPos === 0) {
+							const pos = before ? curPos : curPos + nodeView.node.nodeSize;
+
+							insert(pos, schema.nodes.paragraph, {})(
+								view.state,
+								view.dispatch,
+								view
+							);
+						}
+					}}
+				/>
+			</Tooltip>
+			<Tooltip
+				title={
+					(
+						<Typography textAlign="center">
+							按住可以拖动{(<br />) as any}
+							点击展开更多
+						</Typography>
+					) as any
+				}
+				arrow
+			>
+				{/* @ts-ignore */}
 				<SvgDragIndicator className="iconButton" />
 			</Tooltip>
 		</Box>
@@ -65,16 +88,19 @@ const Toolbar = ({ view }: ToolbarProps) => {
 
 interface Props {
 	children: ComponentChild;
-	nodeView: BaseNodeView;
+	nodeView?: BaseNodeView;
 }
 
-export default ({ children, nodeView }: Props) => {
+export default ({ children }: Props) => {
 	return (
 		/* @ts-ignore */
 		<HtmlTooltip
-			title={(<Toolbar view={nodeView.view} />) as any}
+			title={(<Toolbar />) as any}
 			placement="left-start"
 			slotProps={{
+				tooltip: {
+					className: 'richTooltip'
+				},
 				popper: {
 					sx: {
 						[`&.${tooltipClasses.popper}[data-popper-placement*="left"] .${tooltipClasses.tooltip}`]:
@@ -87,5 +113,5 @@ export default ({ children, nodeView }: Props) => {
 		>
 			{children as any}
 		</HtmlTooltip>
-	) as any;
+	);
 };

@@ -8,14 +8,14 @@ import {
 } from './reconciler/fiberHooks';
 import { shallowEqual, wait } from './utils';
 
-export const useRef: <T = any>(initValue?: T) => RefObject<T | undefined> = (
+export const useRef: <T = any>(initValue: T | null) => RefObject<T> = (
 	initValue
 ) => {
 	const hook = createWorkInProgressHook({ current: initValue });
 	return hook.state;
 };
 
-export const useState = <T = any>(initialState: T) => {
+export const useState = <T = any>(initialState: T | null) => {
 	const hook = createWorkInProgressHook(
 		typeof initialState === 'function' ? initialState() : initialState
 	);
@@ -132,8 +132,8 @@ export function memo<P>(
 ) {
 	const fn = typeof component === 'function' ? component : component.render;
 	const render = (p: P, ref: any) => {
-		const props = useRef<P>();
-		const res = useRef<any>();
+		const props = useRef<P>(null);
+		const res = useRef<any>(null);
 
 		if (arePropsEqual(props.current, p)) return res.current;
 		res.current = fn(p, ref);

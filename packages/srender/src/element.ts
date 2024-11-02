@@ -38,10 +38,6 @@ export const getTag = ({ type, $$typeof, ref, props }: VNode) => {
 			return FiberTag.ForwardRef;
 	}
 
-	if (props && !props.ref) {
-		console.log(props, ref, 'tt');
-	}
-
 	// 兼容react element
 	if (
 		typeof type === 'object' &&

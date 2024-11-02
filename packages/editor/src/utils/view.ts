@@ -13,24 +13,19 @@ import {
 	RootRender,
 	useLayoutEffect,
 	useRef,
-	ExtendedComponent,
-	forwardRef,
 	createContext
 } from '@docucraft/srender';
 import { shallowEqual } from '.';
-import Tooltip, { TooltipProps, tooltipClasses } from '@mui/material/Tooltip';
-import { styled } from '@mui/material/styles';
-import Tools from '../components/toolBar/Tools';
 
 export function useNodeView<
 	T extends HTMLElement = HTMLElement,
 	P extends HTMLElement = HTMLElement
 >(nodeView: BaseNodeView) {
-	const $dom = useRef<T>();
-	const $contentDOM = useRef<P>();
+	const $dom = useRef<T>(null);
+	const $contentDOM = useRef<P>(null);
 	useLayoutEffect(() => {
 		if ($dom.current) nodeView.dom = $dom.current;
-		nodeView.contentDOM = $contentDOM.current;
+		if ($contentDOM.current) nodeView.contentDOM = $contentDOM.current;
 	}, []);
 
 	return {

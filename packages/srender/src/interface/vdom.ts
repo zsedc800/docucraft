@@ -104,7 +104,7 @@ export interface VNode<P = any> {
 export type Key = string | number | any;
 
 export interface RefObject<T = any> {
-	current: T;
+	current: T | null;
 }
 
 export interface RefCallback<T> {

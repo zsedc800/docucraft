@@ -43,7 +43,12 @@ export class ParagraphView extends BaseNodeView {
 
 	update(node: Node) {
 		if (!node.content.size) this.hack();
-		return super.update(node);
+		const { type, attrs } = node;
+		const { attrs: props, type: t } = this.node;
+		if (type !== t) return false;
+		this.node = node;
+		this.render({ text: node.textContent });
+		return true;
 	}
 }
 
