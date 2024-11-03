@@ -7,7 +7,7 @@
 	"module": "./index.js",
 	"scripts": {
 		"dev": "tsc -w",
-		"build:svg": "svgr ./node_modules/@material-design-icons/svg/round -d svg",
+		"build:svg": "svgr ./node_modules/@material-symbols/svg-400/rounded -d svg",
 		"build:logo": "svgr ./assets/logo -d logo",
 		"build": "tsc"
 	},
@@ -20,6 +20,7 @@
 	"dependencies": {
 		"@fontsource-variable/material-symbols-rounded": "^5.1.0",
 		"@material-design-icons/svg": "^0.14.13",
+		"@material-symbols/svg-400": "^0.26.0",
 		"@svgr/cli": "^8.1.0",
 		"react": "^18.3.1"
 	}

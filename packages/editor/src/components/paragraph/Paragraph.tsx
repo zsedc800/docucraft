@@ -7,14 +7,17 @@ import Popper from '@mui/material/Popper';
 import { useEffect, useState } from '@docucraft/srender';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Box from '@mui/material/Box';
-import React from 'react';
+import Chip from '@mui/material/Chip';
+import Stack from '@mui/material/Stack';
+import Grid2 from '@mui/material/Grid2';
+import Tooltip from '@mui/material/Tooltip';
+import SvgTitle from '@docucraft/icons/svg/Title';
 interface Props {
 	nodeView: ParagraphView;
 	placeholder: string;
 	text?: string;
 }
 
-function Popover() {}
 const StyledPopper = styled(Popper)(({ theme }) => ({
 	border: `1px solid ${'#e1e4e8'}`,
 	boxShadow: `0 8px 24px ${'rgba(149, 157, 165, 0.2)'}`,
@@ -38,14 +41,12 @@ export default ({ nodeView, placeholder, text = '', ...props }: Props) => {
 	const handleClose = () => {
 		setAnchorEl(null);
 	};
-	const handleClick = (e: React.MouseEvent) => {
-		setAnchorEl(e.currentTarget);
-	};
+
 	const open = Boolean(anchorEl);
 	const id = open ? 'block-control-panel' : void 0;
 	useEffect(() => {
 		if (/^\//.test(text)) {
-			if (!open) setAnchorEl($dom);
+			if (!open) setAnchorEl($dom.current);
 		} else if (open) {
 			handleClose();
 		}
@@ -63,14 +64,44 @@ export default ({ nodeView, placeholder, text = '', ...props }: Props) => {
 					placeholder={placeholder}
 					{...props}
 				/>
-				<StyledPopper
-					id={id}
-					open={open}
-					anchorEl={anchorEl}
-					placement="bottom-start"
-				>
+				<StyledPopper id={id} open anchorEl={anchorEl} placement="bottom-start">
 					<ClickAwayListener onClickAway={handleClose}>
-						<Box>xxxx</Box>
+						<Box
+							className="scrollbar"
+							sx={(t) => ({
+								padding: '0 10px',
+								'& .subTitle': {
+									fontSize: '12px',
+									paddingBottom: '4px',
+									color: t.palette.text.secondary
+								},
+								'& .group': {
+									padding: '8px 0'
+								}
+							})}
+						>
+							<Box
+								className="group"
+								sx={(t) => ({
+									borderBottom: `1px solid ${t.palette.grey[100]}`
+								})}
+							>
+								<Typography className="subTitle">最近使用</Typography>
+								<Stack direction="row" spacing={1}>
+									<Chip size="small" label="代码块"></Chip>
+									<Chip size="small" label="任务列表"></Chip>
+									<Chip size="small" label="表格"></Chip>
+								</Stack>
+							</Box>
+							<Box className="group">
+								<Typography className="subTitle">基础块</Typography>
+								<Box sx={(t) => ({ display: 'grid' })}>
+									<Tooltip title="x">
+										<SvgTitle className="iconButton" />
+									</Tooltip>
+								</Box>
+							</Box>
+						</Box>
 					</ClickAwayListener>
 				</StyledPopper>
 			</div>

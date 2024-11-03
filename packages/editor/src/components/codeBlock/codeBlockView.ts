@@ -19,7 +19,8 @@ export class CodeBlockView extends BaseNodeView {
 		super(node, view, getPos);
 		this.component = CodeBlock;
 		this.render();
-
+		this.codeContainer = this.contentDOM;
+		this.contentDOM = void 0;
 		const state = EditorState.create({
 			extensions: extensions.concat([
 				lineNumberCompartment.of(

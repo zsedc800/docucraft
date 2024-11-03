@@ -129,6 +129,9 @@ importers:
       '@material-design-icons/svg':
         specifier: ^0.14.13
         version: 0.14.13
+      '@material-symbols/svg-400':
+        specifier: ^0.26.0
+        version: 0.26.0
       '@svgr/cli':
         specifier: ^8.1.0
         version: 8.1.0(typescript@5.4.5)
@@ -1406,6 +1409,9 @@ packages:
 
   '@material-design-icons/svg@0.14.13':
     resolution: {integrity: sha512-nCExGZOtoLoFeeqShEOM4XA9DkkLzLlQdk/ZxHxps0//dz6e1Lw3fvQbZ2X/+0Dz2O+udiEukfZ4Nd4KpHg8aA==}
+
+  '@material-symbols/svg-400@0.26.0':
+    resolution: {integrity: sha512-kVxE8oaiYoxPqeEoX6idR+KDYGjGkfKxtoYab/gfbyGZGicAeTg3RqaObK9NVuUp7H8fgz3UtVE/JIrLkiRWJA==}
 
   '@mui/core-downloads-tracker@6.1.3':
     resolution: {integrity: sha512-ajMUgdfhTb++rwqj134Cq9f4SRN8oXUqMRnY72YBnXiXai3olJLLqETheRlq3MM8wCKrbq7g6j7iWL1VvP44VQ==}
@@ -6695,6 +6701,8 @@ snapshots:
       '@lezer/lr': 1.4.2
 
   '@material-design-icons/svg@0.14.13': {}
+
+  '@material-symbols/svg-400@0.26.0': {}
 
   '@mui/core-downloads-tracker@6.1.3': {}
 
