@@ -2,14 +2,15 @@ import Tooltip, { TooltipProps, tooltipClasses } from '@mui/material/Tooltip';
 import { styled } from '@mui/material/styles';
 import Box from '@mui/material/Box';
 import SvgAdd from '@docucraft/icons/svg/Add';
-import SvgDragIndicator from '@docucraft/icons/svg/DragIndicator';
-import { ComponentChild, useContext } from '@docucraft/srender';
+import SvgDragIndicator from '@docucraft/icons/svg/DragIndicatorFill';
+import { useContext } from '@docucraft/srender';
 import { EditorView } from 'prosemirror-view';
 import { BaseNodeView, nodeViewContext } from '../../utils/view';
+import { Typography } from '@mui/material';
 import { insert } from '../../commands/commands';
 import { schema } from '../../model';
 import './style.scss';
-import { Typography } from '@mui/material';
+import { MouseEvent } from 'react';
 
 const HtmlTooltip = styled(
 	({ className, ...props }: TooltipProps) =>
@@ -25,13 +26,9 @@ const HtmlTooltip = styled(
 	}
 }));
 
-interface ToolbarProps {
-	view?: EditorView;
-}
 const Toolbar = () => {
 	const { nodeView } = useContext(nodeViewContext);
 	return (
-		// @ts-ignore
 		<Box
 			sx={{
 				'&': { fontSize: '22px', color: '#999' }
@@ -48,10 +45,9 @@ const Toolbar = () => {
 				}
 				arrow
 			>
-				{/* @ts-ignore */}
 				<SvgAdd
 					className="iconButton"
-					onClick={(e) => {
+					onClick={(e: MouseEvent) => {
 						const before = e.altKey;
 
 						const curPos = nodeView.getPos();
@@ -79,7 +75,6 @@ const Toolbar = () => {
 				}
 				arrow
 			>
-				{/* @ts-ignore */}
 				<SvgDragIndicator className="iconButton" />
 			</Tooltip>
 		</Box>
@@ -87,15 +82,14 @@ const Toolbar = () => {
 };
 
 interface Props {
-	children: ComponentChild;
+	children: any;
 	nodeView?: BaseNodeView;
 }
 
 export default ({ children }: Props) => {
 	return (
-		/* @ts-ignore */
 		<HtmlTooltip
-			title={(<Toolbar />) as any}
+			title={<Toolbar />}
 			placement="left-start"
 			slotProps={{
 				tooltip: {
@@ -111,7 +105,7 @@ export default ({ children }: Props) => {
 				}
 			}}
 		>
-			{children as any}
+			{children}
 		</HtmlTooltip>
 	);
 };

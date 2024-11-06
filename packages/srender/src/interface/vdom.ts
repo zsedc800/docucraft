@@ -117,9 +117,8 @@ export type IVNode<P = Props> = VNode<P>;
 
 export type ComponentType<P = any> =
 	| string
-	| Symbol
-	| ((props: P) => ComponentChild)
-	| (new (props: P, context?: any) => Component<any, any>)
+	| symbol
+	| ((props: P) => JSX.Element)
 	| FunctionComponent<P>
 	| ClassComponent<P>
 	| ExtendedComponent<any, P>;
@@ -213,4 +212,5 @@ export interface RootFiberNode {
 export interface RootRender {
 	render: (children: ComponentChildren, dom?: HTMLElement) => void;
 	unmount: () => void;
+	updateContainer: (dom: HTMLElement) => void;
 }

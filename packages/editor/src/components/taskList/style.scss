@@ -1,36 +1,37 @@
 .task-list {
-  padding-left: 0;
-  list-style: none;
-  font-size: 16px;
-  line-height: 22px;
+	padding-left: 0;
+	list-style: none;
+	font-size: 1rem;
+	line-height: 1.5;
 
-  .task-item {
-    // width: 100%;
-    padding: 4px 0;
-    display: flex;
-    // align-items: baseline;
-    text-indent: 0em;
-    &.checked {
-      text-decoration: line-through rgba(55, 53, 47, 0.45);
-      color: rgba(55, 53, 47, 0.65);
-    }
-    input[type='checkbox'] {
-      width: 14px;
-      height: 14px;
-      margin: 0;
-    }
-    &-checkbox {
-      padding: 4px 0;
-      margin-right: 4px;
-      display: flex;
-      flex-shrink: 0;
-    }
-    &-content {
-      flex-grow: 1;
-    }
-    p {
-      padding: 0;
-      margin: 0;
-    }
-  }
+	.task-item {
+		display: flex;
+		align-items: flex-start;
+		text-indent: 0em;
+		&.checked {
+			text-decoration: line-through rgba(55, 53, 47, 0.45);
+			color: rgba(55, 53, 47, 0.65);
+		}
+		input[type='checkbox'] {
+			width: 1em;
+			height: 1em;
+			line-height: 1.5;
+			margin: 0;
+			font-size: inherit;
+		}
+		&-checkbox {
+			height: calc(1.5em + 6px);
+			margin-right: 4px;
+			display: flex;
+			align-items: center;
+			flex-shrink: 0;
+		}
+		&-content {
+			flex-grow: 1;
+		}
+		p {
+			padding: 0;
+			margin: 0;
+		}
+	}
 }

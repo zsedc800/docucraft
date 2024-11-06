@@ -161,14 +161,13 @@ function processClassComponent(wipFiber: Fiber, lanes: Lanes) {
 function processHostComponent(wipFiber: Fiber, lanes: Lanes) {
 	if (wipFiber.tag === FiberTag.Portal) {
 		wipFiber.stateNode = wipFiber.pendingProps.container;
-	}
-
-	if (!wipFiber.stateNode) {
-		wipFiber.stateNode = createDomElement(wipFiber) as Element;
+	} else {
+		if (!wipFiber.stateNode)
+			wipFiber.stateNode = createDomElement(wipFiber) as Element;
 		// putRef(wipFiber);
 		// if (wipFiber.ref) wipFiber.ref.current = wipFiber.stateNode;
+		domMap.set(wipFiber.stateNode as HTMLElement, wipFiber);
 	}
-	domMap.set(wipFiber.stateNode as HTMLElement, wipFiber);
 	const newChildElements = wipFiber.pendingProps.children;
 	reconcileChildrenArray(wipFiber, newChildElements, lanes);
 }

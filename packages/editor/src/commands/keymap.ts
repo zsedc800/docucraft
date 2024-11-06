@@ -142,34 +142,6 @@ export const myKeymap: { [key: string]: Command } = {
 		liftEmptyBlock,
 		splitBlock
 	),
-	// Backspace: chainCommands(
-	// 	deleteSelection,
-	// 	(state, dispatch) => {
-	// 		const { selection, doc } = state;
-	// 		const decorations = highlightCodePluginKey.getState(state)?.decorations;
-	// 		const { $from } = selection;
-	// 		const { pos } = $from;
-
-	// 		// 检查是否处在widget上（行号）
-	// 		if (
-	// 			$from.parent.type === schema.nodes.codeBlock &&
-	// 			isAtWidget(state, decorations) &&
-	// 			pos > $from.before() + 1
-	// 		) {
-	// 			const p = pos - 1;
-	// 			dispatch?.(
-	// 				state.tr
-	// 					.setSelection(TextSelection.create(state.doc, p))
-	// 					.delete(p, pos)
-	// 			);
-	// 		}
-
-	// 		// 默认行为
-	// 		return false;
-	// 	},
-	// 	joinBackward,
-	// 	selectNodeBackward
-	// ),
 	'Mod-z': undo,
 	'Mod-y': redo,
 	Tab: (state: EditorState, dispatch?: EditorView['dispatch']) => {

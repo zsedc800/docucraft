@@ -67,6 +67,7 @@ pre {
 		&::after {
 			content: attr(placeholder);
 			pointer-events: none;
+			display: inline-block;
 		}
 	}
 }
@@ -78,4 +79,8 @@ pre {
 	&:hover {
 		background-color: #ededed;
 	}
+}
+
+body {
+	word-break: break-all;
 }

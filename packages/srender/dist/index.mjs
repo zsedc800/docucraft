@@ -920,6 +920,18 @@ const registerEvent = root => {
           }
           if (capture) break;
         }
+        if (current.tag === FiberTag.HostRoot) {
+          const {
+            container
+          } = current.stateNode;
+          let node = container,
+            f;
+          while (!f && node) {
+            f = domMap.get(node);
+            node = node.parentNode;
+          }
+          if (f) current = f;
+        }
         current = current.parent;
       }
     };
@@ -1298,13 +1310,12 @@ function processClassComponent(wipFiber, lanes) {
 function processHostComponent(wipFiber, lanes) {
   if (wipFiber.tag === FiberTag.Portal) {
     wipFiber.stateNode = wipFiber.pendingProps.container;
-  }
-  if (!wipFiber.stateNode) {
-    wipFiber.stateNode = createDomElement(wipFiber);
+  } else {
+    if (!wipFiber.stateNode) wipFiber.stateNode = createDomElement(wipFiber);
     // putRef(wipFiber);
     // if (wipFiber.ref) wipFiber.ref.current = wipFiber.stateNode;
+    domMap.set(wipFiber.stateNode, wipFiber);
   }
-  domMap.set(wipFiber.stateNode, wipFiber);
   const newChildElements = wipFiber.pendingProps.children;
   reconcileChildrenArray(wipFiber, newChildElements, lanes);
 }
@@ -1344,6 +1355,9 @@ function createRoot() {
           child = child.sibling;
         }
       }
+    },
+    updateContainer(dom) {
+      rootFiberNode.container = dom;
     }
   };
 }

@@ -20,6 +20,7 @@ import {
 	textblockPlugin
 } from './components/paragraph';
 import { BlockTileViewConstructor } from './components/blockTile';
+import { ListItemViewConstructor } from './components/ListItem';
 
 export class Editor {
 	constructor(container?: HTMLElement) {
@@ -64,7 +65,8 @@ export const setupEditor = (el: HTMLElement | null) => {
 			taskItem: TaskItemViewConstructor,
 			heading: HeadingViewConstructor,
 			paragraph: ParagraphViewConstructor,
-			blockTile: BlockTileViewConstructor
+			blockTile: BlockTileViewConstructor,
+			list_item: ListItemViewConstructor
 		},
 		handleClickOn(view, pos, node, nodePos, event, direct) {
 			const markType = view.state.schema.marks.link;

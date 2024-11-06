@@ -8,6 +8,7 @@ import { schema } from '../model';
 import { outlineTreeKey } from '../components/outline';
 import { Fragment } from 'prosemirror-model';
 import { languages } from '@codemirror/language-data';
+import { nextTick } from '../utils';
 
 // 定义输入规则
 const headingRules = [
@@ -49,9 +50,7 @@ const rules = [
 
 		if (outlineTree) {
 			tr.delete(start, end);
-			setTimeout(() => {
-				outlineTree.setOrderType(orderType);
-			}, 17);
+			nextTick(() => outlineTree.setOrderType(orderType));
 		}
 		return tr;
 	}),

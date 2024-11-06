@@ -71,6 +71,9 @@ export function createRoot(): RootRender {
 					child = child.sibling;
 				}
 			}
+		},
+		updateContainer(dom: HTMLElement) {
+			rootFiberNode.container = dom;
 		}
 	};
 }

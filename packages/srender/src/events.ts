@@ -1,4 +1,4 @@
-import { Fiber, FiberTag } from './interface';
+import { Fiber, FiberTag, RootFiberNode } from './interface';
 import { batchedUpdates } from './reconciler/update';
 
 const nonBubblingEvents = [
@@ -185,6 +185,26 @@ function getEventHandler(
 	return handler;
 }
 
+function getDirectChildren(fiber: Fiber) {
+	let queue = [fiber];
+	while (queue.length) {
+		const fiber = queue.shift();
+		if (
+			fiber?.tag !== FiberTag.HostComponent &&
+			fiber?.tag !== FiberTag.Portal
+		) {
+			let node = fiber?.child;
+			while (node) {
+				queue.push(node);
+				node = node.sibling;
+			}
+		} else {
+			return fiber.stateNode as HTMLElement;
+		}
+	}
+	return null;
+}
+
 export const registerEvent = (root: HTMLElement | Document) => {
 	const listener =
 		(eventName: string, capture = false) =>
@@ -195,6 +215,7 @@ export const registerEvent = (root: HTMLElement | Document) => {
 			const clonedEvent = cloneEventWithCustomProperties(e, {
 				target: e.target
 			});
+
 			while (current) {
 				if (
 					current.tag === FiberTag.HostComponent &&
@@ -206,6 +227,18 @@ export const registerEvent = (root: HTMLElement | Document) => {
 						batchedUpdates(handler, clonedEvent);
 					}
 					if (capture) break;
+				}
+				if (current.tag === FiberTag.HostRoot) {
+					const { container } = current.stateNode as RootFiberNode;
+					let node: HTMLElement | null = container,
+						f;
+
+					while (!f && node) {
+						f = domMap.get(node);
+						node = node.parentNode as HTMLElement;
+					}
+
+					if (f) current = f;
 				}
 				current = current.parent;
 			}

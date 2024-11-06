@@ -1,15 +1,10 @@
-import { Fragment, Node, NodeSpec } from 'prosemirror-model';
-import { Command, EditorState } from 'prosemirror-state';
-import {
-	Decoration,
-	DecorationSource,
-	EditorView,
-	NodeView,
-	NodeViewConstructor
-} from 'prosemirror-view';
+import { Node, NodeSpec } from 'prosemirror-model';
+import { Command } from 'prosemirror-state';
+import { NodeViewConstructor } from 'prosemirror-view';
 import './style.scss';
 import createElement, { updateElement } from '../../createElement';
 import { BaseNodeView } from '../../utils/view';
+import TaskItem from './TaskItem';
 
 export const taskItem: NodeSpec = {
 	content: 'paragraph*',
@@ -72,35 +67,8 @@ export class TaskItemView extends BaseNodeView {
 	constructor(...args: Parameters<NodeViewConstructor>) {
 		const [node, view, getPos] = args;
 		super(node, view, getPos);
-		this.contentDOM = createElement('div', { class: 'task-item-content' });
-		this.view = view;
-		this.dom = createElement(
-			'li',
-			{ class: 'task-item' },
-			createElement(
-				'div',
-				{ class: 'task-item-checkbox' },
-				createElement('input', {
-					type: 'checkbox',
-					checked: node.attrs.checked ? 'true' : void 0,
-					onchange: (e) => {
-						const val = (e.target as HTMLInputElement)?.checked;
-						let tr = view.state.tr;
-						view.dispatch(
-							tr.setNodeAttribute(getPos() as number, 'checked', !!val)
-						);
-					}
-				})
-			),
-			this.contentDOM
-		);
-	}
-	update(node: Node) {
-		if (!super.update(node)) return false;
-		updateElement(this.dom, {
-			class: `task-item${node.attrs.checked ? ' checked' : ''}`
-		});
-		return true;
+		this.component = TaskItem;
+		this.render();
 	}
 }
 

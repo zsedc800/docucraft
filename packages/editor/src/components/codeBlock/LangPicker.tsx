@@ -11,7 +11,7 @@ import Box from '@mui/material/Box';
 import { languages } from '@codemirror/language-data';
 import { LanguageDescription } from '@codemirror/language';
 import { useEffect, useState } from '@docucraft/srender';
-import SvgArticle from '@docucraft/icons/svg/Article';
+import SvgArticle from '@docucraft/icons/svg/ArticleFill';
 
 interface PopperComponentProps {
 	anchorEl?: any;

@@ -18,8 +18,8 @@ import {
 import { shallowEqual } from '.';
 
 export function useNodeView<
-	T extends HTMLElement = HTMLElement,
-	P extends HTMLElement = HTMLElement
+	T extends HTMLElement = HTMLDivElement,
+	P extends HTMLElement = HTMLDivElement
 >(nodeView: BaseNodeView) {
 	const $dom = useRef<T>(null);
 	const $contentDOM = useRef<P>(null);
@@ -38,12 +38,17 @@ export const nodeViewContext = createContext<{ nodeView: BaseNodeView }>(
 	{} as any
 );
 
+export interface BaseNodeViewProps {
+	nodeView: BaseNodeView;
+}
+
 export class BaseNodeView implements NodeView {
 	dom: HTMLElement;
 	contentDOM?: HTMLElement;
 	container?: HTMLElement;
 	rootRender: RootRender;
 	component: ComponentType<any> = () => '';
+	depth: number;
 	constructor(
 		public node: Node,
 		public view: EditorView,
@@ -51,6 +56,12 @@ export class BaseNodeView implements NodeView {
 	) {
 		this.dom = createElement('div');
 		this.rootRender = createRoot();
+		const pos = getPos();
+		this.depth = pos || pos === 0 ? view.state.doc.resolve(pos).depth : -1;
+
+		Promise.resolve().then(() =>
+			this.rootRender.updateContainer(this.dom.parentElement!)
+		);
 	}
 
 	render(p?: any) {
@@ -65,6 +76,8 @@ export class BaseNodeView implements NodeView {
 	}
 
 	ignoreMutation(mutation: MutationRecord) {
+		console.log(mutation, 'm');
+
 		if (this.contentDOM) {
 			if (mutation.target !== this.contentDOM) return true;
 		}

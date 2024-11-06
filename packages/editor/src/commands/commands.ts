@@ -1,5 +1,6 @@
-import { Node, NodeType } from 'prosemirror-model';
-import { Command, TextSelection } from 'prosemirror-state';
+import { Node, NodeRange, NodeType } from 'prosemirror-model';
+import { Command, NodeSelection, TextSelection } from 'prosemirror-state';
+import { canJoin, findWrapping } from 'prosemirror-transform';
 
 export const insertCodeBlock: Command = (state, dispatch, view) => {
 	const lastLanguage = state.schema.cached.lastLanguage || 'plaintext';
@@ -21,9 +22,10 @@ export const insert =
 	(pos: number, nodeType: NodeType, attrs: any): Command =>
 	(state, dispatch) => {
 		let tr = state.tr;
-		tr = tr.insert(pos, nodeType.create(attrs));
-		tr = tr.setSelection(TextSelection.create(tr.doc, pos + 1));
-		tr = tr.scrollIntoView();
+		tr = tr
+			.insert(pos, nodeType.create(attrs))
+			.setSelection(TextSelection.create(tr.doc, pos + 1))
+			.scrollIntoView();
 		if (dispatch) {
 			dispatch(tr);
 			return true;
@@ -34,5 +36,32 @@ export const insert =
 export const insertAfter =
 	(node: Node, nodeType: NodeType): Command =>
 	(state, dispatch, view) => {
+		return false;
+	};
+
+export const transformToNode =
+	(nodeType: NodeType, attrs?: any): Command =>
+	(state, dispatch) => {
+		let { tr } = state;
+		const { selection } = tr;
+
+		if (selection instanceof NodeSelection && dispatch) {
+			const { from, to, $from, $to } = selection;
+			const start = Math.min(from, to);
+			if (nodeType.isTextblock) tr = tr.setBlockType(from, to, nodeType, attrs);
+			else {
+				const range = new NodeRange($from, $to, $from.depth);
+				const wrapping = findWrapping(range, nodeType);
+				if (!wrapping) return false;
+				tr.wrap(range, wrapping);
+				const before = tr.doc.resolve(start).nodeBefore;
+				if (before && before.type === nodeType && canJoin(tr.doc, start))
+					tr.join(start);
+			}
+
+			const sel = TextSelection.create(tr.doc, Math.min(from, to) + 1);
+			dispatch(tr.setSelection(sel));
+			return true;
+		}
 		return false;
 	};

@@ -137,9 +137,7 @@ const nodes = {
 			}
 		],
 		toDOM(node) {
-			return node.attrs.order == 1
-				? ['ol', 0]
-				: ['ol', { start: node.attrs.order }, 0];
+			return ['ol', { class: 'order-list', start: node.attrs.order }, 0];
 		}
 	}),
 	bullet_list: createNodeSpec({
@@ -147,11 +145,12 @@ const nodes = {
 		group: 'block',
 		parseDOM: [{ tag: 'ul' }],
 		toDOM() {
-			return ['ul', 0];
+			return ['ul', { class: 'bullet-list' }, 0];
 		}
 	}),
 	list_item: createNodeSpec({
 		content: 'block*',
+		group: 'block',
 		parseDOM: [{ tag: 'li' }],
 		toDOM() {
 			return ['li', 0];

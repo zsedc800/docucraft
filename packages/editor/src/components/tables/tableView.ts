@@ -29,13 +29,13 @@ export class TableView extends BaseNodeView {
 	private $cell?: ResolvedPos;
 
 	constructor(
-		public node: Node,
-		public view: EditorView,
-		private getPos: () => number | undefined,
+		node: Node,
+		view: EditorView,
+		getPos: () => number | undefined,
 		public cellMinWidth: number
 	) {
 		console.log('table create');
-		super(node, view);
+		super(node, view, getPos);
 		this.dom = createElement('div', {
 			class: tableClassName
 		});

@@ -162,3 +162,23 @@ export function classnames(...args: (string | Record<string, boolean>)[]) {
 export function isNotEmpty(val: any) {
 	return !!val || val === 0;
 }
+
+export function overrides<T extends Record<string | symbol, any> = any>(
+	target: T,
+	props: Record<string, any>
+) {
+	return new Proxy(target, {
+		get(target, key) {
+			if (typeof key !== 'symbol' && props[key]) return props[key];
+			return target[key];
+		}
+	});
+}
+
+export function nextTick(fn: () => void) {
+	if (requestAnimationFrame) {
+		requestAnimationFrame(fn);
+	} else {
+		setTimeout(fn, 17);
+	}
+}
