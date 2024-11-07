@@ -94,12 +94,10 @@ export function updateDomProperties(
 			} else if (svgElements.has(dom.tagName) && name !== 'xmlns') {
 				// const svgPropName = name.replace(/(a-z)(A-Z)/g, '$1-$2').toLowerCase();
 				dom.setAttributeNS(null, convertName(name), value);
-			}
-			// else if (booleanAttributes.has(name)) {
-			// 	if (value) setAttribute(dom,name, 'true');
-			// 	else removeAttribute(dom, name);
-			// }
-			else {
+			} else if (booleanAttributes.has(name)) {
+				if (value) dom.setAttribute(name, 'true');
+				else dom.removeAttribute(name);
+			} else {
 				setAttribute(dom, convertName(name), value);
 			}
 		});

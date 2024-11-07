@@ -142,7 +142,8 @@ const deleteChild = (domParent: HTMLElement, fiber: Fiber) => {
 			(f) => {
 				if (f.tag === FiberTag.Portal) return true;
 				if (f.tag === FiberTag.HostComponent || f.tag === FiberTag.HostText) {
-					domParent.removeChild(f.stateNode as Element);
+					const el = f.stateNode as Element;
+					if (domParent.contains(el)) domParent.removeChild(el);
 					return true;
 				}
 				return false;

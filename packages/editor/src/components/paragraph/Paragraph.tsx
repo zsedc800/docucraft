@@ -1,5 +1,9 @@
 import Typography from '@mui/material/Typography';
-import { nodeViewContext, useNodeView } from '../../utils/view';
+import {
+	BaseNodeViewProps,
+	nodeViewContext,
+	useNodeView
+} from '../../utils/view';
 import { ParagraphView } from '.';
 import Tools from '../toolBar/Tools';
 import { styled } from '@mui/material/styles';
@@ -34,10 +38,12 @@ import SvgEmphsis from '../../assets/svg/Emphsis';
 import { Command, NodeSelection } from 'prosemirror-state';
 import { transformToNode } from '../../commands';
 import { schema } from '../../model';
-import { overrides } from '../../utils';
+import { classnames, nextTick, overrides } from '../../utils';
 import { ReactNode } from 'react';
+import { confirm as DialogConfirm } from '../dialog';
+import { confirm } from '../popover';
 
-interface Props {
+interface Props extends BaseNodeViewProps {
 	nodeView: ParagraphView;
 	placeholder: string;
 	text?: string;
@@ -168,15 +174,29 @@ const basicTools: ToolItem[] = [
 		title: '任务列表',
 		icon: SvgAddTask,
 		handler: transformToNode(schema.nodes.taskList)
+	},
+	{
+		title: '添加链接',
+		icon: SvgLink,
+		handler: (state, dispatch, view) => {
+			if (view) view.dispatch(state.tr);
+			nextTick(() => {
+				confirm({}, view!).then((res: any) => {
+					console.log(res, 'res');
+				});
+			});
+			return false;
+		}
 	}
-	// {
-	// 	title: '添加链接',
-	// 	icon: SvgLink,
-	// 	handler: () => {}
-	// }
 ];
 
-export default ({ nodeView, placeholder, text = '', ...props }: Props) => {
+export default ({
+	nodeView,
+	placeholder,
+	hidden,
+	text = '',
+	...props
+}: Props) => {
 	const { $dom, $contentDOM } = useNodeView<HTMLDivElement>(nodeView);
 	const [anchorEl, setAnchorEl] = useState<HTMLElement>(null);
 	const handleClose = () => {
@@ -302,7 +322,7 @@ export default ({ nodeView, placeholder, text = '', ...props }: Props) => {
 		</StyledPopper>
 	);
 	const body = (
-		<div ref={$dom} className="block text-block">
+		<div ref={$dom} className={classnames('block text-block', { hidden })}>
 			<Typography
 				className="paragraph"
 				ref={$contentDOM}

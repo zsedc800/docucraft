@@ -956,6 +956,7 @@ function convertName(name) {
   return name === 'className' ? 'class' : name;
 }
 const svgElements = new Set(['svg', 'circle', 'rect', 'path', 'line', 'polygon', 'polyline', 'ellipse', 'g', 'text', 'tspan', 'defs', 'linearGradient', 'radialGradient', 'stop', 'use']);
+const booleanAttributes = new Set(['disabled', 'checked', 'readonly', 'selected', 'multiple', 'hidden', 'autofocus', 'required']);
 const hyphenateStyleName = name => {
   return name.replace(/[A-Z]/g, match => '-' + match.toLowerCase());
 };
@@ -986,12 +987,9 @@ function updateDomProperties(dom, prevProps, nextProps) {
     } else if (svgElements.has(dom.tagName) && name !== 'xmlns') {
       // const svgPropName = name.replace(/(a-z)(A-Z)/g, '$1-$2').toLowerCase();
       dom.setAttributeNS(null, convertName(name), value);
-    }
-    // else if (booleanAttributes.has(name)) {
-    // 	if (value) setAttribute(dom,name, 'true');
-    // 	else removeAttribute(dom, name);
-    // }
-    else {
+    } else if (booleanAttributes.has(name)) {
+      if (value) dom.setAttribute(name, 'true');else dom.removeAttribute(name);
+    } else {
       setAttribute(dom, convertName(name), value);
     }
   });
@@ -1087,7 +1085,8 @@ const deleteChild = (domParent, fiber) => {
     node = traverseFiber(node, f => {
       if (f.tag === FiberTag.Portal) return true;
       if (f.tag === FiberTag.HostComponent || f.tag === FiberTag.HostText) {
-        domParent.removeChild(f.stateNode);
+        const el = f.stateNode;
+        if (domParent.contains(el)) domParent.removeChild(el);
         return true;
       }
       return false;

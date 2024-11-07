@@ -40,6 +40,7 @@ export const nodeViewContext = createContext<{ nodeView: BaseNodeView }>(
 
 export interface BaseNodeViewProps {
 	nodeView: BaseNodeView;
+	hidden: boolean;
 }
 
 export class BaseNodeView implements NodeView {
@@ -76,8 +77,6 @@ export class BaseNodeView implements NodeView {
 	}
 
 	ignoreMutation(mutation: MutationRecord) {
-		console.log(mutation, 'm');
-
 		if (this.contentDOM) {
 			if (mutation.target !== this.contentDOM) return true;
 		}

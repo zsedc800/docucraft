@@ -182,3 +182,22 @@ export function nextTick(fn: () => void) {
 		setTimeout(fn, 17);
 	}
 }
+
+export function getSelectionRect(view: EditorView) {
+	const { selection } = view.state;
+
+	if (selection.empty) return null; // 处理空选区
+
+	// 获取 DOM 节点和偏移
+	const start = view.domAtPos(selection.from);
+	const end = view.domAtPos(selection.to);
+
+	// 创建 Range 并设置起点和终点
+	const range = document.createRange();
+	range.setStart(start.node, start.offset);
+	range.setEnd(end.node, end.offset);
+	// 返回 Range 的边界框
+	const res = range.getBoundingClientRect();
+	console.log(res, selection, 'xxx');
+	return res;
+}

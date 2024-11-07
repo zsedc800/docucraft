@@ -11,6 +11,7 @@ import { taskItem, taskList } from './components/taskList';
 import { tableNodes } from './components/tables';
 import { mathNodeSpec } from './components/katex';
 import { blockTileSpec } from './components/blockTile';
+import { LinkSpec } from './components/link';
 
 function createNodeSpec(config: NodeSpec): NodeSpec {
 	config.attrs = { ...config.attrs, hidden: { default: false } };
@@ -168,6 +169,7 @@ const nodes = {
 		parseDOM: [{ tag: 'hr' }],
 		toDOM: () => ['hr']
 	}),
+	link: createNodeSpec(LinkSpec),
 	image: createNodeSpec({
 		inline: true,
 		attrs: {
@@ -205,7 +207,7 @@ export type NodesKey = keyof typeof nodes;
 export type MarksKey =
 	| 'bold'
 	| 'italic'
-	| 'link'
+	// | 'link'
 	| 'underline'
 	| 'linethrough'
 	| 'style';
@@ -238,20 +240,20 @@ const marks: Record<MarksKey, MarkSpec> = {
 			{ style: 'font-style=italic' }
 		]
 	},
-	link: {
-		group: 'heading',
-		attrs: {
-			href: { default: null },
-			ref: { default: 'noopener noreferrer nofollow' },
-			target: { default: '_blank' },
-			title: { default: '' }
-		},
-		toDOM: (mark) => {
-			const { href, ref, target, title } = mark.attrs;
-			return ['a', { href, ref, target, title }, 0];
-		},
-		parseDOM: [{ tag: 'a[href]:not([href *= "javascript:" i])' }]
-	},
+	// link: {
+	// 	group: 'heading',
+	// 	attrs: {
+	// 		href: { default: null },
+	// 		ref: { default: 'noopener noreferrer nofollow' },
+	// 		target: { default: '_blank' },
+	// 		title: { default: '' }
+	// 	},
+	// 	toDOM: (mark) => {
+	// 		const { href, ref, target, title } = mark.attrs;
+	// 		return ['a', { href, ref, target, title }, 0];
+	// 	},
+	// 	parseDOM: [{ tag: 'a[href]:not([href *= "javascript:" i])' }]
+	// },
 	underline: {
 		parseDOM: [
 			{ tag: 'u' },

@@ -47,9 +47,16 @@ export const transformToNode =
 
 		if (selection instanceof NodeSelection && dispatch) {
 			const { from, to, $from, $to } = selection;
-			const start = Math.min(from, to);
+			let start = Math.min(from, to);
 			if (nodeType.isTextblock) tr = tr.setBlockType(from, to, nodeType, attrs);
-			else {
+			else if (nodeType.isInline) {
+				const { parent: node, pos } = tr.doc.resolve(start + 1);
+				if (!node.isAtom) {
+					const n = nodeType.create(attrs);
+					tr = tr.insert(pos, n);
+					start++;
+				}
+			} else {
 				const range = new NodeRange($from, $to, $from.depth);
 				const wrapping = findWrapping(range, nodeType);
 				if (!wrapping) return false;
@@ -59,7 +66,9 @@ export const transformToNode =
 					tr.join(start);
 			}
 
-			const sel = TextSelection.create(tr.doc, Math.min(from, to) + 1);
+			const sel = TextSelection.create(tr.doc, start + 1);
+			console.log(sel, 'sel');
+
 			dispatch(tr.setSelection(sel));
 			return true;
 		}
