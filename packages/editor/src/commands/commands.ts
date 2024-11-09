@@ -1,4 +1,4 @@
-import { Node, NodeRange, NodeType } from 'prosemirror-model';
+import { Fragment, Node, NodeRange, NodeType } from 'prosemirror-model';
 import { Command, NodeSelection, TextSelection } from 'prosemirror-state';
 import { canJoin, findWrapping } from 'prosemirror-transform';
 
@@ -40,7 +40,11 @@ export const insertAfter =
 	};
 
 export const transformToNode =
-	(nodeType: NodeType, attrs?: any): Command =>
+	(
+		nodeType: NodeType,
+		attrs?: any,
+		content?: Node | Fragment | readonly Node[]
+	): Command =>
 	(state, dispatch) => {
 		let { tr } = state;
 		const { selection } = tr;
@@ -52,9 +56,9 @@ export const transformToNode =
 			else if (nodeType.isInline) {
 				const { parent: node, pos } = tr.doc.resolve(start + 1);
 				if (!node.isAtom) {
-					const n = nodeType.create(attrs);
+					const n = nodeType.create(attrs, content);
 					tr = tr.insert(pos, n);
-					start++;
+					start += n.nodeSize - 1;
 				}
 			} else {
 				const range = new NodeRange($from, $to, $from.depth);
@@ -67,7 +71,6 @@ export const transformToNode =
 			}
 
 			const sel = TextSelection.create(tr.doc, start + 1);
-			console.log(sel, 'sel');
 
 			dispatch(tr.setSelection(sel));
 			return true;

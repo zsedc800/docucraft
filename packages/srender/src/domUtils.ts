@@ -42,6 +42,7 @@ const booleanAttributes = new Set([
 ]);
 
 const hyphenateStyleName = (name: string) => {
+	if (name.startsWith('--')) return name;
 	return name.replace(/[A-Z]/g, (match) => '-' + match.toLowerCase());
 };
 

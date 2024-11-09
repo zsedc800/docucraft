@@ -148,12 +148,15 @@ export function shallowEqual(obj1: any, obj2: any): boolean {
 	return true;
 }
 
-export function classnames(...args: (string | Record<string, boolean>)[]) {
+export function classnames(
+	...args: (string | Record<string, boolean> | undefined)[]
+) {
 	return args
+		.filter(Boolean)
 		.map((item) => {
 			if (typeof item === 'string') return item;
-			return Object.keys(item)
-				.filter((key) => !!item[key])
+			return Object.keys(item!)
+				.filter((key) => !!item![key])
 				.join(' ');
 		})
 		.join(' ');
@@ -175,18 +178,20 @@ export function overrides<T extends Record<string | symbol, any> = any>(
 	});
 }
 
-export function nextTick(fn: () => void) {
+export function nextTick(fn?: () => void) {
+	const { promise, resolve } = Promise.withResolvers();
 	if (requestAnimationFrame) {
-		requestAnimationFrame(fn);
+		requestAnimationFrame(resolve);
 	} else {
-		setTimeout(fn, 17);
+		setTimeout(resolve, 17);
 	}
+	return promise.then(() => fn?.());
 }
 
 export function getSelectionRect(view: EditorView) {
 	const { selection } = view.state;
 
-	if (selection.empty) return null; // 处理空选区
+	if (selection.empty) return {} as DOMRect; // 处理空选区
 
 	// 获取 DOM 节点和偏移
 	const start = view.domAtPos(selection.from);
@@ -196,8 +201,6 @@ export function getSelectionRect(view: EditorView) {
 	const range = document.createRange();
 	range.setStart(start.node, start.offset);
 	range.setEnd(end.node, end.offset);
-	// 返回 Range 的边界框
-	const res = range.getBoundingClientRect();
-	console.log(res, selection, 'xxx');
-	return res;
+
+	return range.getBoundingClientRect();
 }

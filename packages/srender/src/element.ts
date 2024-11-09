@@ -90,7 +90,7 @@ export function createElement(
 		});
 
 	props.children =
-		props.children.length === 1 ? props.children[0] : props.children;
+		props.children.length <= 1 ? props.children[0] : props.children;
 
 	let node: VNode = {
 		$$typeof: ELEMENT,

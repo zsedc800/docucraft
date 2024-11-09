@@ -49,14 +49,6 @@ export default ({
 	hidden = false
 }: Props) => {
 	const { $dom, $contentDOM } = useNodeView<HTMLPreElement>(nodeView);
-	const options = useMemo(
-		() =>
-			languages.map(({ name }) => ({
-				label: name,
-				value: name.toLowerCase()
-			})),
-		[]
-	);
 	return (
 		<pre
 			ref={$dom}

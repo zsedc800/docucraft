@@ -1,30 +1,15 @@
-import Tooltip, { TooltipProps, tooltipClasses } from '@mui/material/Tooltip';
-import { styled } from '@mui/material/styles';
+import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
 import Box from '@mui/material/Box';
 import SvgAdd from '@docucraft/icons/svg/Add';
 import SvgDragIndicator from '@docucraft/icons/svg/DragIndicatorFill';
 import { useContext } from '@docucraft/srender';
-import { EditorView } from 'prosemirror-view';
 import { BaseNodeView, nodeViewContext } from '../../utils/view';
 import { Typography } from '@mui/material';
 import { insert } from '../../commands/commands';
 import { schema } from '../../model';
-import './style.scss';
 import { MouseEvent } from 'react';
-
-const HtmlTooltip = styled(
-	({ className, ...props }: TooltipProps) =>
-		(<Tooltip {...props} classes={{ popper: className }} />) as any
-)(({ theme }) => ({
-	[`&  .${tooltipClasses.tooltip}.richTooltip`]: {
-		backgroundColor: 'transparent',
-		color: 'rgba(0, 0, 0, 0.87)',
-		fontSize: theme.typography.pxToRem(14),
-		border: 'none',
-		padding: '0 0 0 0',
-		margin: '1px 0 0 0'
-	}
-}));
+import { RichTooltip as HtmlTooltip } from '../kits';
+import './style.scss';
 
 const Toolbar = () => {
 	const { nodeView } = useContext(nodeViewContext);

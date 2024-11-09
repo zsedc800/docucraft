@@ -1,4 +1,10 @@
-import { EditorState, PluginView, Plugin, PluginKey } from 'prosemirror-state';
+import {
+	EditorState,
+	PluginView,
+	Plugin,
+	PluginKey,
+	Command
+} from 'prosemirror-state';
 import { MenuGroup, MenuGroupSpec } from './menuGroup';
 import { EditorView } from 'prosemirror-view';
 import { createCodeBlockCmd } from '../codeBlock';
@@ -15,6 +21,14 @@ import {
 import { FloatBar } from './floatBar';
 import { Tooltip } from '../tooltip';
 import './style.scss';
+import { ReactNode } from 'react';
+import { BaseNodeView } from '../../utils/view';
+
+export interface ToolItem {
+	title: string;
+	icon: (p: any) => ReactNode;
+	handler: Command | ((nodeView: BaseNodeView) => void);
+}
 
 export interface ToolBarSpec {
 	groups: MenuGroupSpec[];

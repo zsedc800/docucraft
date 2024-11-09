@@ -958,6 +958,7 @@ function convertName(name) {
 const svgElements = new Set(['svg', 'circle', 'rect', 'path', 'line', 'polygon', 'polyline', 'ellipse', 'g', 'text', 'tspan', 'defs', 'linearGradient', 'radialGradient', 'stop', 'use']);
 const booleanAttributes = new Set(['disabled', 'checked', 'readonly', 'selected', 'multiple', 'hidden', 'autofocus', 'required']);
 const hyphenateStyleName = name => {
+  if (name.startsWith('--')) return name;
   return name.replace(/[A-Z]/g, match => '-' + match.toLowerCase());
 };
 const isUnitlessNumber = ['opacity', 'zIndex', 'lineHeight', 'flexGrow', 'flexShrink', 'fontWeight'];
@@ -1843,7 +1844,7 @@ function createElement(type) {
     if (isValidElement(c) || typeof c === 'function') return c;
     return createTextElement(c);
   });
-  props.children = props.children.length === 1 ? props.children[0] : props.children;
+  props.children = props.children.length <= 1 ? props.children[0] : props.children;
   let node = {
     $$typeof: ELEMENT,
     props,

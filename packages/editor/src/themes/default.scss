@@ -216,11 +216,13 @@ li > ul {
 }
 
 hr {
-	height: 2px;
+	height: 1px;
 	padding: 0;
 	margin: 16px 0;
-	background-color: #e7e7e7;
-	border: 0 none;
+	border-width: 0;
+	border-style: solid;
+	border-color: rgba(0, 0, 0, 0.12);
+	border-bottom-width: thin;
 	overflow: hidden;
 	box-sizing: content-box;
 }

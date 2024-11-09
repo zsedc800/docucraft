@@ -8,7 +8,7 @@ export const LinkSpec: NodeSpec = {
 	selectable: true,
 	attrs: {
 		href: { default: '' },
-		download: { default: null },
+		// download: { default: null },
 		title: { default: '' },
 		target: { default: '_blank' }
 	},
@@ -19,7 +19,7 @@ export const LinkSpec: NodeSpec = {
 			getAttrs(node) {
 				return {
 					href: node.getAttribute('href'),
-					download: node.getAttribute('download') || null,
+					// download: node.getAttribute('download') || null,
 					title: node.getAttribute('title') || null,
 					target: node.getAttribute('target')
 				};

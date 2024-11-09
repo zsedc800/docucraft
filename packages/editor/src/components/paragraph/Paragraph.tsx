@@ -13,7 +13,6 @@ import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
 import Stack from '@mui/material/Stack';
-import Tooltip from '@mui/material/Tooltip';
 import SvgTitle from '@docucraft/icons/svg/TitleFill';
 import SvgH1 from '@docucraft/icons/svg/FormatH1';
 import SvgH2 from '@docucraft/icons/svg/FormatH2';
@@ -35,13 +34,14 @@ import SvgTable from '../../assets/svg/SvgTable';
 import SvgBlockQuote from '../../assets/svg/BlockQuote';
 import SvgDivider from '../../assets/svg/Divider';
 import SvgEmphsis from '../../assets/svg/Emphsis';
-import { Command, NodeSelection } from 'prosemirror-state';
+import { Command } from 'prosemirror-state';
 import { transformToNode } from '../../commands';
 import { schema } from '../../model';
-import { classnames, nextTick, overrides } from '../../utils';
+import { classnames, nextTick } from '../../utils';
 import { ReactNode } from 'react';
-import { confirm as DialogConfirm } from '../dialog';
-import { confirm } from '../popover';
+import { prompt } from '../popover';
+import { IconBlock } from '../kits';
+import { ToolItem } from '../toolBar';
 
 interface Props extends BaseNodeViewProps {
 	nodeView: ParagraphView;
@@ -66,56 +66,6 @@ const StyledPopper = styled(Popper)(({ theme }) => ({
 	})
 }));
 
-const IconBlock = ({
-	title,
-	icon: Ico,
-	handler,
-	handleClose
-}: {
-	title: string;
-	icon: (...args: any[]) => ReactNode;
-	handler: (...args: any[]) => any;
-	handleClose?: () => void;
-}) => {
-	const {
-		nodeView: { view }
-	} = useContext(nodeViewContext);
-	return (
-		<Tooltip
-			title={<Typography sx={{ fontSize: '12px' }}>{title}</Typography>}
-			placement="top"
-		>
-			<Ico
-				className="iconButton"
-				onClick={() => {
-					const { state, dispatch } = view;
-					const {
-						selection: { $from },
-						tr,
-						doc
-					} = state;
-					const start = $from.before();
-
-					let transction = tr.setSelection(NodeSelection.create(doc, start));
-					const node = $from.parent;
-					if (node.type === schema.nodes.paragraph)
-						transction = transction.delete(start + 1, start + node.nodeSize);
-
-					handler(overrides(state, { tr: transction }), view.dispatch, view);
-
-					view.focus();
-					handleClose?.();
-				}}
-			/>
-		</Tooltip>
-	);
-};
-
-interface ToolItem {
-	title: string;
-	icon: (p: any) => ReactNode;
-	handler: Command | (() => void);
-}
 const basicTools: ToolItem[] = [
 	{
 		title: '文本',
@@ -179,11 +129,28 @@ const basicTools: ToolItem[] = [
 		title: '添加链接',
 		icon: SvgLink,
 		handler: (state, dispatch, view) => {
-			if (view) view.dispatch(state.tr);
+			if (!view) return false;
+			view.dispatch(state.tr);
 			nextTick(() => {
-				confirm({}, view!).then((res: any) => {
-					console.log(res, 'res');
-				});
+				prompt(
+					{
+						title: '添加链接',
+						fields: [
+							{ name: 'url', label: '链接地址', required: true },
+							{ name: 'text', label: '文本' }
+						]
+					},
+					view!
+				)
+					.then((res: any) =>
+						transformToNode(
+							schema.nodes.link,
+							{ href: res.url },
+							schema.text(res.text || '链接')
+						)
+					)
+					.then((fn) => fn(view.state, view.dispatch, view))
+					.then(() => view.focus());
 			});
 			return false;
 		}
@@ -264,7 +231,7 @@ export default ({
 							})}
 						>
 							{basicTools.map((props) => (
-								<IconBlock {...{ ...props, handleClose }} />
+								<IconBlock type="block" {...{ ...props, handleClose }} />
 							))}
 						</Box>
 					</Box>
