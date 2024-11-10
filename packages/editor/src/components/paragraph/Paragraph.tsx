@@ -39,7 +39,7 @@ import { transformToNode } from '../../commands';
 import { schema } from '../../model';
 import { classnames, nextTick } from '../../utils';
 import { ReactNode } from 'react';
-import { prompt } from '../popover';
+import { prompt, usePopover } from '../popover';
 import { IconBlock } from '../kits';
 import { ToolItem } from '../toolBar';
 

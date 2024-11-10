@@ -10,6 +10,7 @@ import { languages } from '@codemirror/language-data';
 import LangPicker from './LangPicker';
 import { useNodeView } from '../../utils/view';
 import './style.scss';
+import { usePopover } from '../popover';
 interface Props {
 	nodeView: CodeBlockView;
 	language: string;
@@ -89,7 +90,6 @@ export default ({
 								checked={showLineNumber}
 								onChange={(e) => {
 									const { state, dispatch } = nodeView.view;
-									console.log(111);
 
 									const pos = nodeView.getPos();
 									if (pos || pos == 0) {

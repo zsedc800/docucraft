@@ -1,4 +1,4 @@
-import { createRoot, useMemo, useRef } from '@docucraft/srender';
+import { createRoot, useMemo, useRef, useState } from '@docucraft/srender';
 
 import Button from '@mui/material/Button';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
@@ -16,23 +16,6 @@ import { FieldValues } from 'react-hook-form';
 
 let container: HTMLElement;
 
-const StyledPopper = styled(Popper)(({ theme }) => ({
-	border: `1px solid ${'#e1e4e8'}`,
-	boxShadow: `0 8px 24px ${'rgba(149, 157, 165, 0.2)'}`,
-	color: '#24292e',
-	backgroundColor: '#fff',
-	borderRadius: 6,
-	minWidth: 300,
-	zIndex: theme.zIndex.modal,
-	fontSize: 13,
-	...theme.applyStyles('dark', {
-		border: `1px solid ${'#30363d'}`,
-		boxShadow: `0 8px 24px ${'rgb(1, 4, 9)'}`,
-		color: '#c9d1d9',
-		backgroundColor: '#1c2128'
-	})
-}));
-
 interface Config {
 	title?: string | ReactNode;
 	content?: ReactNode;
@@ -40,16 +23,16 @@ interface Config {
 	fields: Field[];
 }
 
-interface Props extends Config {
+interface Props {
 	open: boolean;
 	close: () => void;
 	view: EditorView;
-	onOk: (e: any) => void;
+	// onOk: (e: any) => void;
 	onCancel?: () => void;
 	children: ReactNode;
 }
 
-const PlainBoard = ({ open, view, children }: Props) => {
+const PlainBoard = ({ open, view, children, close }: Props) => {
 	const id = open ? 'plain-board-popover' : void 0;
 	const context = useRef(view);
 	context.current = view;
@@ -61,16 +44,11 @@ const PlainBoard = ({ open, view, children }: Props) => {
 		[]
 	);
 	return (
-		<StyledPopper
-			id={id}
-			anchorEl={anchorEl}
-			open={open}
-			placement="bottom-start"
-		>
+		<Popper id={id} anchorEl={anchorEl} open={open} placement="bottom-start">
 			<ClickAwayListener onClickAway={close}>
-				<Box>{children}</Box>
+				<Paper>{children}</Paper>
 			</ClickAwayListener>
-		</StyledPopper>
+		</Popper>
 	);
 };
 
@@ -100,57 +78,94 @@ function basePop({
 	return [rootRender, container];
 }
 
-export function prompt<T extends FieldValues = FieldValues>(
-	{ title, fields }: Config,
-	view: EditorView
-) {
-	const { promise, reject, resolve } = Promise.withResolvers<T>();
-	basePop({
-		view,
-		render: ({ close }) => (
-			<Box sx={{ width: '480px', '& .form-content': { padding: '8px 15px' } }}>
-				<Typography
-					sx={{ fontSize: '14px', fontWeight: 'bold', padding: '8px 15px' }}
-					variant="h2"
-				>
-					{title}
-				</Typography>
-				<BaseForm
-					fields={fields}
-					onSubmit={(data) => {
-						resolve(data as T);
+interface PromptProps extends Config {
+	close: () => void;
+	onSubmit: (v: FieldValues) => void;
+}
+const BasePrompt = ({ title, close, fields, onSubmit }: PromptProps) => (
+	<Box sx={{ width: '480px', '& .form-content': { padding: '8px 15px' } }}>
+		<Typography
+			sx={{ fontSize: '14px', fontWeight: 'bold', padding: '8px 15px' }}
+			variant="h2"
+		>
+			{title}
+		</Typography>
+		<BaseForm fields={fields} onSubmit={onSubmit}>
+			<Divider />
+			<Box
+				sx={{
+					display: 'flex',
+					justifyContent: 'flex-end',
+					padding: '8px 15px'
+				}}
+			>
+				<Button
+					onClick={() => {
 						close();
 					}}
 				>
-					<Divider />
-					<Box
-						sx={{
-							display: 'flex',
-							justifyContent: 'flex-end',
-							padding: '8px 15px'
-						}}
-					>
-						<Button
-							onClick={() => {
-								close();
-							}}
-						>
-							取消
-						</Button>
-						<Button type="submit">确认</Button>
-					</Box>
-				</BaseForm>
+					取消
+				</Button>
+				<Button type="submit">确认</Button>
 			</Box>
+		</BaseForm>
+	</Box>
+);
+
+export function prompt<T extends FieldValues = FieldValues>(
+	conf: Config,
+	view: EditorView
+) {
+	const { promise, resolve } = Promise.withResolvers<T>();
+	basePop({
+		view,
+		render: ({ close }) => (
+			<BasePrompt
+				{...conf}
+				close={close}
+				onSubmit={(data) => {
+					resolve(data as T);
+					close();
+				}}
+			/>
 		)
 	});
 
 	return promise;
 }
 
-export const usePopover = (view: EditorView) => {
+interface IPopover {
+	prompt<T extends FieldValues = FieldValues>(conf: Config): Promise<T>;
+}
+
+export const usePopover = (view: EditorView): [IPopover, ReactNode] => {
+	const [open, setOpen] = useState(false);
+	const close = () => setOpen(false);
+	const children = useRef<ReactNode>(<></>);
+	function prompt<T extends FieldValues = FieldValues>(conf: Config) {
+		const { promise, resolve } = Promise.withResolvers<T>();
+		children.current = (
+			<BasePrompt
+				{...conf}
+				close={close}
+				onSubmit={(data) => {
+					resolve(data as T);
+					close();
+				}}
+			/>
+		);
+		setOpen(true);
+		return promise;
+	}
 	const Popover = {
-		confirm: ({}: Config) => {}
+		prompt
 	};
 
-	return [Popover];
+	const placeholder = (
+		<PlainBoard open={open} close={close} view={view}>
+			{children.current}
+		</PlainBoard>
+	);
+
+	return [Popover, placeholder];
 };

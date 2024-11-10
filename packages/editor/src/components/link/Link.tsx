@@ -11,10 +11,11 @@ import SvgCopy from '@docucraft/icons/svg/ContentCopyFill';
 import SvgLinkOff from '@docucraft/icons/svg/LinkOffFill';
 import Paper from '@mui/material/Paper';
 import { NodeSelection } from 'prosemirror-state';
-import { prompt } from '../popover';
+import { prompt, usePopover } from '../popover';
 import { nextTick } from '../../utils';
 import { Fragment, Slice } from 'prosemirror-model';
 import { schema } from '../../model';
+import Toast from '../Toast';
 interface Props extends AnchorHTMLAttributes<HTMLAnchorElement> {
 	nodeView: LinkView;
 }
@@ -74,7 +75,9 @@ const tools: ToolItem[] = [
 		title: '复制链接',
 		icon: SvgCopy,
 		handler: ({ node }: BaseNodeView) => {
-			navigator.clipboard.writeText(node.attrs.href).then(() => {});
+			navigator.clipboard
+				.writeText(node.attrs.href)
+				.then(() => Toast.success('已复制'));
 		}
 	},
 	{
@@ -119,7 +122,6 @@ export default ({ nodeView, hidden, href, ...props }: Props) => {
 	const { $dom, $contentDOM } = useNodeView<HTMLSpanElement, HTMLAnchorElement>(
 		nodeView
 	);
-
 	return (
 		<RichTooltip
 			title={<LinkTools />}

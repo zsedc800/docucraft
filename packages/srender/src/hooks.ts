@@ -15,7 +15,9 @@ export const useRef: <T = any>(initValue: T | null) => RefObject<T> = (
 	return hook.state;
 };
 
-export const useState = <T = any>(initialState: T | null) => {
+export const useState = <T = any>(
+	initialState: T | null
+): [T, (...args: any[]) => void] => {
 	const hook = createWorkInProgressHook(
 		typeof initialState === 'function' ? initialState() : initialState
 	);
