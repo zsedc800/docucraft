@@ -62,10 +62,10 @@ pre {
 	right: 100%;
 }
 
-[placeholder] {
+[data-placeholder] {
 	&:empty {
 		&::after {
-			content: attr(placeholder);
+			content: attr(data-placeholder);
 			pointer-events: none;
 			display: inline-block;
 		}

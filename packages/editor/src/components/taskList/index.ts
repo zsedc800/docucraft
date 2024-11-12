@@ -5,6 +5,7 @@ import './style.scss';
 import createElement, { updateElement } from '../../createElement';
 import { BaseNodeView } from '../../utils/view';
 import TaskItem from './TaskItem';
+import { createNode, createNodeAndFill } from '../../commands';
 
 export const taskItem: NodeSpec = {
 	content: 'paragraph*',
@@ -55,7 +56,9 @@ export const createTaskList: Command = (state, dispatch) => {
 	if (dispatch) {
 		dispatch(
 			state.tr
-				.replaceSelectionWith(taskList.create(null, taskItem.createAndFill()))
+				.replaceSelectionWith(
+					createNode(taskList, null, createNodeAndFill(taskItem))
+				)
 				.scrollIntoView()
 		);
 		return true;

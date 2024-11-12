@@ -16,6 +16,7 @@ import { nextTick } from '../../utils';
 import { Fragment, Slice } from 'prosemirror-model';
 import { schema } from '../../model';
 import Toast from '../Toast';
+import { createNode } from '../../commands';
 interface Props extends AnchorHTMLAttributes<HTMLAnchorElement> {
 	nodeView: LinkView;
 }
@@ -58,7 +59,8 @@ const tools: ToolItem[] = [
 					view.state.tr.replaceSelection(
 						new Slice(
 							Fragment.from(
-								schema.nodes.link.create(
+								createNode(
+									schema.nodes.link,
 									{ ...node.attrs, href: url },
 									schema.text(text)
 								)

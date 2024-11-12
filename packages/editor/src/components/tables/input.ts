@@ -20,6 +20,7 @@ import {
 import { tableNodeTypes } from './schema';
 import { clipCells, fitSlice, insertCells, pastedCells } from './copypaste';
 import { TableMap } from './tableMap';
+import { createNodeAndFill } from '../../commands';
 
 type Axis = 'horiz' | 'vert';
 
@@ -30,8 +31,9 @@ const deleteCellSelection: Command = (state, dispatch) => {
 	if (!(sel instanceof CellSelection)) return false;
 	if (dispatch) {
 		const tr = state.tr;
-		const baseContent = tableNodeTypes(state.schema).cell.createAndFill()!
-			.content;
+		const baseContent = createNodeAndFill(
+			tableNodeTypes(state.schema).cell
+		)!.content;
 		sel.forEachCell((cell, pos) => {
 			if (!cell.content.eq(baseContent))
 				tr.replace(

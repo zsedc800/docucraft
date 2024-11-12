@@ -9,45 +9,26 @@ import { Node, NodeType } from 'prosemirror-model';
 import './style.scss';
 import { Plugin } from 'prosemirror-state';
 import { schema } from '../../model';
+import { shallowEqual } from '../../utils';
 
 export class ParagraphView extends BaseNodeView {
+	placeholder: string = ' ';
+	text: string;
 	constructor(...args: Parameters<NodeViewConstructor>) {
 		const [node, view, getPos] = args;
 		super(node, view, getPos);
 		this.component = Paragraph;
 		this.render();
-		this.hack();
-	}
-
-	clearBr = () => {
-		if (this.contentDOM) this.contentDOM.innerHTML = '';
-	};
-
-	hack() {
-		if (requestAnimationFrame) requestAnimationFrame(this.clearBr);
-		else setTimeout(this.clearBr, 17);
-	}
-
-	ignoreMutation(mutation: MutationRecord): boolean {
-		if (mutation.type === 'childList') {
-			const node = mutation.removedNodes && mutation.removedNodes[0];
-			if (
-				node &&
-				'className' in node &&
-				node.className === 'ProseMirror-trailingBreak'
-			)
-				return true;
-		}
-		return super.ignoreMutation(mutation);
+		this.text = node.textContent;
 	}
 
 	update(node: Node) {
-		if (!node.content.size) this.hack();
-		const { type, attrs } = node;
-		const { attrs: props, type: t } = this.node;
+		const { type, attrs, textContent: txt } = node;
+		const { attrs: props, type: t, textContent: text } = this.node;
+		this.text = txt;
 		if (type !== t) return false;
 		this.node = node;
-		this.render({ text: node.textContent });
+		if (!shallowEqual(attrs, props) || txt !== text) this.render({ text: txt });
 		return true;
 	}
 }
@@ -70,21 +51,25 @@ export const textblockPlugin = new Plugin({
 		const { doc, selection, tr } = newState;
 		const curPos = selection.from;
 
+		let apply = false;
 		doc.descendants((node, pos) => {
 			if (node.type === schema.nodes.paragraph) {
 				const isCursorInside = curPos >= pos && curPos < pos + node.nodeSize;
-
 				if (isCursorInside) {
 					const $pos = doc.resolve(pos);
 					const parentNode = $pos.parent;
 					const placeholder = getTextByNodeType(parentNode.type);
-					tr.setNodeAttribute(pos, 'placeholder', placeholder);
-				} else {
-					tr.setNodeAttribute(pos, 'placeholder', ' ');
+					if (!node.attrs.placeholder) {
+						tr.setNodeAttribute(pos, 'placeholder', placeholder);
+						apply = true;
+					}
+				} else if (node.attrs.placeholder) {
+					tr.setNodeAttribute(pos, 'placeholder', '');
+					apply = true;
 				}
 			}
 		});
 
-		return tr;
+		return apply ? tr : null;
 	}
 });

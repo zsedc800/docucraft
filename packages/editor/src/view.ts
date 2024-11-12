@@ -6,9 +6,8 @@ import { keymap } from 'prosemirror-keymap';
 import { history } from 'prosemirror-history';
 import { CodeBlockViewConstructor } from './components/codeBlock/codeBlockView';
 // import { highlightCodePlugin } from './components/codeBlock/highlightCodePlugin';
-import { myKeymap, buildInputRules } from './commands';
+import { getMyKeyMap, buildInputRules } from './commands';
 import { buildToolbar } from './components/toolBar';
-import './themes/default.scss';
 import { TaskItemViewConstructor, taskItem } from './components/taskList';
 import { columnResizing, tableEditing } from './components/tables';
 import { addView } from './utils';
@@ -22,6 +21,7 @@ import {
 import { BlockTileViewConstructor } from './components/blockTile';
 import { ListItemViewConstructor } from './components/listItem';
 import { LinkViewConstructor } from './components/link';
+import './themes/default.scss';
 
 export class Editor {
 	constructor(container?: HTMLElement) {
@@ -41,7 +41,7 @@ export const setupEditor = (el: HTMLElement | null) => {
 		schema,
 		plugins: [
 			buildInputRules(),
-			keymap(myKeymap),
+			keymap(getMyKeyMap()),
 			history(),
 			// toolbar.plugin,
 			// highlightCodePlugin(),

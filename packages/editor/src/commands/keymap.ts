@@ -22,6 +22,7 @@ import { schema } from '../model';
 import { redo, undo } from 'prosemirror-history';
 import { DecorationSet, EditorView } from 'prosemirror-view';
 import { createTaskList } from '../components/taskList';
+import { createNode, createNodeAndFill } from './commands';
 
 const splitListItem = (itemTypes: NodeType[], itemAttrs?: Attrs): Command => {
 	return (state, dispatch) => {
@@ -60,7 +61,7 @@ const splitListItem = (itemTypes: NodeType[], itemAttrs?: Attrs): Command => {
 							? 2
 							: 3;
 				// Add a second list item with an empty default start node
-				wrap = wrap.append(Fragment.from(itemTypes[0].createAndFill()));
+				wrap = wrap.append(Fragment.from(createNodeAndFill(itemTypes[0])));
 
 				let start = $from.before($from.depth - (depthBefore - 1));
 				const s = new Slice(wrap, 4 - depthBefore, 0);
@@ -111,7 +112,7 @@ const headingEnter: Command = (state, dispatch) => {
 		const position = findNextVisiblePos(state.doc, pos);
 		let tr = state.tr.insert(
 			position,
-			schema.nodes.heading.create({ level: node.attrs.level })
+			createNode(schema.nodes.heading, { level: node.attrs.level })
 		);
 		tr = tr.setSelection(TextSelection.create(tr.doc, position + 1));
 		dispatch(tr);
@@ -132,27 +133,33 @@ function isAtWidget(state: EditorState, decorations?: DecorationSet) {
 	return widget && !(widget as any).inline;
 }
 
-export const myKeymap: { [key: string]: Command } = {
-	...baseKeymap,
-	Enter: chainCommands(
-		headingEnter,
-		splitListItem([schema.nodes.list_item, schema.nodes.taskItem]),
-		newlineInCode,
-		createParagraphNear,
-		liftEmptyBlock,
-		splitBlock
-	),
-	'Mod-z': undo,
-	'Mod-y': redo,
-	Tab: (state: EditorState, dispatch?: EditorView['dispatch']) => {
-		const { $from, $to } = state.selection;
-		if (!$from.sameParent($to) || $from.parent.type !== schema.nodes.codeBlock)
+export const getMyKeyMap = () => {
+	const myKeymap: { [key: string]: Command } = {
+		...baseKeymap,
+		Enter: chainCommands(
+			headingEnter,
+			splitListItem([schema.nodes.list_item, schema.nodes.taskItem]),
+			newlineInCode,
+			createParagraphNear,
+			liftEmptyBlock,
+			splitBlock
+		),
+		'Mod-z': undo,
+		'Mod-y': redo,
+		Tab: (state: EditorState, dispatch?: EditorView['dispatch']) => {
+			const { $from, $to } = state.selection;
+			if (
+				!$from.sameParent($to) ||
+				$from.parent.type !== schema.nodes.codeBlock
+			)
+				return false;
+			if (dispatch) {
+				dispatch(state.tr.insertText('\t'));
+				return true;
+			}
 			return false;
-		if (dispatch) {
-			dispatch(state.tr.insertText('\t'));
-			return true;
-		}
-		return false;
-	},
-	'Ctrl-Shift-L': createTaskList
+		},
+		'Ctrl-Shift-L': createTaskList
+	};
+	return myKeymap;
 };

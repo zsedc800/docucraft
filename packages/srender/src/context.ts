@@ -1,15 +1,22 @@
 import { ContextProvider } from './element';
-import { Context } from './interface';
-import { createRef } from './utils';
+import { Context, RootFiberNode } from './interface';
+import { workInProgressRoot } from './reconciler/core';
 const resetHandlers: Array<() => void> = [];
 export function resetContext() {
 	for (const fn of resetHandlers) fn();
 }
+
 export const createContext = <T = any>(initialValue: T): Context<T> => {
-	const $currentValue = createRef(initialValue);
 	const stackValue = [initialValue];
+	const map = new WeakMap<RootFiberNode, T[]>();
 	const Provider = ({ value, children }: { value: T; children: any }) => {
-		stackValue.push(value);
+		let stack = map.get(workInProgressRoot!);
+
+		if (!stack) {
+			stack = [initialValue];
+			map.set(workInProgressRoot!, stack);
+		}
+		stack.push(value);
 		return children;
 	};
 
@@ -17,13 +24,16 @@ export const createContext = <T = any>(initialValue: T): Context<T> => {
 
 	const context: Context<T> = {
 		get currentValue() {
-			return stackValue[stackValue.length - 1];
+			const stack = map.get(workInProgressRoot!);
+			return stack ? stack[stack.length - 1] : initialValue;
 		},
 		pop() {
-			stackValue.pop();
+			let stack = map.get(workInProgressRoot!);
+			stack?.pop();
+			// stackValue.pop();
 		},
 		Provider,
-		Consumer: ({ children }) => children($currentValue.current)
+		Consumer: ({ children }) => children(context.currentValue)
 	};
 	Provider._context = context;
 	Provider.displayType = ContextProvider;

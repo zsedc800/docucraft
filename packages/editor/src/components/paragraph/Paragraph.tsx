@@ -1,12 +1,7 @@
 import Typography from '@mui/material/Typography';
-import {
-	BaseNodeViewProps,
-	nodeViewContext,
-	useNodeView
-} from '../../utils/view';
+import { BaseNodeViewProps, useNodeView } from '../../utils/view';
 import { ParagraphView } from '.';
 import Tools from '../toolBar/Tools';
-import { styled } from '@mui/material/styles';
 import Popper from '@mui/material/Popper';
 import { useContext, useEffect, useState } from '@docucraft/srender';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
@@ -34,37 +29,19 @@ import SvgTable from '../../assets/svg/SvgTable';
 import SvgBlockQuote from '../../assets/svg/BlockQuote';
 import SvgDivider from '../../assets/svg/Divider';
 import SvgEmphsis from '../../assets/svg/Emphsis';
-import { Command } from 'prosemirror-state';
 import { transformToNode } from '../../commands';
 import { schema } from '../../model';
 import { classnames, nextTick } from '../../utils';
-import { ReactNode } from 'react';
 import { prompt, usePopover } from '../popover';
 import { IconBlock } from '../kits';
 import { ToolItem } from '../toolBar';
+import Paper from '@mui/material/Paper';
 
 interface Props extends BaseNodeViewProps {
 	nodeView: ParagraphView;
 	placeholder: string;
 	text?: string;
 }
-
-const StyledPopper = styled(Popper)(({ theme }) => ({
-	border: `1px solid ${'#e1e4e8'}`,
-	boxShadow: `0 8px 24px ${'rgba(149, 157, 165, 0.2)'}`,
-	color: '#24292e',
-	backgroundColor: '#fff',
-	borderRadius: 6,
-	width: 300,
-	zIndex: theme.zIndex.modal,
-	fontSize: 13,
-	...theme.applyStyles('dark', {
-		border: `1px solid ${'#30363d'}`,
-		boxShadow: `0 8px 24px ${'rgb(1, 4, 9)'}`,
-		color: '#c9d1d9',
-		backgroundColor: '#1c2128'
-	})
-}));
 
 const basicTools: ToolItem[] = [
 	{
@@ -170,134 +147,129 @@ export default ({
 		setAnchorEl(null);
 	};
 
+	const [{ plain }, childrenHolder] = usePopover(nodeView.view);
+
 	const isToplevel = nodeView.depth === 0;
 
-	const open = Boolean(anchorEl);
-	const id = open ? 'block-control-panel' : void 0;
+	const poper = (
+		<Paper
+			className="scrollbar"
+			sx={(t) => ({
+				padding: '0 15px',
+				width: 300,
+				'& .subTitle': {
+					fontSize: '12px',
+					paddingBottom: '4px',
+					color: t.palette.text.secondary
+				},
+				'& .group': {
+					padding: '8px 0'
+				}
+			})}
+		>
+			<Box
+				className="group"
+				sx={(t) => ({
+					borderBottom: `1px solid ${t.palette.grey[100]}`
+				})}
+			>
+				<Typography className="subTitle">最近使用</Typography>
+				<Stack direction="row" spacing={1}>
+					<Chip size="small" label="代码块"></Chip>
+					<Chip size="small" label="任务列表"></Chip>
+					<Chip size="small" label="表格"></Chip>
+				</Stack>
+			</Box>
+			<Box className="group">
+				<Typography className="subTitle">常见块</Typography>
+				<Box
+					sx={(t) => ({
+						display: 'grid',
+						gridTemplateColumns: 'repeat(6, 1fr)',
+						'& .iconButton': {
+							fontSize: '22px',
+							padding: '4px'
+						}
+					})}
+				>
+					{basicTools.map((props) => (
+						<IconBlock type="block" {...{ ...props, handleClose }} />
+					))}
+				</Box>
+			</Box>
+			<Box className="group">
+				<Typography className="subTitle">基础块</Typography>
+				<List
+					sx={(t) => ({
+						[`& .${listItemButtonClasses.root}`]: {
+							padding: '4px',
+							marginLeft: '-4px',
+							borderRadius: '4px'
+						},
+						'& .avatar': {
+							backgroundColor: 'transparent',
+							border: `1px solid #e3e4e5`
+						}
+					})}
+				>
+					<ListItem>
+						<ListItemAvatar>
+							<Avatar className="avatar" variant="rounded">
+								<SvgTable />
+							</Avatar>
+						</ListItemAvatar>
+						<ListItemText primary="表格" secondary="添加表格" />
+					</ListItem>
+					<ListItem>
+						<ListItemAvatar>
+							<Avatar className="avatar" variant="rounded">
+								<SvgBlockQuote />
+							</Avatar>
+						</ListItemAvatar>
+						<ListItemText primary="引用" secondary="摘要引用" />
+					</ListItem>
+					<ListItem>
+						<ListItemAvatar>
+							<Avatar className="avatar" variant="rounded">
+								<SvgDivider />
+							</Avatar>
+						</ListItemAvatar>
+						<ListItemText primary="分隔线" secondary="创建元素分割线" />
+					</ListItem>
+					<ListItem>
+						<ListItemAvatar>
+							<Avatar className="avatar" variant="rounded">
+								<SvgEmphsis />
+							</Avatar>
+						</ListItemAvatar>
+						<ListItemText primary="标注" secondary="强调块" />
+					</ListItem>
+				</List>
+			</Box>
+		</Paper>
+	);
 	useEffect(() => {
 		if (!isToplevel) return;
 
 		if (/^\//.test(text)) {
-			if (!open) setAnchorEl($dom.current);
-		} else if (open) {
-			handleClose();
+			if (!plain.visible) plain(poper);
+		} else if (plain.visible) {
+			plain.close();
 		}
 	}, [text]);
-	const poper = (
-		<StyledPopper
-			id={id}
-			open={open}
-			anchorEl={anchorEl}
-			placement="bottom-start"
-		>
-			<ClickAwayListener onClickAway={handleClose}>
-				<Box
-					className="scrollbar"
-					sx={(t) => ({
-						padding: '0 15px',
-						'& .subTitle': {
-							fontSize: '12px',
-							paddingBottom: '4px',
-							color: t.palette.text.secondary
-						},
-						'& .group': {
-							padding: '8px 0'
-						}
-					})}
-				>
-					<Box
-						className="group"
-						sx={(t) => ({
-							borderBottom: `1px solid ${t.palette.grey[100]}`
-						})}
-					>
-						<Typography className="subTitle">最近使用</Typography>
-						<Stack direction="row" spacing={1}>
-							<Chip size="small" label="代码块"></Chip>
-							<Chip size="small" label="任务列表"></Chip>
-							<Chip size="small" label="表格"></Chip>
-						</Stack>
-					</Box>
-					<Box className="group">
-						<Typography className="subTitle">常见块</Typography>
-						<Box
-							sx={(t) => ({
-								display: 'grid',
-								gridTemplateColumns: 'repeat(6, 1fr)',
-								'& .iconButton': {
-									fontSize: '22px',
-									padding: '4px'
-								}
-							})}
-						>
-							{basicTools.map((props) => (
-								<IconBlock type="block" {...{ ...props, handleClose }} />
-							))}
-						</Box>
-					</Box>
-					<Box className="group">
-						<Typography className="subTitle">基础块</Typography>
-						<List
-							sx={(t) => ({
-								[`& .${listItemButtonClasses.root}`]: {
-									padding: '4px',
-									marginLeft: '-4px',
-									borderRadius: '4px'
-								},
-								'& .avatar': {
-									backgroundColor: 'transparent',
-									border: `1px solid #e3e4e5`
-								}
-							})}
-						>
-							<ListItem>
-								<ListItemAvatar>
-									<Avatar className="avatar" variant="rounded">
-										<SvgTable />
-									</Avatar>
-								</ListItemAvatar>
-								<ListItemText primary="表格" secondary="添加表格" />
-							</ListItem>
-							<ListItem>
-								<ListItemAvatar>
-									<Avatar className="avatar" variant="rounded">
-										<SvgBlockQuote />
-									</Avatar>
-								</ListItemAvatar>
-								<ListItemText primary="引用" secondary="摘要引用" />
-							</ListItem>
-							<ListItem>
-								<ListItemAvatar>
-									<Avatar className="avatar" variant="rounded">
-										<SvgDivider />
-									</Avatar>
-								</ListItemAvatar>
-								<ListItemText primary="分隔线" secondary="创建元素分割线" />
-							</ListItem>
-							<ListItem>
-								<ListItemAvatar>
-									<Avatar className="avatar" variant="rounded">
-										<SvgEmphsis />
-									</Avatar>
-								</ListItemAvatar>
-								<ListItemText primary="标注" secondary="强调块" />
-							</ListItem>
-						</List>
-					</Box>
-				</Box>
-			</ClickAwayListener>
-		</StyledPopper>
-	);
 	const body = (
-		<div ref={$dom} className={classnames('block text-block', { hidden })}>
-			<Typography
-				className="paragraph"
-				ref={$contentDOM}
-				placeholder={placeholder}
-				{...props}
-			/>
-			{isToplevel ? poper : null}
+		<div
+			ref={$dom}
+			className={classnames('block text-block', { hidden, empty: !text })}
+			data-placeholder={placeholder}
+		>
+			<Typography className="paragraph" ref={$contentDOM} />
 		</div>
 	);
-	return isToplevel ? <Tools nodeView={nodeView}>{body}</Tools> : body;
+	return (
+		<>
+			{isToplevel ? <Tools nodeView={nodeView}>{body}</Tools> : body}
+			{childrenHolder}
+		</>
+	);
 };

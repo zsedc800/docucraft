@@ -11,6 +11,7 @@ import { Mappable } from 'prosemirror-transform';
 import { TableMap } from './tableMap';
 import { CellAttrs, inSameTable, pointsAtCell, removeColSpan } from './utils';
 import { Decoration, DecorationSet, DecorationSource } from 'prosemirror-view';
+import { createNode, createNodeAndFill } from '../../commands';
 
 export interface CellSelectionJSON {
 	type: string;
@@ -203,14 +204,14 @@ export class CellSelection extends Selection {
 						);
 					}
 					if (cellRect.left < rect.left) {
-						cell = cell.type.createAndFill(attrs);
+						cell = createNodeAndFill(cell.type, attrs);
 						if (!cell) {
 							throw RangeError(
 								`Could not create cell with attrs ${JSON.stringify(attrs)}`
 							);
 						}
 					} else {
-						cell = cell.type.create(attrs, cell.content);
+						cell = createNode(cell.type, attrs, cell.content);
 					}
 				}
 				if (cellRect.top < rect.top || cellRect.bottom > rect.bottom) {
@@ -221,9 +222,9 @@ export class CellSelection extends Selection {
 							Math.max(cellRect.top, rect.top)
 					};
 					if (cellRect.top < rect.top) {
-						cell = cell.type.createAndFill(attrs)!;
+						cell = createNodeAndFill(cell.type, attrs)!;
 					} else {
-						cell = cell.type.create(attrs, cell.content);
+						cell = createNode(cell.type, attrs, cell.content);
 					}
 				}
 				rowContent.push(cell);

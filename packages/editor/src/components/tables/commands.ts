@@ -19,24 +19,29 @@ import {
 import { CellAttributes, tableNodeTypes } from './schema';
 import { CellSelection } from './cellSelection';
 import { Direction } from './input';
+import { createNode, createNodeAndFill } from '../../commands';
 export const createTable: (rows: number, columns: number) => Command =
 	(rows, columns) => (state, dispatch, view) => {
 		const { table, tableRow, tableHeader, tableCell, paragraph } =
 			state.schema.nodes;
 
-		const tableNode = table.create(
+		const tableNode = createNode(
+			table,
 			null,
 			Array(rows + 1)
 				.fill(null)
 				.map((_, row) =>
-					tableRow.create(
+					createNode(
+						tableRow,
 						null,
 						Array(columns)
 							.fill(null)
 							.map((_, col) =>
-								(row === 0 ? tableHeader : tableCell).create(
+								createNode(
+									row === 0 ? tableHeader : tableCell,
 									null,
-									paragraph.create(
+									createNode(
+										paragraph,
 										null
 										// state.schema.text('cell row ' + row + ', col ' + col)
 									)
@@ -63,19 +68,23 @@ export function insertTable(
 	const row = schema.nodes.table_row;
 	const cell = schema.nodes.table_cell;
 	const paragraph = schema.nodes.paragraph;
-	const tableNode = table.create(
+	const tableNode = createNode(
+		table,
 		null,
 		Array(3)
 			.fill(null)
 			.map((_, r) =>
-				row.create(
+				createNode(
+					row,
 					null,
 					Array(3)
 						.fill(null)
 						.map((_, col) =>
-							cell.create(
+							createNode(
+								cell,
 								null,
-								paragraph.create(
+								createNode(
+									paragraph,
 									null,
 									schema.text(`hello row ${r + 1} col ${col + 1}`)
 								)
@@ -139,7 +148,7 @@ export function addColumn(
 					? tableNodeTypes(table.type.schema).cell
 					: table.nodeAt(map.map[index + refColumn])!.type;
 			const pos = map.positionAt(row, col, table);
-			tr.insert(tr.mapping.map(tableStart + pos), type.createAndFill()!);
+			tr.insert(tr.mapping.map(tableStart + pos), createNodeAndFill(type)!);
 		}
 	}
 	return tr;
@@ -271,11 +280,14 @@ export const addRow = (
 				refRow === null
 					? tableNodeTypes(table.type.schema).cell
 					: table.nodeAt(map.map[index + refRow * map.width])?.type;
-			const node = type?.createAndFill();
+			const node = type ? createNodeAndFill(type) : void 0;
 			if (node) cells.push(node);
 		}
 	}
-	tr.insert(rowPos, tableNodeTypes(table.type.schema).row.create(null, cells));
+	tr.insert(
+		rowPos,
+		createNode(tableNodeTypes(table.type.schema).row, null, cells)
+	);
 	return tr;
 };
 
@@ -335,7 +347,8 @@ export const removeRow = (
 		} else if (row < map.height && pos == map.map[index + map.width]) {
 			const cell = table.nodeAt(pos)!;
 			const attrs = cell?.attrs as CellAttrs;
-			const copy = cell.type.create(
+			const copy = createNode(
+				cell.type,
 				{ ...attrs, rowspan: cell.attrs.rowspan - 1 },
 				cell.content
 			);

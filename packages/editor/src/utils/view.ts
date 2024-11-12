@@ -48,6 +48,7 @@ export class BaseNodeView implements NodeView {
 	contentDOM?: HTMLElement;
 	container?: HTMLElement;
 	rootRender: RootRender;
+	blockId: string;
 	component: ComponentType<any> = () => '';
 	depth: number;
 	constructor(
@@ -59,7 +60,7 @@ export class BaseNodeView implements NodeView {
 		this.rootRender = createRoot();
 		const pos = getPos();
 		this.depth = pos || pos === 0 ? view.state.doc.resolve(pos).depth : -1;
-
+		this.blockId = node.attrs.blockId;
 		Promise.resolve().then(() =>
 			this.rootRender.updateContainer(this.dom.parentElement!)
 		);
@@ -80,6 +81,7 @@ export class BaseNodeView implements NodeView {
 		if (this.contentDOM) {
 			if (mutation.target !== this.contentDOM) return true;
 		}
+
 		return false;
 	}
 

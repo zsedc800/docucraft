@@ -1,9 +1,23 @@
 .text-block {
+	position: relative;
 	padding: 3px 2px;
-	& > p {
-		min-height: 1em;
-		&::after {
-			opacity: 0.5;
+	// & > p {
+	// min-height: 1em;
+	// &::after {
+	// 	opacity: 0.5;
+	// }
+	// }
+	&.empty {
+		&[data-placeholder] {
+			&::after {
+				content: attr(data-placeholder);
+				position: absolute;
+				left: 2px;
+				top: 50%;
+				transform: translate(0, -50%);
+				opacity: 0.5;
+				pointer-events: none;
+			}
 		}
 	}
 }

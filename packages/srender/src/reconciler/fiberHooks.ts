@@ -12,7 +12,7 @@ import { getLatestFiber } from './utils';
 let workInProgressHook: Hooks | null = null;
 let firstWorkInProgressHook: Hooks | null = null;
 let lastWorkInProgressHook: Hooks | null = null;
-let workInProgress: Fiber | null = null;
+export let workInProgress: Fiber | null = null;
 export function createWorkInProgress(wip: Fiber) {
 	workInProgressHook = firstWorkInProgressHook = wip.memoizedState as Hooks;
 	workInProgress = wip;

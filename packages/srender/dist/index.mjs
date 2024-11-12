@@ -63,119 +63,42 @@ var Flags;
   Flags[Flags["DidCapture"] = 2] = "DidCapture";
 })(Flags || (Flags = {}));
 
-function isSubclassOf(subClass, superClass) {
-  let prototype = subClass.prototype ? Object.getPrototypeOf(subClass.prototype) : void 0;
-  while (prototype) {
-    if (prototype === superClass.prototype) {
-      return true;
-    }
-    prototype = Object.getPrototypeOf(prototype);
-  }
-  return false;
-}
-const wait = (fn, time) => function () {
-  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
-    args[_key] = arguments[_key];
-  }
-  return new Promise(resolve => {
-    setTimeout(() => resolve(fn(...args)), time);
-  });
-};
-const createRef = initialVal => ({
-  current: initialVal
-});
-const wrapPromise = promise => {
-  let status = 'pending',
-    result;
-  const next = promise.then(res => {
-    status = 'fulfilled';
-    result = res;
-  }, reason => {
-    status = 'rejected';
-    result = reason;
-  });
-  return {
-    read() {
-      switch (status) {
-        case 'pending':
-          throw new SuspenseException(next);
-        case 'fulfilled':
-          return result;
-        case 'rejected':
-        default:
-          throw result;
-      }
-    }
-  };
-};
-const lazy = load => {
-  const p = load();
-  const {
-    read
-  } = wrapPromise(p);
-  return props => createElement(read().default, props);
-};
-let counter = 0;
-function useId() {
-  return `srender_unique_${counter++}`;
-}
-function isNotEmpty(val) {
-  return val || val === 0;
-}
-function shallowEqual(obj1, obj2) {
-  if (obj1 === obj2) return true;
-  if (typeof obj1 !== 'object' || obj1 === null || typeof obj2 !== 'object' || obj2 === null) {
-    return false;
-  }
-  const keys1 = Object.keys(obj1);
-  const keys2 = Object.keys(obj2);
-  if (keys1.length !== keys2.length) {
-    return false;
-  }
-  for (let key of keys1) {
-    if (obj1[key] !== obj2[key]) {
-      return false;
-    }
-  }
-  return true;
-}
-function nextTick(fn) {
-  if (requestAnimationFrame) {
-    requestAnimationFrame(fn);
-  } else {
-    setTimeout(fn, 17);
-  }
-}
-
 const resetHandlers = [];
 function resetContext() {
   for (const fn of resetHandlers) fn();
 }
 const createContext = initialValue => {
-  const $currentValue = createRef(initialValue);
-  const stackValue = [initialValue];
+  const map = new WeakMap();
   const Provider = _ref => {
     let {
       value,
       children
     } = _ref;
-    stackValue.push(value);
+    let stack = map.get(workInProgressRoot);
+    if (!stack) {
+      stack = [initialValue];
+      map.set(workInProgressRoot, stack);
+    }
+    stack.push(value);
     return children;
   };
-  resetHandlers.push(() => stackValue.length = 1);
+  resetHandlers.push(() => 1);
   const context = {
     get currentValue() {
-      return stackValue[stackValue.length - 1];
+      const stack = map.get(workInProgressRoot);
+      return stack ? stack[stack.length - 1] : initialValue;
     },
     pop() {
-      stackValue.pop();
+      let stack = map.get(workInProgressRoot);
+      stack?.pop();
+      // stackValue.pop();
     },
     Provider,
     Consumer: _ref2 => {
       let {
         children
       } = _ref2;
-      return children($currentValue.current);
+      return children(context.currentValue);
     }
   };
   Provider._context = context;
@@ -539,6 +462,90 @@ function cloneFiberNode(oldFiber, props) {
   fiber.effects = [];
   fiber.flags = FiberFlags.Update;
   return fiber;
+}
+
+function isSubclassOf(subClass, superClass) {
+  let prototype = subClass.prototype ? Object.getPrototypeOf(subClass.prototype) : void 0;
+  while (prototype) {
+    if (prototype === superClass.prototype) {
+      return true;
+    }
+    prototype = Object.getPrototypeOf(prototype);
+  }
+  return false;
+}
+const wait = (fn, time) => function () {
+  for (var _len = arguments.length, args = new Array(_len), _key = 0; _key < _len; _key++) {
+    args[_key] = arguments[_key];
+  }
+  return new Promise(resolve => {
+    setTimeout(() => resolve(fn(...args)), time);
+  });
+};
+const createRef = initialVal => ({
+  current: initialVal
+});
+const wrapPromise = promise => {
+  let status = 'pending',
+    result;
+  const next = promise.then(res => {
+    status = 'fulfilled';
+    result = res;
+  }, reason => {
+    status = 'rejected';
+    result = reason;
+  });
+  return {
+    read() {
+      switch (status) {
+        case 'pending':
+          throw new SuspenseException(next);
+        case 'fulfilled':
+          return result;
+        case 'rejected':
+        default:
+          throw result;
+      }
+    }
+  };
+};
+const lazy = load => {
+  const p = load();
+  const {
+    read
+  } = wrapPromise(p);
+  return props => createElement(read().default, props);
+};
+let counter = 0;
+function useId() {
+  return `srender_unique_${counter++}`;
+}
+function isNotEmpty(val) {
+  return val || val === 0;
+}
+function shallowEqual(obj1, obj2) {
+  if (obj1 === obj2) return true;
+  if (typeof obj1 !== 'object' || obj1 === null || typeof obj2 !== 'object' || obj2 === null) {
+    return false;
+  }
+  const keys1 = Object.keys(obj1);
+  const keys2 = Object.keys(obj2);
+  if (keys1.length !== keys2.length) {
+    return false;
+  }
+  for (let key of keys1) {
+    if (obj1[key] !== obj2[key]) {
+      return false;
+    }
+  }
+  return true;
+}
+function nextTick(fn) {
+  if (requestAnimationFrame) {
+    requestAnimationFrame(fn);
+  } else {
+    setTimeout(fn, 17);
+  }
 }
 
 function markCurrentFiber(wip, old) {
@@ -1450,7 +1457,7 @@ function performWork(root, workLoop) {
   if (!current) return;
   prepareStack();
   setBatchingUpdates(true);
-  console.log('perform');
+  // console.log('perform');
   nextUnitOfWork = cloneFiberNode(current, current.pendingProps, {
     alternate: current
   });

@@ -13,6 +13,7 @@ import { ReactNode } from 'react';
 import { Divider, Typography } from '@mui/material';
 import { BaseForm, Field } from '../Form';
 import { FieldValues } from 'react-hook-form';
+import { useEvent } from '../../utils/hooks';
 
 let container: HTMLElement;
 
@@ -27,7 +28,6 @@ interface Props {
 	open: boolean;
 	close: () => void;
 	view: EditorView;
-	// onOk: (e: any) => void;
 	onCancel?: () => void;
 	children: ReactNode;
 }
@@ -138,34 +138,56 @@ interface IPopover {
 	prompt<T extends FieldValues = FieldValues>(conf: Config): Promise<T>;
 }
 
-export const usePopover = (view: EditorView): [IPopover, ReactNode] => {
-	const [open, setOpen] = useState(false);
-	const close = () => setOpen(false);
-	const children = useRef<ReactNode>(<></>);
-	function prompt<T extends FieldValues = FieldValues>(conf: Config) {
-		const { promise, resolve } = Promise.withResolvers<T>();
-		children.current = (
-			<BasePrompt
-				{...conf}
-				close={close}
-				onSubmit={(data) => {
-					resolve(data as T);
-					close();
-				}}
-			/>
-		);
-		setOpen(true);
-		return promise;
-	}
+export const usePopover = (view: EditorView) => {
+	const [promptVisible, setPromptVisible] = useState(false);
+	const promptChildren = useRef(<></>);
+	const closePrompt = () => setPromptVisible(false);
+	const prompt = useEvent(
+		function <T extends FieldValues = FieldValues>(conf: Config) {
+			const { promise, resolve } = Promise.withResolvers<T>();
+			promptChildren.current = (
+				<BasePrompt
+					{...conf}
+					close={closePrompt}
+					onSubmit={(data) => {
+						resolve(data as T);
+						close();
+					}}
+				/>
+			);
+			setPromptVisible(true);
+			return promise;
+		},
+		{ visible: promptVisible }
+	);
+
+	const [plainVisible, setPlainVisible] = useState(false);
+	const plainChildren = useRef(<></>);
+	const closePlain = () => setPlainVisible(false);
+
+	const plain = useEvent(
+		function plain(children: JSX.Element) {
+			plainChildren.current = children;
+			setPlainVisible(true);
+		},
+		{ visible: plainVisible, close: closePlain }
+	);
+
 	const Popover = {
-		prompt
+		prompt,
+		plain
 	};
 
 	const placeholder = (
-		<PlainBoard open={open} close={close} view={view}>
-			{children.current}
-		</PlainBoard>
+		<>
+			<PlainBoard open={promptVisible} close={closePrompt} view={view}>
+				{promptChildren.current}
+			</PlainBoard>
+			<PlainBoard open={plainVisible} close={closePlain} view={view}>
+				{plainChildren.current}
+			</PlainBoard>
+		</>
 	);
 
-	return [Popover, placeholder];
+	return [Popover, placeholder] as const;
 };

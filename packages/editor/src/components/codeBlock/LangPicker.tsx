@@ -159,7 +159,7 @@ export default function LangPicker({ onChange, value: val }: LangPickerProps) {
 	};
 
 	useEffect(() => {
-		if (val && val !== value) {
+		if (val) {
 			const lang = languages.find((item) => item.name.toLowerCase() === val);
 			if (lang) setValue(lang);
 		}

@@ -1,4 +1,3 @@
-import { Node } from 'prosemirror-model';
 import { EditorView } from 'prosemirror-view';
 
 let view: { current?: EditorView } = {};
@@ -191,14 +190,16 @@ export function nextTick(fn?: () => void) {
 export function getSelectionRect(view: EditorView) {
 	const { selection } = view.state;
 
-	if (selection.empty) return {} as DOMRect; // 处理空选区
-
 	// 获取 DOM 节点和偏移
 	const start = view.domAtPos(selection.from);
 	const end = view.domAtPos(selection.to);
 
 	// 创建 Range 并设置起点和终点
 	const range = document.createRange();
+	if (selection.empty) {
+		const { node } = start;
+		if (node instanceof HTMLElement) return node.getBoundingClientRect();
+	}
 	range.setStart(start.node, start.offset);
 	range.setEnd(end.node, end.offset);
 

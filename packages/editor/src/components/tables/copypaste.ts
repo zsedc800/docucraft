@@ -6,6 +6,11 @@ import { ColWidths, Rect, TableMap } from './tableMap';
 import { EditorState, Transaction } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { CellSelection } from './cellSelection';
+import {
+	createNode,
+	createNodeAndFill,
+	createNodeChecked
+} from '../../commands';
 
 export type Area = { width: number; height: number; rows: Fragment[] };
 export const pastedCells = (slice: Slice): Area | null => {
@@ -68,7 +73,7 @@ function ensureRectangular(schema: Schema, rows: Fragment[]): Area {
 	for (let r = 0; r < widths.length; r++) {
 		if (r > rows.length) rows.push(Fragment.empty);
 		if (widths[r] < width) {
-			const empty = tableNodeTypes(schema).cell.createAndFill()!;
+			const empty = createNodeAndFill(tableNodeTypes(schema).cell)!;
 			const cells = [];
 			for (let i = widths[r]; i < width; i++) {
 				cells.push(empty);
@@ -80,7 +85,7 @@ function ensureRectangular(schema: Schema, rows: Fragment[]): Area {
 }
 
 export const fitSlice = (nodeType: NodeType, slice: Slice): Node => {
-	const node = nodeType.createAndFill()!;
+	const node = createNodeAndFill(nodeType)!;
 	const tr = new Transform(node).replace(0, node.content.size, slice);
 	return tr.doc;
 };
@@ -99,7 +104,8 @@ export const clipCells = (
 			for (let col = added[row] || 0, i = 0; col < newWidth; i++) {
 				let cell = frag.child(i % frag.childCount);
 				if (col + cell.attrs.colspan > newWidth)
-					cell = cell.type.createChecked(
+					cell = createNodeChecked(
+						cell.type,
 						removeColSpan(
 							cell.attrs as CellAttrs,
 							cell.attrs.colspan,
@@ -125,7 +131,8 @@ export const clipCells = (
 			for (let j = 0; j < source.childCount; j++) {
 				let cell = source.child(j);
 				if (row + cell.attrs.rowspan > newHeight)
-					cell = cell.type.create(
+					cell = createNode(
+						cell.type,
 						{
 							...cell.attrs,
 							rowspan: Math.max(1, newHeight - cell.attrs.rowspan)
@@ -163,8 +170,9 @@ function growTable(
 			const cells: Node[] = [];
 			let add: Node;
 			if (rowNode.lastChild == null || rowNode.lastChild.type == types.cell)
-				add = empty || (empty = types.cell.createAndFill()!);
-			else add = emptyHead || (emptyHead = types.headerCell.createAndFill()!);
+				add = empty || (empty = createNodeAndFill(types.cell)!);
+			else
+				add = emptyHead || (emptyHead = createNodeAndFill(types.headerCell)!);
 			for (let i = map.width; i < width; i++) cells.push(add);
 			tr.insert(tr.mapping.slice(mapFrom).map(rowEnd - 1 + start), cells);
 		}
@@ -182,12 +190,12 @@ function growTable(
 					: table.nodeAt(map.map[start + i])!.type == types.headerCell;
 			cells.push(
 				header
-					? emptyHead || (emptyHead = types.headerCell.createAndFill()!)
-					: empty || (empty = types.cell.createAndFill()!)
+					? emptyHead || (emptyHead = createNodeAndFill(types.headerCell)!)
+					: empty || (empty = createNodeAndFill(types.cell)!)
 			);
 		}
 
-		const emptyRow = types.row.create(null, Fragment.from(cells)),
+		const emptyRow = createNode(types.row, null, Fragment.from(cells)),
 			rows = [];
 		for (let i = map.height; i < height; i++) rows.push(emptyRow);
 		tr.insert(tr.mapping.slice(mapFrom).map(start + table.nodeSize - 2), rows);
@@ -220,7 +228,7 @@ function isolateHorizontal(
 			});
 			tr.insert(
 				tr.mapping.slice(mapFrom).map(map.positionAt(top, cellLeft, table)),
-				cell.type.createAndFill({
+				createNodeAndFill(cell.type, {
 					...cell.attrs,
 					rowspan: cellTop + cell.attrs.rowspan - top
 				})!
@@ -262,7 +270,8 @@ function isolateVertical(
 			);
 			tr.insert(
 				updatePos + cell.nodeSize,
-				cell.type.createAndFill(
+				createNodeAndFill(
+					cell.type,
 					removeColSpan(cell.attrs as CellAttrs, 0, left - cellLeft)
 				)!
 			);

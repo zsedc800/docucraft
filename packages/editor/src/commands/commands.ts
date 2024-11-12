@@ -1,6 +1,14 @@
-import { Fragment, Node, NodeRange, NodeType } from 'prosemirror-model';
+import {
+	Attrs,
+	Fragment,
+	Mark,
+	Node,
+	NodeRange,
+	NodeType
+} from 'prosemirror-model';
 import { Command, NodeSelection, TextSelection } from 'prosemirror-state';
 import { canJoin, findWrapping } from 'prosemirror-transform';
+import { generateUniqueId } from '../utils';
 
 export const insertCodeBlock: Command = (state, dispatch, view) => {
 	const lastLanguage = state.schema.cached.lastLanguage || 'plaintext';
@@ -18,16 +26,46 @@ export const insertCodeBlock: Command = (state, dispatch, view) => {
 	return false;
 };
 
+function addBlockId(attrs?: Attrs | null) {
+	return { ...attrs, blockId: generateUniqueId() };
+}
+
+export function createNode(
+	type: NodeType,
+	attrs?: any | null,
+	content?: Node | Fragment | readonly Node[] | null,
+	marks?: Mark[]
+) {
+	return type.create(addBlockId(attrs), content, marks);
+}
+
+export function createNodeAndFill(
+	type: NodeType,
+	attrs?: any | null,
+	content?: Node | Fragment | readonly Node[] | null,
+	marks?: Mark[]
+) {
+	return type.createAndFill(addBlockId(attrs), content, marks);
+}
+
+export function createNodeChecked(
+	type: NodeType,
+	attrs?: any | null,
+	content?: Node | Fragment | readonly Node[] | null,
+	marks?: Mark[]
+) {
+	return type.createChecked(attrs, content, marks);
+}
+
 export const insert =
-	(pos: number, nodeType: NodeType, attrs: any): Command =>
+	(pos: number, nodeType: NodeType, attrs?: any): Command =>
 	(state, dispatch) => {
-		let tr = state.tr;
-		tr = tr
-			.insert(pos, nodeType.create(attrs))
-			.setSelection(TextSelection.create(tr.doc, pos + 1))
-			.scrollIntoView();
+		let tr = state.tr.insert(pos, createNode(nodeType, attrs));
+
 		if (dispatch) {
-			dispatch(tr);
+			dispatch(
+				tr.setSelection(TextSelection.create(tr.doc, pos + 1)).scrollIntoView()
+			);
 			return true;
 		}
 		return false;
@@ -56,7 +94,7 @@ export const transformToNode =
 			else if (nodeType.isInline) {
 				const { parent: node, pos } = tr.doc.resolve(start + 1);
 				if (!node.isAtom) {
-					const n = nodeType.create(attrs, content);
+					const n = createNode(nodeType, attrs, content);
 					tr = tr.insert(pos, n);
 					start += n.nodeSize - 1;
 				}

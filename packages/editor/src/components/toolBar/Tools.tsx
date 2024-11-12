@@ -20,15 +20,14 @@ const Toolbar = () => {
 			}}
 		>
 			<Tooltip
+				disableInteractive
 				title={
-					(
-						<Typography textAlign="center">
-							点击向下插入{(<br />) as any}
-							按住alt键 + 点击将向上插入
-						</Typography>
-					) as any
+					<Typography textAlign="center">
+						点击向下插入
+						<br />
+						按住alt键 + 点击将向上插入
+					</Typography>
 				}
-				arrow
 			>
 				<SvgAdd
 					className="iconButton"
@@ -36,29 +35,30 @@ const Toolbar = () => {
 						const before = e.altKey;
 
 						const curPos = nodeView.getPos();
-						const { view } = nodeView;
+						const { view, node } = nodeView;
+
 						if (curPos || curPos === 0) {
-							const pos = before ? curPos : curPos + nodeView.node.nodeSize;
+							const pos = before ? curPos : curPos + node.nodeSize;
 
 							insert(pos, schema.nodes.paragraph, {})(
 								view.state,
 								view.dispatch,
 								view
 							);
+							view.focus();
 						}
 					}}
 				/>
 			</Tooltip>
 			<Tooltip
+				disableInteractive
 				title={
-					(
-						<Typography textAlign="center">
-							按住可以拖动{(<br />) as any}
-							点击展开更多
-						</Typography>
-					) as any
+					<Typography textAlign="center">
+						按住可以拖动
+						<br />
+						点击展开更多
+					</Typography>
 				}
-				arrow
 			>
 				<SvgDragIndicator className="iconButton" />
 			</Tooltip>

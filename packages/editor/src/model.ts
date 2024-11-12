@@ -14,7 +14,11 @@ import { blockTileSpec } from './components/blockTile';
 import { LinkSpec } from './components/link';
 
 function createNodeSpec(config: NodeSpec): NodeSpec {
-	config.attrs = { ...config.attrs, hidden: { default: false } };
+	config.attrs = {
+		...config.attrs,
+		hidden: { default: false },
+		blockId: { default: null }
+	};
 	const toDOM = config.toDOM;
 	if (toDOM)
 		config.toDOM = (node: Node) => {
