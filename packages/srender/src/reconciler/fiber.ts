@@ -29,6 +29,7 @@ export function createFiberNode(
 		alternate: null,
 		effects: null
 	};
+
 	return Object.assign(base, {}, options);
 }
 

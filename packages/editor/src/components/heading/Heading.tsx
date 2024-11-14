@@ -9,17 +9,17 @@ import {
 	useRef,
 	useState
 } from '@docucraft/srender';
-import Icon from '@docucraft/icons';
-import '@docucraft/icons/styles';
+import ArrowRight from '@docucraft/icons/svg/ArrowRightFill';
+import ArrowDown from '@docucraft/icons/svg/ArrowDropDownFill';
 import { HeadingView } from '.';
-import Button from '@mui/material/Button';
 import Popover from '@mui/material/Popover';
-import Typography from '@mui/material/Typography';
-import Skeleton from '@mui/material/Skeleton';
 import ToggleButton from '@mui/material/ToggleButton';
 import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import SvgHourglassEmpty from '@docucraft/icons/svg/HourglassEmpty';
 import { OrderType, OutlineTree } from '../outline';
+import { useNodeView } from '../../utils/view';
+import Tools from '../toolBar/Tools';
+import Toast from '../Toast';
+import { NormalTooltip } from '../kits';
 export type Level = 1 | 2 | 3 | 4 | 5 | 6;
 export interface Props {
 	view: HeadingView;
@@ -58,10 +58,13 @@ const OrderTypeItem = ({ data = [] }: { data: string[] }) => {
 	);
 };
 
-const SymbolControlBtn: FC<{
+const SymbolControlBtn = ({
+	close,
+	onChange
+}: {
 	close?: () => void;
 	onChange?: (val: OrderType) => void;
-}> = ({ close, onChange }) => {
+}) => {
 	const [value, setValue] = useState<OrderType>(0);
 	const handleChange = (e: any, val: OrderType) => {
 		setValue(val);
@@ -70,22 +73,15 @@ const SymbolControlBtn: FC<{
 	};
 	return (
 		<ToggleButtonGroup exclusive value={value} onChange={handleChange}>
-			{/* @ts-ignore */}
 			<ToggleButton value={1}>
-				{/* @ts-ignore */}
 				<OrderTypeItem data={['1.', '1.1.', '1.1.1.']} />
 			</ToggleButton>
-			{
-				(
-					<ToggleButton value={2}>
-						{/* @ts-ignore */}
-						<OrderTypeItem data={['一、', '(一)', '1.']} />
-					</ToggleButton>
-				) as any
-			}
-			{/* @ts-ignore */}
+
+			<ToggleButton value={2}>
+				<OrderTypeItem data={['一、', '(一)', '1.']} />
+			</ToggleButton>
+
 			<ToggleButton value={3}>
-				{/* @ts-ignore */}
 				<OrderTypeItem data={['1.', 'a.', 'i.']} />
 			</ToggleButton>
 		</ToggleButtonGroup>
@@ -111,7 +107,6 @@ function BasicPopover({
 
 	const open = Boolean(anchorEl);
 	const id = open ? 'simple-popover' : undefined;
-	const ref = useRef<HTMLButtonElement>();
 	const child = Children.only(children);
 	useEffect(() => {}, []);
 	return (
@@ -133,7 +128,6 @@ function BasicPopover({
 					horizontal: 'left'
 				}}
 			>
-				{/* @ts-ignore */}
 				<SymbolControlBtn
 					close={handleClose}
 					onChange={(val) => outlineTree.setOrderType(val)}
@@ -144,57 +138,75 @@ function BasicPopover({
 }
 
 export default ({ view, level, fold, hidden, id }: Props) => {
-	const $heading = useRef<HTMLElement>();
-	const $content = useRef<HTMLDivElement>();
 	const outlineTree = view.outlineTree;
-	useLayoutEffect(() => {
-		if ($heading.current) view.dom = $heading.current;
-		view.contentDOM = $content.current;
-	}, []);
+	const { $dom, $contentDOM } = useNodeView(view);
 	const Tag = `h${level}`;
 
 	return (
-		<Tag
-			ref={$heading}
-			id={id}
-			className={`heading relative ${hidden ? 'hidden' : ''}`}
+		<Tools
+			toolsAfter={
+				<>
+					<NormalTooltip disableInteractive title="点击复制标题">
+						<span
+							style={{ fontSize: 16, padding: '4px', opacity: 0.8 }}
+							className="iconButton"
+							onClick={() => {
+								navigator.clipboard
+									.writeText(view.node.textContent)
+									.then(() => Toast.success('已复制'));
+							}}
+						>
+							{`h${level}`}
+						</span>
+					</NormalTooltip>
+					<NormalTooltip disableInteractive title={fold ? '展开' : '折叠'}>
+						<span
+							className="iconButton"
+							style={{ marginRight: 4 }}
+							onClick={() => {
+								const pos = view.getPos();
+
+								let tr = view.view.state.tr.setMeta('toggleHeading', {
+									hidden: !fold,
+									pos
+								});
+
+								if (typeof pos !== 'undefined')
+									tr = tr.setNodeMarkup(pos, null, {
+										...view.node.attrs,
+										fold: !fold
+									});
+								view.view.dispatch(tr);
+							}}
+						>
+							{fold ? <ArrowRight /> : <ArrowDown />}
+						</span>
+					</NormalTooltip>
+				</>
+			}
 		>
-			<div className="heading-tools tools" contentEditable="false">
-				<Icon
-					className="toggle-button"
-					name={fold ? 'arrow_right' : 'arrow_drop_down'}
-					onClick={() => {
-						const pos = view.getPos();
-
-						let tr = view.view.state.tr.setMeta('toggleHeading', {
-							hidden: !fold,
-							pos
-						});
-
-						if (typeof pos !== 'undefined')
-							tr = tr.setNodeMarkup(pos, null, {
-								...view.node.attrs,
-								fold: !fold
-							});
-						view.view.dispatch(tr);
-					}}
-				/>
-			</div>
-			{outlineTree && outlineTree.orderType ? (
-				<BasicPopover outlineTree={outlineTree}>
-					<span
-						className="list-symbol"
-						data-type={outlineTree.orderType}
-						data-level={outlineTree.dataLevel(view.id)}
-						contentEditable="false"
-					>
-						{outlineTree.calculateOrderNumber(view.id)}
-					</span>
-				</BasicPopover>
-			) : (
-				<></>
-			)}
-			<div ref={$content} className="heading-content"></div>
-		</Tag>
+			<Tag
+				ref={$dom}
+				id={id}
+				className={`heading relative ${hidden ? 'hidden' : ''}`}
+			>
+				<div className="heading-tools tools" contentEditable="false"></div>
+				{outlineTree && outlineTree.orderType ? (
+					<BasicPopover outlineTree={outlineTree}>
+						<span
+							className="list-symbol"
+							data-type={outlineTree.orderType}
+							data-level={outlineTree.dataLevel(view.id)}
+							contentEditable="false"
+						>
+							{outlineTree.calculateOrderNumber(view.id)}
+						</span>
+					</BasicPopover>
+				) : (
+					<></>
+				)}
+				<div ref={$contentDOM} className="heading-content" />
+			</Tag>
+		</Tools>
 	);
 };

@@ -13,6 +13,7 @@ ol {
 			line-height: 1.5;
 			flex-shrink: 0;
 			padding: 3px 4px;
+			flex-shrink: 0;
 			user-select: none;
 			&::before {
 				// content: '\200B';
@@ -20,6 +21,7 @@ ol {
 				font-size: 1.5em;
 				line-height: 1;
 			}
+
 			// &::after {
 			// 	display: block;
 			// 	width: 4px;
@@ -28,6 +30,9 @@ ol {
 			// 	border-radius: 100%;
 			// }
 		}
+	}
+	.list-item-content {
+		flex-grow: 1;
 	}
 }
 

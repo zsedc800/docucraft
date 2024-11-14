@@ -23,6 +23,7 @@ import { redo, undo } from 'prosemirror-history';
 import { DecorationSet, EditorView } from 'prosemirror-view';
 import { createTaskList } from '../components/taskList';
 import { createNode, createNodeAndFill } from './commands';
+import { closeFloatBar, showFloatBar } from '../components/toolBar/FloatBar';
 
 const splitListItem = (itemTypes: NodeType[], itemAttrs?: Attrs): Command => {
 	return (state, dispatch) => {
@@ -133,6 +134,27 @@ function isAtWidget(state: EditorState, decorations?: DecorationSet) {
 	return widget && !(widget as any).inline;
 }
 
+let timer: ReturnType<typeof setTimeout>;
+
+const openFloatBar: Command = (state, dispatch, view) => {
+	if (!view) return false;
+
+	if (timer) clearTimeout(timer);
+
+	timer = setTimeout(() => {
+		const {
+			state: { selection }
+		} = view;
+		if (selection.empty) {
+			closeFloatBar();
+		} else {
+			showFloatBar(view);
+		}
+	}, 500);
+
+	return false;
+};
+
 export const getMyKeyMap = () => {
 	const myKeymap: { [key: string]: Command } = {
 		...baseKeymap,
@@ -159,7 +181,11 @@ export const getMyKeyMap = () => {
 			}
 			return false;
 		},
-		'Ctrl-Shift-L': createTaskList
+		'Ctrl-Shift-L': createTaskList,
+		'Shift-ArrowLeft': openFloatBar,
+		'Shift-ArrowRight': openFloatBar,
+		'Shift-ArrowUp': openFloatBar,
+		'Shift-ArrowDown': openFloatBar
 	};
 	return myKeymap;
 };

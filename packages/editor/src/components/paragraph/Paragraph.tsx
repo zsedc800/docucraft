@@ -34,7 +34,7 @@ import { schema } from '../../model';
 import { classnames, nextTick } from '../../utils';
 import { prompt, usePopover } from '../popover';
 import { IconBlock } from '../kits';
-import { ToolItem } from '../toolBar';
+import { ToolItem } from '../toolBar/index.old';
 import Paper from '@mui/material/Paper';
 
 interface Props extends BaseNodeViewProps {
@@ -157,6 +157,7 @@ export default ({
 			sx={(t) => ({
 				padding: '0 15px',
 				width: 300,
+				boxSizing: 'border-box',
 				'& .subTitle': {
 					fontSize: '12px',
 					paddingBottom: '4px',
@@ -268,7 +269,7 @@ export default ({
 	);
 	return (
 		<>
-			{isToplevel ? <Tools nodeView={nodeView}>{body}</Tools> : body}
+			{isToplevel ? <Tools>{body}</Tools> : body}
 			{childrenHolder}
 		</>
 	);

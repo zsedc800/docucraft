@@ -4,7 +4,7 @@ import { BaseNodeView, useNodeView } from '../../utils/view';
 import Link from '@mui/material/Link';
 import Box from '@mui/material/Box';
 import { IconBlock, RichTooltip } from '../kits';
-import { ToolItem } from '../toolBar';
+import { ToolItem } from '../toolBar/index.old';
 import SvgEdit from '@docucraft/icons/svg/EditFill';
 import SvgOpenInNew from '@docucraft/icons/svg/OpenInNewFill';
 import SvgCopy from '@docucraft/icons/svg/ContentCopyFill';

@@ -7,6 +7,7 @@ import { NodeSelection } from 'prosemirror-state';
 import { schema } from '../../model';
 import { overrides } from '../../utils';
 import { styled } from '@mui/material/styles';
+import { fontSize } from '@mui/system';
 
 export const IconBlock = ({
 	title,
@@ -69,5 +70,17 @@ export const RichTooltip = styled(({ className, ...props }: TooltipProps) => (
 		border: 'none',
 		padding: '0 0 0 0',
 		margin: '1px 0 0 0'
+	}
+}));
+
+export const NormalTooltip = styled(({ className, ...props }: TooltipProps) => (
+	<Tooltip {...props} classes={{ popper: className }} />
+))(({ theme }) => ({
+	[`& .${tooltipClasses.tooltip}`]: {
+		backgroundColor: theme.palette.common.black,
+		fontSize: 12
+	},
+	'& p': {
+		fontSize: 12
 	}
 }));

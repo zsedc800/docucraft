@@ -7,7 +7,7 @@ import { history } from 'prosemirror-history';
 import { CodeBlockViewConstructor } from './components/codeBlock/codeBlockView';
 // import { highlightCodePlugin } from './components/codeBlock/highlightCodePlugin';
 import { getMyKeyMap, buildInputRules } from './commands';
-import { buildToolbar } from './components/toolBar';
+import buildToolbar from './components/toolBar';
 import { TaskItemViewConstructor, taskItem } from './components/taskList';
 import { columnResizing, tableEditing } from './components/tables';
 import { addView } from './utils';
@@ -49,7 +49,8 @@ export const setupEditor = (el: HTMLElement | null) => {
 			tableEditing({}),
 			mathRender(),
 			outlineTreePlugin,
-			textblockPlugin
+			textblockPlugin,
+			buildToolbar()
 		]
 	});
 
@@ -59,7 +60,7 @@ export const setupEditor = (el: HTMLElement | null) => {
 		dispatchTransaction(tr) {
 			const newState = editorView.state.apply(tr);
 			editorView.updateState(newState);
-			toolbar.update(editorView, editorView.state);
+			// toolbar.update(editorView, editorView.state);
 		},
 		nodeViews: {
 			codeBlock: CodeBlockViewConstructor,
@@ -98,6 +99,6 @@ export const setupEditor = (el: HTMLElement | null) => {
 	addView(editorView);
 	return () => {
 		editorView.destroy();
-		toolbar.destroy();
+		// toolbar.destroy();
 	};
 };

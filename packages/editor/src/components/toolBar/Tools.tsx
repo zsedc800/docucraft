@@ -1,25 +1,41 @@
-import Tooltip, { tooltipClasses } from '@mui/material/Tooltip';
+import { tooltipClasses } from '@mui/material/Tooltip';
 import Box from '@mui/material/Box';
 import SvgAdd from '@docucraft/icons/svg/Add';
 import SvgDragIndicator from '@docucraft/icons/svg/DragIndicatorFill';
-import { useContext } from '@docucraft/srender';
+import { useContext, useEffect, useRef, useState } from '@docucraft/srender';
 import { BaseNodeView, nodeViewContext } from '../../utils/view';
-import { Typography } from '@mui/material';
+import Typography from '@mui/material/Typography';
 import { insert } from '../../commands/commands';
 import { schema } from '../../model';
-import { MouseEvent } from 'react';
-import { RichTooltip as HtmlTooltip } from '../kits';
+import { CSSProperties, MouseEvent, ReactNode } from 'react';
+import { RichTooltip as HtmlTooltip, NormalTooltip } from '../kits';
 import './style.scss';
 
-const Toolbar = () => {
+const Toolbar = ({
+	before,
+	after,
+	style
+}: {
+	before: ReactNode;
+	after: ReactNode;
+	style?: CSSProperties;
+}) => {
 	const { nodeView } = useContext(nodeViewContext);
+
 	return (
 		<Box
+			style={style}
 			sx={{
-				'&': { fontSize: '22px', color: '#999' }
+				'&': {
+					fontSize: '22px',
+					color: '#999',
+					display: 'flex',
+					alignItems: 'center'
+				}
 			}}
 		>
-			<Tooltip
+			<>{before}</>
+			<NormalTooltip
 				disableInteractive
 				title={
 					<Typography textAlign="center">
@@ -49,8 +65,8 @@ const Toolbar = () => {
 						}
 					}}
 				/>
-			</Tooltip>
-			<Tooltip
+			</NormalTooltip>
+			<NormalTooltip
 				disableInteractive
 				title={
 					<Typography textAlign="center">
@@ -61,7 +77,8 @@ const Toolbar = () => {
 				}
 			>
 				<SvgDragIndicator className="iconButton" />
-			</Tooltip>
+			</NormalTooltip>
+			<>{after}</>
 		</Box>
 	);
 };
@@ -69,12 +86,29 @@ const Toolbar = () => {
 interface Props {
 	children: any;
 	nodeView?: BaseNodeView;
+	toolsBefore?: ReactNode;
+	toolsAfter?: ReactNode;
 }
 
-export default ({ children }: Props) => {
+export default ({ children, toolsAfter, toolsBefore }: Props) => {
+	const anchorEl = useRef<HTMLElement>(null);
+	const [height, setHeight] = useState<number | undefined>(undefined);
+	useEffect(() => {
+		if (anchorEl.current) {
+			const { lineHeight, paddingTop } = getComputedStyle(anchorEl.current);
+			setHeight(parseInt(lineHeight) + parseInt(paddingTop));
+		}
+	}, []);
+	const { ref } = children;
+	children.ref = (node: HTMLElement) => {
+		anchorEl.current = node;
+		typeof ref === 'function' ? ref(node) : (ref.current = node);
+	};
 	return (
 		<HtmlTooltip
-			title={<Toolbar />}
+			title={
+				<Toolbar style={{ height }} before={toolsBefore} after={toolsAfter} />
+			}
 			placement="left-start"
 			slotProps={{
 				tooltip: {

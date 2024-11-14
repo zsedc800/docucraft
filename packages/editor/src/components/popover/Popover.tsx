@@ -2,11 +2,11 @@ import { createRoot, useMemo, useRef, useState } from '@docucraft/srender';
 
 import Button from '@mui/material/Button';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
-import Paper from '@mui/material/Paper';
+import Paper, { PaperProps } from '@mui/material/Paper';
 import TextField from '@mui/material/TextField';
 import Box from '@mui/material/Box';
 import { styled } from '@mui/material/styles';
-import Popper from '@mui/material/Popper';
+import Popper, { PopperPlacementType } from '@mui/material/Popper';
 import { EditorView } from 'prosemirror-view';
 import { getSelectionRect } from '../../utils';
 import { ReactNode } from 'react';
@@ -30,9 +30,20 @@ interface Props {
 	view: EditorView;
 	onCancel?: () => void;
 	children: ReactNode;
+	placement?: PopperPlacementType;
+	slotProps?: {
+		paper: PaperProps;
+	};
 }
 
-const PlainBoard = ({ open, view, children, close }: Props) => {
+const PlainBoard = ({
+	open,
+	view,
+	children,
+	close,
+	placement = 'bottom-start',
+	slotProps
+}: Props) => {
 	const id = open ? 'plain-board-popover' : void 0;
 	const context = useRef(view);
 	context.current = view;
@@ -44,38 +55,67 @@ const PlainBoard = ({ open, view, children, close }: Props) => {
 		[]
 	);
 	return (
-		<Popper id={id} anchorEl={anchorEl} open={open} placement="bottom-start">
-			<ClickAwayListener onClickAway={close}>
-				<Paper>{children}</Paper>
+		<Popper id={id} anchorEl={anchorEl} open={open} placement={placement}>
+			<ClickAwayListener
+				onClickAway={() => {
+					console.log('cloae');
+					close();
+				}}
+			>
+				<Paper {...slotProps?.paper}>{children}</Paper>
 			</ClickAwayListener>
 		</Popper>
 	);
 };
 
-function basePop({
+export function basePop({
 	render: childrenRender,
-	view
+	view,
+	placement,
+	slotProps
 }: {
 	view: EditorView;
 	render: (props: Pick<Props, 'close'>) => ReactNode;
-}) {
+} & Pick<Props, 'placement' | 'slotProps'>) {
 	const rootRender = createRoot();
 	const container = document.createElement('div');
 	document.body.appendChild(container);
 	const close = () => render(false);
+	let visible = false;
+	function render(open = true) {
+		visible = open;
 
-	const render = (open = true) => {
 		rootRender.render(
-			//@ts-ignore
-			<PlainBoard open={open} close={close} view={view}>
+			<PlainBoard
+				open={open}
+				close={close}
+				view={view}
+				placement={placement}
+				slotProps={slotProps}
+			>
 				{childrenRender({ close })}
 			</PlainBoard>,
 			container
 		);
-	};
+	}
 	render();
 
-	return [rootRender, container];
+	return [
+		{
+			render,
+			show: () => render(),
+			close,
+			get visible() {
+				return visible;
+			},
+			destroy: () => {
+				rootRender.unmount();
+				container.parentNode?.removeChild(container);
+			}
+		},
+		rootRender,
+		container
+	] as const;
 }
 
 interface PromptProps extends Config {
@@ -132,10 +172,6 @@ export function prompt<T extends FieldValues = FieldValues>(
 	});
 
 	return promise;
-}
-
-interface IPopover {
-	prompt<T extends FieldValues = FieldValues>(conf: Config): Promise<T>;
 }
 
 export const usePopover = (view: EditorView) => {

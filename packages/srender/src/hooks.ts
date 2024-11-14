@@ -15,15 +15,13 @@ export const useRef: <T = any>(initValue: T | null) => RefObject<T> = (
 	return hook.state;
 };
 
-export const useState = <T = any>(
-	initialState: T | null
-): [T, (...args: any[]) => void] => {
+export const useState = <T = any>(initialState: T | null) => {
 	const hook = createWorkInProgressHook(
 		typeof initialState === 'function' ? initialState() : initialState
 	);
 	if (!hook.queue) createUpdateQueue(hook);
 	processHookState(hook);
-	return [hook.state, hook.queue!.dispatch!];
+	return [hook.state, hook.queue!.dispatch!] as const;
 };
 
 function areDependenciesEqual(prevDeps: any, deps: any) {

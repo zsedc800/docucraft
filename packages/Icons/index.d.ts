@@ -10,5 +10,5 @@ export interface Props {
 }
 export type IconName = MaterialIcon;
 export declare const SVGIcon: () => null;
-declare const _default: ({ name, type, onClick, className, style }: Props) => import("react/jsx-runtime").JSX.Element;
+declare const _default: import("react").ForwardRefExoticComponent<Props & import("react").RefAttributes<HTMLElement>>;
 export default _default;

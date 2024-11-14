@@ -12,7 +12,7 @@ export default ({ nodeView }: Props) => {
 		<Tools>
 			<li ref={$dom} className="list-item">
 				<div className="marker"></div>
-				<div ref={$contentDOM}></div>
+				<div className="list-item-content" ref={$contentDOM}></div>
 			</li>
 		</Tools>
 	);
