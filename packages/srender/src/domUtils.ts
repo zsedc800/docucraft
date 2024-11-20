@@ -56,6 +56,10 @@ const isUnitlessNumber = [
 ];
 
 function setAttribute(element: HTMLElement, key: string, val: any) {
+	if (key === 'dangerouslySetInnerHTML') {
+		element.innerHTML = val.__html;
+		return;
+	}
 	if (key in element) {
 		(element as any)[key] = val;
 	} else {
@@ -64,6 +68,10 @@ function setAttribute(element: HTMLElement, key: string, val: any) {
 }
 
 function removeAttribute(element: HTMLElement, key: string) {
+	if (key === 'dangerouslySetInnerHTML') {
+		element.innerHTML = '';
+		return;
+	}
 	if (key in element) {
 		(element as any)[key] = null;
 	} else {

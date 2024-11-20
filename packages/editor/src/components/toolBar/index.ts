@@ -1,18 +1,21 @@
 import { Plugin } from 'prosemirror-state';
 import { closeFloatBar, showFloatBar } from './FloatBar';
-import { nextTick } from '../../utils';
+
 export default () => {
+	let updated = false;
 	return new Plugin({
 		props: {
 			handleDOMEvents: {
+				mousedown: () => {
+					updated = false;
+				},
 				mouseup: (view) => {
-					nextTick().then(() => {
-						const {
-							state: { selection }
-						} = view;
+					const {
+						state: { selection }
+					} = view;
 
-						if (!selection.empty && view.hasFocus()) showFloatBar(view);
-					});
+					if (!selection.empty && updated && view.hasFocus())
+						showFloatBar(view);
 				}
 			}
 		},
@@ -21,8 +24,10 @@ export default () => {
 				update(view, { selection: { from, to } }) {
 					const { state } = view;
 					const { selection } = state;
-
-					if (selection.from !== from || selection.to !== to) closeFloatBar();
+					if (selection.from !== from || selection.to !== to) {
+						closeFloatBar();
+						updated = true;
+					}
 				},
 				destroy() {}
 			};

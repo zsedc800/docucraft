@@ -21,13 +21,14 @@ import {
 import { FloatBar } from './floatBar';
 import { Tooltip } from '../tooltip';
 import './style.scss';
-import { ReactNode } from 'react';
+import { CSSProperties, ReactNode } from 'react';
 import { BaseNodeView } from '../../utils/view';
 
 export interface ToolItem {
 	title: string;
 	icon: (p: any) => ReactNode;
 	handler: Command | ((nodeView: BaseNodeView) => void);
+	style?: CSSProperties;
 }
 
 export interface ToolBarSpec {

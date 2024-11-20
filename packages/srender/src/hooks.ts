@@ -16,7 +16,7 @@ export const useRef: <T = any>(initValue: T | null) => RefObject<T> = (
 };
 
 export const useState = <T = any>(initialState: T | null) => {
-	const hook = createWorkInProgressHook(
+	const hook = createWorkInProgressHook<T>(
 		typeof initialState === 'function' ? initialState() : initialState
 	);
 	if (!hook.queue) createUpdateQueue(hook);

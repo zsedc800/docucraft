@@ -2,21 +2,20 @@ import { AnchorHTMLAttributes } from 'react';
 import { LinkView } from './view';
 import { BaseNodeView, useNodeView } from '../../utils/view';
 import Link from '@mui/material/Link';
-import Box from '@mui/material/Box';
-import { IconBlock, RichTooltip } from '../kits';
+import { IconBlock, RichTooltip } from '../../kits';
 import { ToolItem } from '../toolBar/index.old';
-import SvgEdit from '@docucraft/icons/svg/EditFill';
+import SvgEdit from '@docucraft/icons/svg/Edit';
 import SvgOpenInNew from '@docucraft/icons/svg/OpenInNewFill';
-import SvgCopy from '@docucraft/icons/svg/ContentCopyFill';
+import SvgCopy from '@docucraft/icons/svg/ContentCopy';
 import SvgLinkOff from '@docucraft/icons/svg/LinkOffFill';
 import Paper from '@mui/material/Paper';
 import { NodeSelection } from 'prosemirror-state';
-import { prompt, usePopover } from '../popover';
-import { nextTick } from '../../utils';
+import { prompt } from '../popover';
 import { Fragment, Slice } from 'prosemirror-model';
 import { schema } from '../../model';
 import Toast from '../Toast';
 import { createNode } from '../../commands';
+import { classnames, nextTick } from '../../utils';
 interface Props extends AnchorHTMLAttributes<HTMLAnchorElement> {
 	nodeView: LinkView;
 }
@@ -89,8 +88,8 @@ const tools: ToolItem[] = [
 			const pos = getPos();
 			const { state, dispatch } = view;
 			if (pos || pos === 0) {
-				view.dispatch(
-					view.state.tr.replaceWith(
+				dispatch(
+					state.tr.replaceWith(
 						pos,
 						pos + node.nodeSize,
 						schema.text(node.textContent)
@@ -120,7 +119,7 @@ const LinkTools = () => {
 	);
 };
 
-export default ({ nodeView, hidden, href, ...props }: Props) => {
+export default ({ nodeView, hidden, href }: Props) => {
 	const { $dom, $contentDOM } = useNodeView<HTMLSpanElement, HTMLAnchorElement>(
 		nodeView
 	);
@@ -130,9 +129,15 @@ export default ({ nodeView, hidden, href, ...props }: Props) => {
 			slotProps={{ tooltip: { className: 'richTooltip' } }}
 			placement="bottom-start"
 		>
-			<span ref={$dom}>
-				<Link href={href} ref={$contentDOM} />
-			</span>
+			<Link
+				className={classnames({ hidden })}
+				aria-labelledby="tooltip"
+				href={href}
+				ref={(node) => {
+					$dom.current = node;
+					$contentDOM.current = node;
+				}}
+			/>
 		</RichTooltip>
 	);
 };

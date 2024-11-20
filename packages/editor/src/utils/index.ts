@@ -1,3 +1,5 @@
+import { Node, NodeType } from 'prosemirror-model';
+import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 
 let view: { current?: EditorView } = {};
@@ -148,7 +150,7 @@ export function shallowEqual(obj1: any, obj2: any): boolean {
 }
 
 export function classnames(
-	...args: (string | Record<string, boolean> | undefined)[]
+	...args: (string | Record<string, boolean | undefined> | undefined)[]
 ) {
 	return args
 		.filter(Boolean)
@@ -204,4 +206,38 @@ export function getSelectionRect(view: EditorView) {
 	range.setEnd(end.node, end.offset);
 
 	return range.getBoundingClientRect();
+}
+
+export function selectionContainsOnlyText(
+	state: EditorState,
+	...whitelist: NodeType[]
+) {
+	const { selection } = state;
+
+	const whitelistNode: Node[] = [];
+	// 如果选区不是 TextSelection，直接返回 false
+	if (!(selection instanceof TextSelection)) {
+		return [false, whitelistNode] as const;
+	}
+
+	// 遍历选区范围内的所有节点
+	let onlyText = true;
+	const { from, to } = selection;
+	state.doc.nodesBetween(selection.from, selection.to, (node, pos) => {
+		let white = false;
+		if (whitelist.includes(node.type)) {
+			whitelistNode.push(node);
+			white = true;
+		}
+		if (
+			!node.isText &&
+			!white &&
+			(pos >= Math.min(from, to) || pos + node.nodeSize <= Math.max(from, to))
+		) {
+			onlyText = false;
+			return false;
+		}
+	});
+
+	return [onlyText, whitelistNode] as const;
 }

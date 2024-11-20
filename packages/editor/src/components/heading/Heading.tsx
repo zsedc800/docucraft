@@ -19,7 +19,7 @@ import { OrderType, OutlineTree } from '../outline';
 import { useNodeView } from '../../utils/view';
 import Tools from '../toolBar/Tools';
 import Toast from '../Toast';
-import { NormalTooltip } from '../kits';
+import { NormalTooltip } from '../../kits';
 export type Level = 1 | 2 | 3 | 4 | 5 | 6;
 export interface Props {
 	view: HeadingView;

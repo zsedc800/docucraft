@@ -3,19 +3,17 @@ import { createRoot, useMemo, useRef, useState } from '@docucraft/srender';
 import Button from '@mui/material/Button';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Paper, { PaperProps } from '@mui/material/Paper';
-import TextField from '@mui/material/TextField';
 import Box from '@mui/material/Box';
-import { styled } from '@mui/material/styles';
 import Popper, { PopperPlacementType } from '@mui/material/Popper';
 import { EditorView } from 'prosemirror-view';
 import { getSelectionRect } from '../../utils';
 import { ReactNode } from 'react';
-import { Divider, Typography } from '@mui/material';
+import Typography from '@mui/material/Typography';
+import Grow from '@mui/material/Grow';
+import Divider from '@mui/material/Divider';
 import { BaseForm, Field } from '../Form';
 import { FieldValues } from 'react-hook-form';
 import { useEvent } from '../../utils/hooks';
-
-let container: HTMLElement;
 
 interface Config {
 	title?: string | ReactNode;
@@ -45,31 +43,43 @@ const PlainBoard = ({
 	slotProps
 }: Props) => {
 	const id = open ? 'plain-board-popover' : void 0;
-	const context = useRef(view);
-	context.current = view;
+	const cacheRect = useRef<any>(null);
 
-	const anchorEl = useMemo(
-		() => ({
-			getBoundingClientRect: () => getSelectionRect(context.current!)
-		}),
-		[]
-	);
+	const getBoundingClientRect = useEvent(() => {
+		if (!open) return cacheRect.current;
+		const res = (cacheRect.current = getSelectionRect(view));
+		return res;
+	}, []);
+
+	const anchorEl = useMemo(() => ({ getBoundingClientRect }), []);
+
 	return (
-		<Popper id={id} anchorEl={anchorEl} open={open} placement={placement}>
-			<ClickAwayListener
-				onClickAway={() => {
-					console.log('cloae');
-					close();
-				}}
-			>
-				<Paper {...slotProps?.paper}>{children}</Paper>
-			</ClickAwayListener>
+		<Popper
+			id={id}
+			anchorEl={anchorEl}
+			open={open}
+			placement={placement}
+			transition
+		>
+			{({ TransitionProps }) => (
+				<Grow
+					{...TransitionProps}
+					style={{ transformOrigin: 'top left' }}
+					timeout={350}
+				>
+					<div>
+						<ClickAwayListener onClickAway={close}>
+							<Paper {...slotProps?.paper}>{children}</Paper>
+						</ClickAwayListener>
+					</div>
+				</Grow>
+			)}
 		</Popper>
 	);
 };
 
 export function basePop({
-	render: childrenRender,
+	render: ChildrenRender,
 	view,
 	placement,
 	slotProps
@@ -84,16 +94,17 @@ export function basePop({
 	let visible = false;
 	function render(open = true) {
 		visible = open;
-
 		rootRender.render(
 			<PlainBoard
 				open={open}
-				close={close}
+				close={() => {
+					if (open) close();
+				}}
 				view={view}
 				placement={placement}
 				slotProps={slotProps}
 			>
-				{childrenRender({ close })}
+				<ChildrenRender close={close} />
 			</PlainBoard>,
 			container
 		);
@@ -187,7 +198,7 @@ export const usePopover = (view: EditorView) => {
 					close={closePrompt}
 					onSubmit={(data) => {
 						resolve(data as T);
-						close();
+						closePrompt();
 					}}
 				/>
 			);
@@ -226,4 +237,26 @@ export const usePopover = (view: EditorView) => {
 	);
 
 	return [Popover, placeholder] as const;
+};
+
+export const usePlainPopover = (children: any) => {
+	const [visible, setVisible] = useState(false);
+	const [anchorEl, setAnchorEl] = useState<HTMLElement>(null);
+	const close = () => setVisible(false);
+
+	const placeholder = (
+		<Popper open={visible} anchorEl={anchorEl} placement="bottom-start">
+			<ClickAwayListener onClickAway={close}>
+				<Paper sx={{ marginTop: '6px' }}>{children}</Paper>
+			</ClickAwayListener>
+		</Popper>
+	);
+	const open = (el: HTMLElement) => {
+		if (!anchorEl) setAnchorEl(el);
+		setVisible(true);
+	};
+	const onClick = (e: Event) => {
+		open(e.currentTarget as HTMLElement);
+	};
+	return [{ setAnchorEl, open, close, onClick }, placeholder] as const;
 };

@@ -970,6 +970,10 @@ const hyphenateStyleName = name => {
 };
 const isUnitlessNumber = ['opacity', 'zIndex', 'lineHeight', 'flexGrow', 'flexShrink', 'fontWeight'];
 function setAttribute(element, key, val) {
+  if (key === 'dangerouslySetInnerHTML') {
+    element.innerHTML = val.__html;
+    return;
+  }
   if (key in element) {
     element[key] = val;
   } else {
@@ -977,6 +981,10 @@ function setAttribute(element, key, val) {
   }
 }
 function removeAttribute(element, key) {
+  if (key === 'dangerouslySetInnerHTML') {
+    element.innerHTML = '';
+    return;
+  }
   if (key in element) {
     element[key] = null;
   } else {

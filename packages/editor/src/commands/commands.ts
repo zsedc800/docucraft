@@ -58,9 +58,14 @@ export function createNodeChecked(
 }
 
 export const insert =
-	(pos: number, nodeType: NodeType, attrs?: any): Command =>
+	(
+		pos: number,
+		nodeType: NodeType,
+		attrs?: any,
+		content?: Node | Fragment | readonly Node[] | null
+	): Command =>
 	(state, dispatch) => {
-		let tr = state.tr.insert(pos, createNode(nodeType, attrs));
+		let tr = state.tr.insert(pos, createNode(nodeType, attrs, content));
 
 		if (dispatch) {
 			dispatch(

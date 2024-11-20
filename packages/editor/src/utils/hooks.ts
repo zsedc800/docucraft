@@ -1,4 +1,4 @@
-import { useRef } from '@docucraft/srender';
+import { Ref, useRef } from '@docucraft/srender';
 import { useCallback } from 'react';
 
 export function useEvent<
@@ -14,4 +14,14 @@ export function useEvent<
 		[]
 	) as T & S;
 	return Object.assign(callback, staticProps);
+}
+
+function setRef<T>(node: T, ref?: Ref<T>) {
+	typeof ref === 'function' ? ref(node) : ref ? (ref.current = node) : void 0;
+}
+
+export function useForkRef<T>(...refs: (Ref<T> | undefined)[]) {
+	return (node: T) => {
+		for (const ref of refs) setRef(node, ref);
+	};
 }

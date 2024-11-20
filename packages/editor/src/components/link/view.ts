@@ -8,11 +8,6 @@ export class LinkView extends BaseNodeView {
 		this.component = Link;
 		this.render();
 	}
-	ignoreMutation(mutation: MutationRecord): boolean {
-		console.log(mutation, 'mnm');
-
-		return super.ignoreMutation(mutation);
-	}
 }
 
 export const LinkViewConstructor: NodeViewConstructor = (...args) =>

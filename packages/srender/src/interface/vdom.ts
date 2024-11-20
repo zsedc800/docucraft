@@ -150,7 +150,7 @@ export interface Hooks<T = any> {
 	state: T;
 	baseState: any;
 	baseUpdate: Update<any> | null;
-	queue: (UpdateQueue<any, any> & { dispatch?(h: Hooks): void }) | null;
+	queue: (UpdateQueue<any, any> & { dispatch?(h: T): void }) | null;
 	next: Hooks | null;
 	fiber: Fiber | null;
 }

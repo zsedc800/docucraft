@@ -25,8 +25,8 @@ export const LinkSpec: NodeSpec = {
 				};
 			}
 		}
-	],
-	toDOM(node) {
-		return ['a', { ...node.attrs }, 0];
-	}
+	]
+	// toDOM(node) {
+	// 	return ['a', { ...node.attrs }, 0];
+	// }
 };

@@ -8,7 +8,7 @@ import Typography from '@mui/material/Typography';
 import { insert } from '../../commands/commands';
 import { schema } from '../../model';
 import { CSSProperties, MouseEvent, ReactNode } from 'react';
-import { RichTooltip as HtmlTooltip, NormalTooltip } from '../kits';
+import { RichTooltip as HtmlTooltip, NormalTooltip } from '../../kits';
 import './style.scss';
 
 const Toolbar = ({

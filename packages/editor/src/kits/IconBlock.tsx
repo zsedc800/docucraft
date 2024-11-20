@@ -1,35 +1,36 @@
 import { useContext } from '@docucraft/srender';
-import { ReactNode } from 'react';
-import { nodeViewContext } from '../../utils/view';
-import Tooltip, { TooltipProps, tooltipClasses } from '@mui/material/Tooltip';
+import { CSSProperties, ReactNode } from 'react';
+import { nodeViewContext } from '../utils/view';
 import Typography from '@mui/material/Typography';
 import { NodeSelection } from 'prosemirror-state';
-import { schema } from '../../model';
-import { overrides } from '../../utils';
-import { styled } from '@mui/material/styles';
-import { fontSize } from '@mui/system';
-
+import { schema } from '../model';
+import { overrides } from '../utils';
+import { NormalTooltip } from './Tooltip';
 export const IconBlock = ({
 	title,
 	icon: Ico,
 	handler,
 	handleClose,
-	type
+	type,
+	style
 }: {
 	title: string;
 	icon: (...args: any[]) => ReactNode;
 	handler: (...args: any[]) => any;
 	handleClose?: () => void;
 	type?: 'block';
+	style?: CSSProperties;
 }) => {
 	const { nodeView } = useContext(nodeViewContext);
 	const { view } = nodeView;
 	return (
-		<Tooltip
+		<NormalTooltip
+			disableInteractive
 			title={<Typography sx={{ fontSize: '12px' }}>{title}</Typography>}
 			placement="top"
 		>
 			<Ico
+				style={style}
 				className="iconButton"
 				onClick={() => {
 					const { state, dispatch } = view;
@@ -56,31 +57,6 @@ export const IconBlock = ({
 					handleClose?.();
 				}}
 			/>
-		</Tooltip>
+		</NormalTooltip>
 	);
 };
-
-export const RichTooltip = styled(({ className, ...props }: TooltipProps) => (
-	<Tooltip {...props} classes={{ popper: className }} />
-))(({ theme }) => ({
-	[`&  .${tooltipClasses.tooltip}.richTooltip`]: {
-		backgroundColor: 'transparent',
-		color: 'rgba(0, 0, 0, 0.87)',
-		fontSize: theme.typography.pxToRem(14),
-		border: 'none',
-		padding: '0 0 0 0',
-		margin: '1px 0 0 0'
-	}
-}));
-
-export const NormalTooltip = styled(({ className, ...props }: TooltipProps) => (
-	<Tooltip {...props} classes={{ popper: className }} />
-))(({ theme }) => ({
-	[`& .${tooltipClasses.tooltip}`]: {
-		backgroundColor: theme.palette.common.black,
-		fontSize: 12
-	},
-	'& p': {
-		fontSize: 12
-	}
-}));

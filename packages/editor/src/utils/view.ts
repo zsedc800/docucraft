@@ -78,11 +78,7 @@ export class BaseNodeView implements NodeView {
 	}
 
 	ignoreMutation(mutation: MutationRecord) {
-		if (this.contentDOM) {
-			if (mutation.target !== this.contentDOM) return true;
-		}
-
-		return false;
+		return mutation.target !== this.contentDOM;
 	}
 
 	update(
