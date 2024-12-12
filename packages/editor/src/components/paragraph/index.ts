@@ -21,6 +21,7 @@ export class ParagraphView extends BaseNodeView {
 		const { attrs: props, type: t, textContent: text } = this.node;
 		if (type !== t) return false;
 		this.node = node;
+
 		if (!shallowEqual(attrs, props) || txt !== text) this.render({ text: txt });
 		return true;
 	}
@@ -35,7 +36,6 @@ function getTextByNodeType(type: NodeType) {
 	} else if (type === schema.nodes.taskItem) {
 		return '代办事项';
 	}
-
 	return '输入 / 唤起命令';
 }
 
@@ -52,10 +52,8 @@ export const textblockPlugin = new Plugin({
 					const $pos = doc.resolve(pos);
 					const parentNode = $pos.parent;
 					const placeholder = getTextByNodeType(parentNode.type);
-					if (!node.attrs.placeholder) {
-						tr.setNodeAttribute(pos, 'placeholder', placeholder);
-						apply = true;
-					}
+					tr.setNodeAttribute(pos, 'placeholder', placeholder);
+					apply = true;
 				} else if (node.attrs.placeholder) {
 					tr.setNodeAttribute(pos, 'placeholder', '');
 					apply = true;

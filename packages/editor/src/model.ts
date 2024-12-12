@@ -12,6 +12,7 @@ import { tableNodes } from './components/tables';
 import { mathNodeSpec } from './components/katex';
 import { blockTileSpec } from './components/blockTile';
 import { LinkSpec } from './components/link';
+import { DividerSpec } from './components/divider';
 
 function createNodeSpec(config: NodeSpec): NodeSpec {
 	config.attrs = {
@@ -168,11 +169,7 @@ const nodes = {
 		cellContent: 'block+',
 		cellAttributes: {}
 	}),
-	horizontalRule: createNodeSpec({
-		group: 'block',
-		parseDOM: [{ tag: 'hr' }],
-		toDOM: () => ['hr']
-	}),
+	divider: createNodeSpec(DividerSpec),
 	link: createNodeSpec(LinkSpec),
 	image: createNodeSpec({
 		inline: true,

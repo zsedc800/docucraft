@@ -35,16 +35,13 @@ export class HeadingView extends BaseNodeView {
 	}
 
 	update(node: Node) {
-		console.log('update');
-		const { type, attrs } = node;
-		const { attrs: props, type: t } = this.node;
-		if (type !== t) return false;
+		const { type, attrs, textContent: txt } = node;
+		const { attrs: props, type: t, textContent: text } = this.node;
+		if (type !== t || attrs.level !== props.level) return false;
 		this.node = node;
-		if (!shallowEqual(props, attrs)) this.render({ view: this, ...attrs });
+		if (!shallowEqual(props, attrs) || txt !== text)
+			this.render({ view: this, ...attrs });
 		return true;
-	}
-	destroy() {
-		console.log('destroy');
 	}
 }
 

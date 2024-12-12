@@ -31,6 +31,7 @@ const splitListItem = (itemTypes: NodeType[], itemAttrs?: Attrs): Command => {
 		if ((node && node.isBlock) || $from.depth < 2 || !$from.sameParent($to))
 			return false;
 		let grandParent = $from.node(-1);
+		const contentType = grandParent.contentMatchAt(0).defaultType;
 		if (!itemTypes.includes(grandParent.type)) return false;
 
 		const liCount = $from.node(-2).childCount;
@@ -47,7 +48,7 @@ const splitListItem = (itemTypes: NodeType[], itemAttrs?: Attrs): Command => {
 			if (dispatch) {
 				let wrap = Fragment.empty;
 				let depthBefore = $from.index(-1) ? 1 : $from.index(-2) ? 2 : 3;
-				console.log(depthBefore, $from);
+				console.log(depthBefore, $from, $from.index(-1), $from.index(-2));
 
 				// Build a fragment containing empty versions of the structure
 				// from the outer list item to the parent node of the cursor
@@ -62,7 +63,12 @@ const splitListItem = (itemTypes: NodeType[], itemAttrs?: Attrs): Command => {
 							? 2
 							: 3;
 				// Add a second list item with an empty default start node
-				wrap = wrap.append(Fragment.from(createNodeAndFill(itemTypes[0])));
+				// wrap = wrap.append(Fragment.from(createNodeAndFill(itemTypes[0])));
+				wrap = wrap.append(
+					Fragment.from(
+						createNode(grandParent.type, null, createNode(contentType!))
+					)
+				);
 
 				let start = $from.before($from.depth - (depthBefore - 1));
 				const s = new Slice(wrap, 4 - depthBefore, 0);
@@ -77,12 +83,12 @@ const splitListItem = (itemTypes: NodeType[], itemAttrs?: Attrs): Command => {
 			}
 			return true;
 		}
-		let nextType =
-			$to.pos == $from.end() ? grandParent.contentMatchAt(0).defaultType : null;
+		let nextType = $to.pos == $from.end() ? contentType : null;
 		let tr = state.tr.delete($from.pos, $to.pos);
 		let types = nextType
 			? [
-					itemAttrs ? { type: itemTypes[0], attrs: itemAttrs } : null,
+					// itemAttrs ? { type: itemTypes[0], attrs: itemAttrs } : null,
+					{ type: grandParent.type },
 					{ type: nextType }
 				]
 			: undefined;

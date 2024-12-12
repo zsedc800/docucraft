@@ -5,7 +5,7 @@ import SvgDragIndicator from '@docucraft/icons/svg/DragIndicatorFill';
 import { useContext, useEffect, useRef, useState } from '@docucraft/srender';
 import { BaseNodeView, nodeViewContext } from '../../utils/view';
 import Typography from '@mui/material/Typography';
-import { insert } from '../../commands/commands';
+import { createNode, insert } from '../../commands/commands';
 import { schema } from '../../model';
 import { CSSProperties, MouseEvent, ReactNode } from 'react';
 import { RichTooltip as HtmlTooltip, NormalTooltip } from '../../kits';
@@ -56,11 +56,12 @@ const Toolbar = ({
 						if (curPos || curPos === 0) {
 							const pos = before ? curPos : curPos + node.nodeSize;
 
-							insert(pos, schema.nodes.paragraph, {})(
-								view.state,
-								view.dispatch,
-								view
-							);
+							insert(
+								pos,
+								node.type,
+								{},
+								node.isTextblock ? void 0 : createNode(schema.nodes.paragraph)
+							)(view.state, view.dispatch, view);
 							view.focus();
 						}
 					}}
@@ -88,9 +89,10 @@ interface Props {
 	nodeView?: BaseNodeView;
 	toolsBefore?: ReactNode;
 	toolsAfter?: ReactNode;
+	visible?: boolean;
 }
 
-export default ({ children, toolsAfter, toolsBefore }: Props) => {
+export default ({ children, toolsAfter, toolsBefore, visible }: Props) => {
 	const anchorEl = useRef<HTMLElement>(null);
 	const [height, setHeight] = useState<number | undefined>(undefined);
 	useEffect(() => {
@@ -104,8 +106,14 @@ export default ({ children, toolsAfter, toolsBefore }: Props) => {
 		anchorEl.current = node;
 		typeof ref === 'function' ? ref(node) : (ref.current = node);
 	};
+	const [open, setOpen] = useState(false);
+	const handleOpen = () => setOpen(true);
+	const handleClose = () => setOpen(false);
 	return (
 		<HtmlTooltip
+			open={typeof visible === 'undefined' ? open : visible}
+			onClose={handleClose}
+			onOpen={handleOpen}
 			title={
 				<Toolbar style={{ height }} before={toolsBefore} after={toolsAfter} />
 			}

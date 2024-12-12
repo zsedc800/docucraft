@@ -158,6 +158,7 @@ function commitDeletion(fiber: Fiber) {
 
 	const deleteChildren = (domParent: HTMLElement | null, fiber: Fiber) => {
 		let node = fiber.child;
+
 		while (domParent && node) {
 			deleteChild(domParent, node);
 			node = node.sibling;

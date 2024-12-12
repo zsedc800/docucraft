@@ -19,8 +19,9 @@ import { SubMenu } from '../Menu';
 
 export interface ColorPickerProps {
 	defaultValue?: string;
-	onChange?: (color: string, rgba?: [number, number, number, number]) => void;
+	onChange?: (color: string, context?: ColorContext) => void;
 	value?: string;
+	disabledAlpha?: boolean;
 }
 
 const ColorSlider = styled(Slider)({
@@ -78,16 +79,41 @@ const MiniTextField = styled(TextField)((t) => ({
 	}
 }));
 
+class ColorContext {
+	constructor(public value: [number, number, number, number]) {}
+	toHex = () => {
+		const [r, g, b] = this.value;
+		return rgbToHex(r, g, b);
+	};
+	toHsl = () => {
+		const [r, g, b] = this.value;
+		return rgbToHsl(r, g, b);
+	};
+	toRgb = () => {
+		const [r, g, b] = this.value;
+		return `rgb(${r}, ${g}, ${b})`;
+	};
+	toRgba = () => {
+		const [r, g, b, a] = this.value;
+		return `rgba(${r}, ${g}, ${b}, ${a})`;
+	};
+}
+
 export const ColorPickerPanel = ({
 	defaultValue = '#FF0000',
 	onChange,
-	value
+	value,
+	disabledAlpha
 }: ColorPickerProps) => {
-	const [r1, g1, b1, a1] = parseColorToRgba(defaultValue);
+	const [r1, g1, b1, a1] = parseColorToRgba(value || defaultValue);
 	const [hueColor, setHueColor] = useState(rgbToHex(r1, g1, b1));
-	const [rgba, setColor] = useState({ r: r1, g: g1, b: b1, a: a1 });
+	let [rgba, setColor] = useState({ r: r1, g: g1, b: b1, a: a1 });
+
+	const isControlled = value && typeof onChange === 'function';
+	if (isControlled) rgba = { r: r1, g: g1, b: b1, a: a1 };
 
 	const { r, g, b, a: alpha } = rgba;
+
 	const [hue, saturation, lightness] = rgbToHsl(r, g, b);
 
 	const [formatType, setFmtType] = useState(0);
@@ -96,24 +122,12 @@ export const ColorPickerPanel = ({
 	const hex = rgbToHex(r, g, b);
 	const hsl = { h: hue, s: saturation, l: lightness };
 
-	console.log(hex, 'hex');
-
-	useEffect(() => {
-		if (!value) return;
-		console.log(value, 'x');
-
-		const { r, g, b, a } = rgba;
-		const pre = [r, g, b, a];
-		const cur = parseColorToRgba(value);
-		if (pre.some((val, i) => val !== cur[i]))
-			setColor({ r: cur[0], g: cur[1], b: cur[2], a: cur[3] });
-	}, [value]);
-
 	const setRgba = useEvent((color: typeof rgba) => {
 		const { r, g, b, a } = color;
-		if (typeof onChange === 'function')
-			onChange(rgbToHex(r, g, b), [r, g, b, a]);
-		setColor(color);
+		if (typeof onChange === 'function') {
+			onChange(`rgba(${r}, ${g}, ${b}, ${a})`, new ColorContext([r, g, b, a]));
+			if (!value) setColor(color);
+		} else setColor(color);
 	});
 
 	const handleHueChange = (event: Event, val: number | number[]) => {
@@ -146,7 +160,6 @@ export const ColorPickerPanel = ({
 
 	const handleHexChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const newHex = e.target.value;
-		// 转换 HEX 为 RGB 更新颜色
 		const [r, g, b, a] = parseColorToRgba(formatHex(newHex));
 		setRgba({ r, g, b, a });
 	};
@@ -211,31 +224,33 @@ export const ColorPickerPanel = ({
 						aria-labelledby="hue-slider"
 					/>
 					{/* 不透明度滑块 */}
-					<ColorSlider
-						value={alpha}
-						onChange={handleAlphaChange}
-						min={0}
-						max={1}
-						step={0.01}
-						aria-labelledby="alpha-slider"
-						style={{
-							color
-						}}
-						slotProps={{
-							rail: {
-								style: {
-									background: `linear-gradient(90deg, rgba(${r}, ${g}, ${b}, 0) 0%, rgb(${r}, ${g}, ${b}) 100%)`
+					{!disabledAlpha && (
+						<ColorSlider
+							value={alpha}
+							onChange={handleAlphaChange}
+							min={0}
+							max={1}
+							step={0.01}
+							aria-labelledby="alpha-slider"
+							style={{
+								color
+							}}
+							slotProps={{
+								rail: {
+									style: {
+										background: `linear-gradient(90deg, rgba(${r}, ${g}, ${b}, 0) 0%, rgb(${r}, ${g}, ${b}) 100%)`
+									}
 								}
-							}
-						}}
-						sx={{
-							backgroundSize: '8px 8px',
-							margin: '6px 0',
-							padding: '0',
-							backgroundImage:
-								'conic-gradient(rgba(0, 0, 0, 0.06) 0 25%, transparent 0 50%, rgba(0, 0, 0, 0.06) 0 75%, transparent 0)'
-						}}
-					/>
+							}}
+							sx={{
+								backgroundSize: '8px 8px',
+								margin: '6px 0',
+								padding: '0',
+								backgroundImage:
+									'conic-gradient(rgba(0, 0, 0, 0.06) 0 25%, transparent 0 50%, rgba(0, 0, 0, 0.06) 0 75%, transparent 0)'
+							}}
+						/>
+					)}
 				</Box>
 				{/* 颜色预览 */}
 				<Box
@@ -368,23 +383,34 @@ export const ColorPickerPanel = ({
 
 export default ({
 	onChange,
-	children
+	children,
+	value,
+	defaultValue
 }: {
 	onChange?: ColorPickerProps['onChange'];
 	children: ReactNode;
+	value?: string;
+	defaultValue?: string;
 }) => {
 	const [color, setColor] = useState('#ff0000');
 	const instance = useRef<{ close: () => void }>(null);
+	console.log(color, 'xcxx');
+
 	return (
 		// @ts-ignore
 		<SubMenu
 			ref={instance}
 			content={
 				<Box>
-					<ColorPickerPanel value={color} onChange={setColor} />
+					<ColorPickerPanel
+						defaultValue={defaultValue}
+						value={color}
+						onChange={setColor}
+					/>
 					<Divider />
 					<Box display="flex" justifyContent="flex-end">
 						<Button
+							size="small"
 							onClick={() => {
 								onChange && onChange(color);
 								instance.current?.close();
@@ -392,7 +418,9 @@ export default ({
 						>
 							确定
 						</Button>
-						<Button onClick={instance.current?.close}>取消</Button>
+						<Button size="small" onClick={instance.current?.close}>
+							取消
+						</Button>
 					</Box>
 				</Box>
 			}

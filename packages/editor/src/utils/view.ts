@@ -91,6 +91,7 @@ export class BaseNodeView implements NodeView {
 		if (type !== t) return false;
 
 		this.node = node;
+
 		if (this.component) {
 			if (!shallowEqual(props, attrs)) {
 				this.render();

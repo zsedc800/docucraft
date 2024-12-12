@@ -6,6 +6,18 @@ ol {
 		display: flex;
 		padding-left: 2px;
 		align-items: flex-start;
+		&.hasSublist {
+			padding-left: 20px;
+		}
+		&.inlist {
+			.marker {
+				&::before {
+					content: '\26AC';
+					font-size: 1em;
+					line-height: 1.5;
+				}
+			}
+		}
 		.marker {
 			display: flex;
 			align-items: center;
@@ -40,6 +52,13 @@ ol.order-list {
 	counter-reset: item;
 
 	& > li.list-item {
+		&.inlist {
+			.marker {
+				&::before {
+					font-weight: normal;
+				}
+			}
+		}
 		.marker {
 			&::before {
 				counter-increment: item;

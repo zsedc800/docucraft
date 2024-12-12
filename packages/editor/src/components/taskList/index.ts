@@ -1,11 +1,10 @@
 import { Node, NodeSpec } from 'prosemirror-model';
 import { Command } from 'prosemirror-state';
 import { NodeViewConstructor } from 'prosemirror-view';
-import './style.scss';
-import createElement, { updateElement } from '../../createElement';
 import { BaseNodeView } from '../../utils/view';
 import TaskItem from './TaskItem';
 import { createNode, createNodeAndFill } from '../../commands';
+import './style.scss';
 
 export const taskItem: NodeSpec = {
 	content: 'paragraph*',

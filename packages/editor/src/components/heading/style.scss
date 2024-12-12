@@ -6,6 +6,19 @@
 			opacity: 1;
 		}
 	}
+	&.empty {
+		&[data-placeholder] {
+			&::after {
+				content: attr(data-placeholder);
+				position: absolute;
+				left: 2px;
+				top: 50%;
+				transform: translate(0, -50%);
+				opacity: 0.5;
+				pointer-events: none;
+			}
+		}
+	}
 	.list-symbol {
 		display: inline-block;
 		padding: 0 4px;

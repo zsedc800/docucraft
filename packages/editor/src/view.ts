@@ -22,6 +22,7 @@ import { BlockTileViewConstructor } from './components/blockTile';
 import { ListItemViewConstructor } from './components/listItem';
 import { LinkViewConstructor } from './components/link';
 import './themes/default.scss';
+import { DividerViewConstructor } from './components/divider';
 
 export class Editor {
 	constructor(container?: HTMLElement) {
@@ -69,7 +70,8 @@ export const setupEditor = (el: HTMLElement | null) => {
 			paragraph: ParagraphViewConstructor,
 			blockTile: BlockTileViewConstructor,
 			list_item: ListItemViewConstructor,
-			link: LinkViewConstructor
+			link: LinkViewConstructor,
+			divider: DividerViewConstructor
 		},
 		handleClickOn(view, pos, node, nodePos, event, direct) {
 			const markType = view.state.schema.marks.link;

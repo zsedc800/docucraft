@@ -134,18 +134,8 @@ const basicTools: ToolItem[] = [
 	}
 ];
 
-export default ({
-	nodeView,
-	placeholder,
-	hidden,
-	text = '',
-	...props
-}: Props) => {
+export default ({ nodeView, placeholder, hidden, text = '' }: Props) => {
 	const { $dom, $contentDOM } = useNodeView<HTMLDivElement>(nodeView);
-	const [anchorEl, setAnchorEl] = useState<HTMLElement>(null);
-	const handleClose = () => {
-		setAnchorEl(null);
-	};
 
 	const [{ plain }, childrenHolder] = usePopover(nodeView.view);
 
@@ -194,7 +184,7 @@ export default ({
 					})}
 				>
 					{basicTools.map((props) => (
-						<IconBlock type="block" {...{ ...props, handleClose }} />
+						<IconBlock type="block" {...{ ...props }} />
 					))}
 				</Box>
 			</Box>
@@ -258,6 +248,7 @@ export default ({
 			plain.close();
 		}
 	}, [text]);
+
 	const body = (
 		<div
 			ref={$dom}

@@ -13,7 +13,7 @@ export default ({ nodeView, checked }: Props) => {
 	return (
 		<Tools>
 			<li ref={$dom} className={classnames('task-item', { checked })}>
-				<div className="task-item-checkbox">
+				<div className="task-item-checkbox" contentEditable={false}>
 					<input
 						type="checkbox"
 						checked={checked}

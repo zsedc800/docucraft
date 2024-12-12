@@ -20,6 +20,7 @@ import { useNodeView } from '../../utils/view';
 import Tools from '../toolBar/Tools';
 import Toast from '../Toast';
 import { NormalTooltip } from '../../kits';
+import { classnames } from '../../utils';
 export type Level = 1 | 2 | 3 | 4 | 5 | 6;
 export interface Props {
 	view: HeadingView;
@@ -98,7 +99,7 @@ function BasicPopover({
 	const [anchorEl, setAnchorEl] = useState<HTMLButtonElement | null>(null);
 
 	const handleClick = (event: Event) => {
-		setAnchorEl(event.currentTarget);
+		setAnchorEl(event.currentTarget as HTMLButtonElement);
 	};
 
 	const handleClose = () => {
@@ -188,7 +189,11 @@ export default ({ view, level, fold, hidden, id }: Props) => {
 			<Tag
 				ref={$dom}
 				id={id}
-				className={`heading relative ${hidden ? 'hidden' : ''}`}
+				className={classnames('heading relative', {
+					hidden,
+					empty: !view.node.textContent
+				})}
+				data-placeholder={`标题${level}`}
 			>
 				<div className="heading-tools tools" contentEditable="false"></div>
 				{outlineTree && outlineTree.orderType ? (

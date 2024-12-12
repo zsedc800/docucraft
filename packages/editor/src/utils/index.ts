@@ -241,3 +241,14 @@ export function selectionContainsOnlyText(
 
 	return [onlyText, whitelistNode] as const;
 }
+
+export function hasChildOfType(node: Node, type: NodeType) {
+	let found = false;
+	node.descendants((child) => {
+		if (child.type === type) {
+			found = true;
+			return false; // 停止遍历
+		}
+	});
+	return found;
+}

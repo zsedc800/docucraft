@@ -10,7 +10,7 @@
 		"dev": "rollup -c -w"
 	},
 	"keywords": [],
-	"author": "",
+	"author": "zsedc800",
 	"license": "ISC",
 	"dependencies": {
 		"@codemirror/autocomplete": "^6.18.1",
