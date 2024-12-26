@@ -400,6 +400,7 @@ export default ({
 		// @ts-ignore
 		<SubMenu
 			ref={instance}
+			slotProps={{ paper: { sx: { margin: '0 15px' } } }}
 			content={
 				<Box>
 					<ColorPickerPanel

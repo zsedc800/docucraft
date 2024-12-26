@@ -10,7 +10,6 @@ import { fixTables } from './fixtables';
 export { tableNodeTypes, tableNodes } from './schema';
 export { TableView } from './tableView';
 export { columnResizing } from './columnresizing';
-import './style.scss';
 import {
 	domInCell,
 	handleKeyDown,
@@ -19,7 +18,9 @@ import {
 	handleTripleClick
 } from './input';
 import { Decoration, DecorationSet, EditorView } from 'prosemirror-view';
-import { TableView, TableViewConstructor, addToolkit } from './tableView';
+import { TableView, TableViewConstructor } from './tableView';
+import './style.scss';
+import { TableCellView, TableHeadCellView, TableRowView } from './view';
 
 export type TableEditingOptions = {
 	allowTableNodeSelection?: boolean;
@@ -33,7 +34,6 @@ export function tableEditing({
 		decs = decs.concat(drawCellSelection(state));
 		state.doc.descendants((node, pos) => {
 			if (node.type.name !== 'table') return;
-			decs = decs.concat(addToolkit(node, pos));
 		});
 		return decs;
 	};
@@ -49,11 +49,13 @@ export function tableEditing({
 			},
 			apply(tr, value, _, state) {
 				const st = tr.getMeta(tableEditingKey);
-				let { set = null, hoverDecos } = st || {};
+				let { set = null, hoverDecos, cellDecos } = st || {};
+
 				const decorations = DecorationSet.create(
 					state.doc,
 					getDecorations(state).concat(
-						hoverDecos ? hoverDecos : value.hoverDecos || []
+						// hoverDecos ? hoverDecos : value.hoverDecos || []
+						cellDecos ? cellDecos : value.cellDecos || []
 					)
 				);
 
@@ -65,13 +67,16 @@ export function tableEditing({
 				return {
 					set: isEmpty(set) || set == -1 ? null : set,
 					decorations,
-					hoverDecos
+					cellDecos
 				};
 			}
 		},
 		props: {
 			nodeViews: {
-				table: TableViewConstructor
+				table: TableViewConstructor,
+				tableRow: (...args) => new TableRowView(...args),
+				tableCell: (...args) => new TableCellView(...args),
+				tableHeader: (...args) => new TableHeadCellView(...args)
 			},
 			decorations(state) {
 				return this.getState(state)?.decorations;
@@ -90,14 +95,14 @@ export function tableEditing({
 
 			// 	return !isEmpty(set) ? view.state.selection : null;
 			// }
-		},
-		appendTransaction(_, oldState, newState) {
-			return normalizeSelection(
-				newState,
-				// newState.tr,
-				fixTables(newState, oldState),
-				allowTableNodeSelection
-			);
 		}
+		// appendTransaction(_, oldState, newState) {
+		// 	return normalizeSelection(
+		// 		newState,
+		// 		// newState.tr,
+		// 		fixTables(newState, oldState),
+		// 		allowTableNodeSelection
+		// 	);
+		// }
 	});
 }

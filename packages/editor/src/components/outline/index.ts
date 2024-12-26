@@ -273,7 +273,7 @@ export const outlineTreePlugin = new Plugin({
 			tr.steps.forEach((step) => {
 				if (step instanceof ReplaceStep) {
 					const { from, to } = step;
-
+					if (Math.max(from, to) >= oldState.doc.nodeSize) return;
 					oldState.doc.nodesBetween(from, to, (node, pos) => {
 						if (node.type.name === 'heading' && pos >= from) {
 							value.removeById(node.attrs.id);

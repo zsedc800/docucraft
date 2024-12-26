@@ -16,6 +16,7 @@ import {
 	createContext
 } from '@docucraft/srender';
 import { shallowEqual } from '.';
+import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 export function useNodeView<
 	T extends HTMLElement = HTMLDivElement,
@@ -74,6 +75,15 @@ export class BaseNodeView implements NodeView {
 			{ value: { nodeView: this } },
 			element
 		);
+		// element = h(
+		// 	ThemeProvider,
+		// 	{
+		// 		theme: createTheme({
+		// 			typography: { fontSize:  }
+		// 		})
+		// 	},
+		// 	element
+		// );
 		this.rootRender.render(element);
 	}
 

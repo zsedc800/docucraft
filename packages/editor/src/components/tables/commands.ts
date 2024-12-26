@@ -10,6 +10,7 @@ import { Fragment, Node, NodeType, ResolvedPos } from 'prosemirror-model';
 import {
 	CellAttrs,
 	addColspan,
+	cellMinWidth,
 	columnIsHeader,
 	isInTable,
 	moveCellForward,
@@ -24,11 +25,11 @@ export const createTable: (rows: number, columns: number) => Command =
 	(rows, columns) => (state, dispatch, view) => {
 		const { table, tableRow, tableHeader, tableCell, paragraph } =
 			state.schema.nodes;
-
+		const cols = Array(columns).fill({ width: cellMinWidth });
 		const tableNode = createNode(
 			table,
-			null,
-			Array(rows + 1)
+			{ cols },
+			Array(rows)
 				.fill(null)
 				.map((_, row) =>
 					createNode(
@@ -70,7 +71,7 @@ export function insertTable(
 	const paragraph = schema.nodes.paragraph;
 	const tableNode = createNode(
 		table,
-		null,
+		{ cols: Array(3).fill({ width: cellMinWidth }) },
 		Array(3)
 			.fill(null)
 			.map((_, r) =>
@@ -148,9 +149,15 @@ export function addColumn(
 					? tableNodeTypes(table.type.schema).cell
 					: table.nodeAt(map.map[index + refColumn])!.type;
 			const pos = map.positionAt(row, col, table);
+
 			tr.insert(tr.mapping.map(tableStart + pos), createNodeAndFill(type)!);
 		}
 	}
+	tr.setNodeAttribute(
+		tableStart - 1,
+		'cols',
+		table.attrs.cols.concat({ width: cellMinWidth })
+	);
 	return tr;
 }
 
@@ -178,8 +185,6 @@ export const addColumnAtEnd = (pos: number, view: EditorView) => {
 	const tableStart = tr.mapping.map(pos);
 	const $start = state.doc.resolve(tableStart);
 	const table = $start.nodeAfter!;
-	// console.log($start);
-	// console.log($start.node($start.depth), 'nn');
 
 	const map = TableMap.get(table);
 	dispatch(addColumn(tr, { map, table, tableStart: pos + 1 }, map.width));
@@ -191,6 +196,7 @@ export const removeColumn = (
 	col: number
 ): Transaction => {
 	const mapStart = tr.mapping.maps.length;
+
 	for (let row = 0; row < map.height; ) {
 		const index = row * map.width + col;
 		const pos = map.map[index];
@@ -212,15 +218,22 @@ export const removeColumn = (
 		}
 		row += attrs.rowspan;
 	}
+	const cols = table.attrs.cols.concat();
+	cols.splice(col, 1);
+	tr.setNodeAttribute(tableStart - 1, 'cols', cols);
 	return tr;
 };
 
 export const deleteColumn: Command = (state, dispatch) => {
-	if (isInTable(state)) return false;
+	if (!isInTable(state)) return false;
 	if (dispatch) {
 		const rect = selectedRect(state);
-		const tr = state.tr;
+		let tr = state.tr;
+
 		if (rect.left == 0 && rect.right == rect.map.width) return false;
+
+		const $pos = selectionCell(state);
+
 		for (let i = rect.right - 1; ; i--) {
 			removeColumn(tr, rect, i);
 			if (i == rect.left) break;
@@ -231,6 +244,8 @@ export const deleteColumn: Command = (state, dispatch) => {
 			rect.table = table;
 			rect.map = TableMap.get(table);
 		}
+
+		tr.setSelection(TextSelection.create(tr.doc, tr.mapping.map($pos.pos)));
 		dispatch(tr);
 	}
 	return true;
@@ -295,7 +310,8 @@ export const addRowBefore: Command = (state, dispatch) => {
 	if (!isInTable(state)) return false;
 	if (dispatch) {
 		const rect = selectedRect(state);
-		dispatch(addRow(state.tr, rect, rect.top));
+		const tr = addRow(state.tr, rect, rect.top);
+		dispatch(tr);
 	}
 	return true;
 };
@@ -304,7 +320,8 @@ export const addRowAfter: Command = (state, dispatch) => {
 	if (!isInTable(state)) return false;
 	if (dispatch) {
 		const rect = selectedRect(state);
-		dispatch(addRow(state.tr, rect, rect.bottom));
+		const tr = addRow(state.tr, rect, rect.bottom);
+		dispatch(tr);
 	}
 	return true;
 };
@@ -327,6 +344,7 @@ export const removeRow = (
 	for (let i = 0; i < row; i++) rowPos += table.child(i).nodeSize;
 	const nextRow = rowPos + table.child(row).nodeSize;
 	const mapFrom = tr.mapping.maps.length;
+
 	tr.delete(rowPos + tableStart, nextRow + tableStart);
 
 	const seen = new Set<number>();
@@ -362,6 +380,8 @@ export const removeRow = (
 
 export const deleteRow: Command = (state, dispatch) => {
 	if (!isInTable(state)) return false;
+	const $pos = selectionCell(state);
+
 	if (dispatch) {
 		const rect = selectedRect(state),
 			tr = state.tr;
@@ -376,6 +396,7 @@ export const deleteRow: Command = (state, dispatch) => {
 			rect.table = table;
 			rect.map = TableMap.get(table);
 		}
+		tr.setSelection(TextSelection.create(tr.doc, tr.mapping.map($pos.pos)));
 		dispatch(tr);
 	}
 	return true;

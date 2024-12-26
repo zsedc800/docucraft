@@ -1,5 +1,5 @@
 import Typography from '@mui/material/Typography';
-import { BaseNodeViewProps, useNodeView } from '../../utils/view';
+import { BaseNodeView, BaseNodeViewProps, useNodeView } from '../../utils/view';
 import { ParagraphView } from '.';
 import Tools from '../toolBar/Tools';
 import Popper from '@mui/material/Popper';
@@ -31,11 +31,14 @@ import SvgDivider from '../../assets/svg/Divider';
 import SvgEmphsis from '../../assets/svg/Emphsis';
 import { transformToNode } from '../../commands';
 import { schema } from '../../model';
-import { classnames, nextTick } from '../../utils';
+import { classnames, nextTick, overrides } from '../../utils';
 import { prompt, usePopover } from '../popover';
 import { IconBlock } from '../../kits';
 import { ToolItem } from '../toolBar/index.old';
 import Paper from '@mui/material/Paper';
+import { ReactNode } from 'react';
+import { Command, NodeSelection } from 'prosemirror-state';
+import { createTable } from '../tables/commands';
 
 interface Props extends BaseNodeViewProps {
 	nodeView: ParagraphView;
@@ -134,6 +137,44 @@ const basicTools: ToolItem[] = [
 	}
 ];
 
+interface BlockItem {
+	title: string;
+	name: string;
+	cover: string | ((props: any) => ReactNode);
+	description: string;
+	handler: Command;
+}
+const blocklist: BlockItem[] = [
+	{
+		title: '表格',
+		description: '添加表格',
+		cover: SvgTable,
+		name: 'table',
+		handler: createTable(3, 3)
+	},
+	{
+		title: '引用',
+		description: '摘要引用',
+		cover: SvgBlockQuote,
+		name: 'blockquote',
+		handler: transformToNode(schema.nodes.blockQuote)
+	},
+	{
+		title: '分隔线',
+		description: '创建元素分割线',
+		cover: SvgDivider,
+		name: 'divider',
+		handler: transformToNode(schema.nodes.divider)
+	},
+	{
+		title: '标注',
+		description: '强调块',
+		cover: SvgEmphsis,
+		name: 'emphsis',
+		handler: transformToNode(schema.nodes.divider)
+	}
+];
+
 export default ({ nodeView, placeholder, hidden, text = '' }: Props) => {
 	const { $dom, $contentDOM } = useNodeView<HTMLDivElement>(nodeView);
 
@@ -203,38 +244,43 @@ export default ({ nodeView, placeholder, hidden, text = '' }: Props) => {
 						}
 					})}
 				>
-					<ListItem>
-						<ListItemAvatar>
-							<Avatar className="avatar" variant="rounded">
-								<SvgTable />
-							</Avatar>
-						</ListItemAvatar>
-						<ListItemText primary="表格" secondary="添加表格" />
-					</ListItem>
-					<ListItem>
-						<ListItemAvatar>
-							<Avatar className="avatar" variant="rounded">
-								<SvgBlockQuote />
-							</Avatar>
-						</ListItemAvatar>
-						<ListItemText primary="引用" secondary="摘要引用" />
-					</ListItem>
-					<ListItem>
-						<ListItemAvatar>
-							<Avatar className="avatar" variant="rounded">
-								<SvgDivider />
-							</Avatar>
-						</ListItemAvatar>
-						<ListItemText primary="分隔线" secondary="创建元素分割线" />
-					</ListItem>
-					<ListItem>
-						<ListItemAvatar>
-							<Avatar className="avatar" variant="rounded">
-								<SvgEmphsis />
-							</Avatar>
-						</ListItemAvatar>
-						<ListItemText primary="标注" secondary="强调块" />
-					</ListItem>
+					{blocklist.map(({ cover: Cover, title, description, handler }) => (
+						<ListItem
+							onClick={() => {
+								const { view } = nodeView;
+								const { state, dispatch } = view;
+								const {
+									selection: { $from },
+									tr,
+									doc
+								} = state;
+								const start = $from.before();
+								console.log(start, 'start');
+
+								let transction = tr.setSelection(
+									NodeSelection.create(doc, start)
+								);
+								const node = $from.parent;
+								if (node.type === schema.nodes.paragraph)
+									transction = transction.delete(
+										start + 1,
+										start + node.nodeSize
+									);
+								console.log(node, $from, 111);
+
+								handler(overrides(state, { tr: transction }), dispatch, view);
+								// handler(view.state, view.dispatch, view);
+								view.focus();
+							}}
+						>
+							<ListItemAvatar>
+								<Avatar className="avatar" variant="rounded">
+									<Cover />
+								</Avatar>
+							</ListItemAvatar>
+							<ListItemText primary={title} secondary={description} />
+						</ListItem>
+					))}
 				</List>
 			</Box>
 		</Paper>

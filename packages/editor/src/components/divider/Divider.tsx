@@ -6,7 +6,7 @@ interface Props {
 	nodeView: DividerView;
 }
 export default ({ nodeView }: Props) => {
-	const { $contentDOM, $dom } = useNodeView(nodeView);
+	const { $dom } = useNodeView(nodeView);
 	return (
 		<div ref={$dom} className="divider" style={{ padding: '12px 0' }}>
 			<Divider />

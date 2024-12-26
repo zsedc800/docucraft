@@ -35,6 +35,8 @@ function getTextByNodeType(type: NodeType) {
 		return '项目';
 	} else if (type === schema.nodes.taskItem) {
 		return '代办事项';
+	} else if (type && type !== schema.nodes.doc) {
+		return '';
 	}
 	return '输入 / 唤起命令';
 }

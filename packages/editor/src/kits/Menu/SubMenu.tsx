@@ -7,10 +7,9 @@ import {
 } from '@docucraft/srender';
 import { ClickAwayListener, Paper, PaperProps } from '@mui/material';
 import Popper, { PopperPlacementType } from '@mui/material/Popper';
-import { ReactNode } from 'react';
+import { ForwardRefExoticComponent, ReactNode } from 'react';
 // import { useForkRef } from '../../utils/hooks';
 
-function Menu() {}
 interface Props {
 	children: any;
 	placement?: PopperPlacementType;
@@ -44,13 +43,10 @@ export const SubMenu = forwardRef<{ close: () => void }, Props>(
 				{cloneElement(children, { ...originalChildProps, onClick })}
 				<Popper anchorEl={anchorEl} open={open} placement={placement}>
 					<ClickAwayListener onClickAway={handleClose}>
-						<Paper sx={{ margin: '0 15px' }} {...slotProps?.paper}>
-							{content}
-						</Paper>
+						<Paper {...slotProps?.paper}>{content}</Paper>
 					</ClickAwayListener>
 				</Popper>
 			</>
 		);
 	}
 );
-export default Menu;

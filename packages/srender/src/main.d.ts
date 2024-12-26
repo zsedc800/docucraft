@@ -1,3 +1,4 @@
+import { forwardRef as Rff } from 'react';
 import {
 	ExoticComponent,
 	ForwardRefExoticComponent,
@@ -9,7 +10,9 @@ export * from './index';
 
 export const Suspense: ExoticComponent<SuspenseProps>;
 
-export const forwardRef: <R, P>(r: R) => ForwardRefExoticComponent<R & P>;
+// export const forwardRef: <R, P>(r: R) => ForwardRefExoticComponent<R & P>;
+
+export const forwardRef: typeof Rff;
 
 // export = Srender;
 // types/index.d.ts

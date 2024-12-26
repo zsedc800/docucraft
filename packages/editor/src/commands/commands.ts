@@ -91,6 +91,7 @@ export const transformToNode =
 	(state, dispatch) => {
 		let { tr } = state;
 		const { selection } = tr;
+		console.log(nodeType, 'nodetype');
 
 		if (selection instanceof NodeSelection && dispatch) {
 			const { from, to, $from, $to } = selection;
@@ -103,14 +104,27 @@ export const transformToNode =
 					tr = tr.insert(pos, n);
 					start += n.nodeSize - 1;
 				}
+			} else if (nodeType.isAtom) {
+				tr.insert(from, createNode(nodeType, attrs));
+				tr.setSelection(TextSelection.create(tr.doc, from + 2));
+				dispatch(tr);
+				return true;
 			} else {
 				const range = new NodeRange($from, $to, $from.depth);
 				const wrapping = findWrapping(range, nodeType);
 				if (!wrapping) return false;
-				tr.wrap(range, wrapping);
-				const before = tr.doc.resolve(start).nodeBefore;
-				if (before && before.type === nodeType && canJoin(tr.doc, start))
-					tr.join(start);
+
+				let node = wrapping[wrapping.length - 1]?.type.isTextblock
+					? void 0
+					: createNode(state.schema.nodes.paragraph);
+				for (const { type, attrs } of wrapping.reverse()) {
+					node = createNode(type, attrs, node);
+				}
+				node && tr.replaceSelectionWith(node);
+				// tr.wrap(range, wrapping);
+				// const before = tr.doc.resolve(start).nodeBefore;
+				// if (before && before.type === nodeType && canJoin(tr.doc, start))
+				// 	tr.join(start);
 			}
 
 			const sel = TextSelection.create(tr.doc, start + 1);

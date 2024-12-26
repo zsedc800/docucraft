@@ -14,7 +14,7 @@ import { blockTileSpec } from './components/blockTile';
 import { LinkSpec } from './components/link';
 import { DividerSpec } from './components/divider';
 
-function createNodeSpec(config: NodeSpec): NodeSpec {
+export function createNodeSpec(config: NodeSpec): NodeSpec {
 	config.attrs = {
 		...config.attrs,
 		hidden: { default: false },

@@ -1,14 +1,27 @@
 import { Attrs, Node, ResolvedPos } from 'prosemirror-model';
 import { TableMap } from './tableMap';
 import { tableNodeTypes } from './schema';
-import { EditorState, NodeSelection, PluginKey } from 'prosemirror-state';
+import {
+	EditorState,
+	NodeSelection,
+	PluginKey,
+	TextSelection
+} from 'prosemirror-state';
 import { CellSelection } from './cellSelection';
-import { Decoration, DecorationSet, DecorationSource } from 'prosemirror-view';
+import {
+	Decoration,
+	DecorationSet,
+	DecorationSource,
+	EditorView
+} from 'prosemirror-view';
+
+export const cellMinWidth = 80;
 
 export interface TableState {
 	decorations: DecorationSet;
 	set: number | null;
 	hoverDecos?: Decoration[];
+	cellDecos?: Decoration[];
 }
 export const tableEditingKey = new PluginKey<TableState>('selectingCells');
 
@@ -144,3 +157,42 @@ export function selectionCell(state: EditorState): ResolvedPos {
 
 export const isEmpty = (val: unknown) =>
 	val === null || val === undefined || Number.isNaN(val);
+
+export function drawCellSel(
+	view: EditorView,
+	type: 'col' | 'row' | 'all' | 'clear'
+) {
+	const cells: Decoration[] = [];
+	const { state, dispatch } = view;
+	const { selection } = state;
+	if (type === 'clear')
+		return dispatch(state.tr.setMeta(tableEditingKey, { cellDecos: [] }));
+	if (!(selection instanceof TextSelection)) return;
+	const { $from } = selection;
+	const $cell = cellAround($from);
+	if (!$cell) return;
+	let cellSelection: CellSelection;
+	if (type === 'col') {
+		cellSelection = CellSelection.colSelection($cell);
+	} else if (type === 'row') {
+		cellSelection = CellSelection.rowSelection($cell);
+	} else {
+		const start = $cell.start(-1);
+		const table = $cell.node(-1);
+		const map = TableMap.get(table);
+		const first = map.map[0];
+		const last = map.map[map.map.length - 1];
+		cellSelection = CellSelection.create(
+			state.doc,
+			start + first,
+			start + last
+		);
+	}
+
+	cellSelection.forEachCell((node, pos) => {
+		cells.push(
+			Decoration.node(pos, pos + node.nodeSize, { class: 'selectCell' })
+		);
+	});
+	dispatch(state.tr.setMeta(tableEditingKey, { cellDecos: cells }));
+}

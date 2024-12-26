@@ -7,6 +7,7 @@ import {
 	Schema
 } from 'prosemirror-model';
 import { CellAttrs, MutableAttrs } from './utils';
+import { createNodeSpec } from '../../model';
 
 export type getFromDOM = (dom: HTMLElement) => unknown;
 export type setDOMAttr = (value: unknown, attrs: MutableAttrs) => void;
@@ -59,6 +60,8 @@ const setCellAttrs = (node: Node, extraAttrs: Attrs): Attrs => {
 	if (node.attrs.colwidth)
 		attrs['data-colwidth'] = node.attrs.colwidth.join(',');
 
+	if (node.attrs.height) attrs['style'] = 'height: ' + node.attrs.height + 'px';
+
 	for (const prop in extraAttrs) {
 		const setter = extraAttrs[prop].setDOMAttr;
 		if (setter) setter(node.attrs[prop], attrs);
@@ -71,14 +74,19 @@ export const tableNodes = (options: TableNodesOptions): TableNodes => {
 	const cellAttrs: Record<string, AttributeSpec> = {
 		colspan: { default: 1 },
 		rowspan: { default: 1 },
-		colwidth: { default: null }
+		colwidth: { default: null },
+		height: { default: null }
 	};
 
 	for (const prop of Object.keys(extraAttrs))
 		cellAttrs[prop] = { default: extraAttrs[prop].default };
 	return {
-		table: {
-			attrs: { class: { default: '' }, hidden: { default: false } },
+		table: createNodeSpec({
+			attrs: {
+				class: { default: '' },
+				hidden: { default: false },
+				cols: { default: [] }
+			},
 			content: 'tableRow+',
 			tableRole: 'table',
 			isolating: true,
@@ -94,16 +102,27 @@ export const tableNodes = (options: TableNodesOptions): TableNodes => {
 			toDOM(node) {
 				return ['table', { class: node.attrs.class }, ['tbody', 0]];
 			}
-		},
-		tableRow: {
+		}),
+		tableRow: createNodeSpec({
 			content: '(tableCell | tableHeader)*',
 			tableRole: 'row',
 			parseDOM: [{ tag: 'tr' }],
-			toDOM() {
-				return ['tr', 0];
+			attrs: {
+				height: { default: null }
+			},
+			toDOM(node) {
+				return [
+					'tr',
+					// {
+					// 	...(node.attrs.height
+					// 		? { style: `height: ${node.attrs.height}px` }
+					// 		: {})
+					// },
+					0
+				];
 			}
-		},
-		tableCell: {
+		}),
+		tableCell: createNodeSpec({
 			content: options.cellContent,
 			attrs: cellAttrs,
 			tableRole: 'cell',
@@ -114,8 +133,8 @@ export const tableNodes = (options: TableNodesOptions): TableNodes => {
 			toDOM(node) {
 				return ['td', setCellAttrs(node, extraAttrs), 0];
 			}
-		},
-		tableHeader: {
+		}),
+		tableHeader: createNodeSpec({
 			content: options.cellContent,
 			attrs: cellAttrs,
 			tableRole: 'headerCell',
@@ -126,7 +145,7 @@ export const tableNodes = (options: TableNodesOptions): TableNodes => {
 			toDOM(node) {
 				return ['th', setCellAttrs(node, extraAttrs), 0];
 			}
-		}
+		})
 	};
 };
 
