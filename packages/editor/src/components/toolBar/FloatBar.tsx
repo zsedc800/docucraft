@@ -17,7 +17,7 @@ import { Attrs, MarkType } from 'prosemirror-model';
 import Divider from '@mui/material/Divider';
 import { type TooltipProps } from '@mui/material';
 import ColorMark from '../../kits/ColorMark';
-import { createNode, insert, transformToNode } from '../../commands';
+import { createNode } from '../../commands';
 import { selectionContainsOnlyText } from '../../utils';
 import { TextSelection } from 'prosemirror-state';
 

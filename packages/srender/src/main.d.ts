@@ -1,4 +1,4 @@
-import { forwardRef as Rff } from 'react';
+import { forwardRef as Rff, Suspense as Suspen } from 'react';
 import {
 	ExoticComponent,
 	ForwardRefExoticComponent,
@@ -8,7 +8,7 @@ import './jsx';
 export * from './interface';
 export * from './index';
 
-export const Suspense: ExoticComponent<SuspenseProps>;
+export const Suspense: typeof Suspen;
 
 // export const forwardRef: <R, P>(r: R) => ForwardRefExoticComponent<R & P>;
 
@@ -16,6 +16,10 @@ export const forwardRef: typeof Rff;
 
 // export = Srender;
 // types/index.d.ts
-import * as CSS from 'csstype';
-
-export interface CSSProperties extends CSS.Properties<string | number> {}
+export {
+	CSSProperties,
+	ReactNode,
+	FC,
+	ForwardRefExoticComponent,
+	ForwardRefRenderFunction
+} from 'react';

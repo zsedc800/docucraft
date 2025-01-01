@@ -75,7 +75,10 @@ export const tableNodes = (options: TableNodesOptions): TableNodes => {
 		colspan: { default: 1 },
 		rowspan: { default: 1 },
 		colwidth: { default: null },
-		height: { default: null }
+		height: { default: null },
+		textAlign: { default: 'left' },
+		color: { default: null },
+		backgroundColor: { default: null }
 	};
 
 	for (const prop of Object.keys(extraAttrs))

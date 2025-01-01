@@ -15,7 +15,7 @@ import {
 	useRef,
 	createContext
 } from '@docucraft/srender';
-import { shallowEqual } from '.';
+import { assignUniqueId, generateUniqueId, shallowEqual } from '.';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 
 export function useNodeView<
@@ -35,6 +35,12 @@ export function useNodeView<
 	};
 }
 
+export const nodeViewContainer = new Map<string, BaseNodeView>();
+
+export function getNodeView(blockId: string) {
+	return nodeViewContainer.get(blockId);
+}
+
 export const nodeViewContext = createContext<{ nodeView: BaseNodeView }>(
 	{} as any
 );
@@ -52,6 +58,7 @@ export class BaseNodeView implements NodeView {
 	blockId: string;
 	component: ComponentType<any> = () => '';
 	depth: number;
+	props: Record<string, any>;
 	constructor(
 		public node: Node,
 		public view: EditorView,
@@ -61,14 +68,24 @@ export class BaseNodeView implements NodeView {
 		this.rootRender = createRoot();
 		const pos = getPos();
 		this.depth = pos || pos === 0 ? view.state.doc.resolve(pos).depth : -1;
+		// @ts-ignore
+		if (!node.attrs.blockId) node.attrs.blockId = generateUniqueId();
+
 		this.blockId = node.attrs.blockId;
+		nodeViewContainer.set(this.blockId, this);
+		this.props = {};
 		Promise.resolve().then(() =>
 			this.rootRender.updateContainer(this.dom.parentElement!)
 		);
 	}
 
+	setProps = (props: Record<string, any>) => {
+		this.props = { ...this.props, ...props };
+		this.render();
+	};
+
 	render(p?: any) {
-		const props = { nodeView: this, ...this.node.attrs, ...p };
+		const props = { nodeView: this, ...this.node.attrs, ...this.props, ...p };
 		let element = h(this.component, props);
 		element = h(
 			nodeViewContext.Provider,
@@ -99,7 +116,8 @@ export class BaseNodeView implements NodeView {
 		const { type, attrs } = node;
 		const { attrs: props, type: t } = this.node;
 		if (type !== t) return false;
-
+		// @ts-ignore
+		if (!node.attrs.blockId) node.attrs.blockId = this.blockId;
 		this.node = node;
 
 		if (this.component) {
@@ -117,6 +135,10 @@ export class BaseNodeView implements NodeView {
 	}
 	destroy() {
 		this.rootRender.unmount();
+		nodeViewContainer.delete(this.blockId);
 		this.dom.remove();
 	}
+	// 抽象方法
+	onFocusIn() {}
+	onFocusOut(e: { reason: 'change' | 'blur'; event?: Event }) {}
 }

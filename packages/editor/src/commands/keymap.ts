@@ -175,6 +175,8 @@ export const getMyKeyMap = () => {
 		'Mod-z': undo,
 		'Mod-y': redo,
 		Tab: (state: EditorState, dispatch?: EditorView['dispatch']) => {
+			console.log('tab');
+
 			const { $from, $to } = state.selection;
 			if (
 				!$from.sameParent($to) ||

@@ -23,6 +23,7 @@ import { ListItemViewConstructor } from './components/listItem';
 import { LinkViewConstructor } from './components/link';
 import './themes/default.scss';
 import { DividerViewConstructor } from './components/divider';
+import { onDispatch } from './utils/hooks';
 
 export class Editor {
 	constructor(container?: HTMLElement) {
@@ -59,6 +60,7 @@ export const setupEditor = (el: HTMLElement | null) => {
 	const editorView = new EditorView(el, {
 		state: editorState,
 		dispatchTransaction(tr) {
+			if (!onDispatch(tr)) return;
 			const newState = editorView.state.apply(tr);
 			editorView.updateState(newState);
 			// toolbar.update(editorView, editorView.state);

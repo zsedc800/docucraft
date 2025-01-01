@@ -10,6 +10,7 @@ import { Fragment, Node, NodeType, ResolvedPos } from 'prosemirror-model';
 import {
 	CellAttrs,
 	addColspan,
+	cellAround,
 	cellMinWidth,
 	columnIsHeader,
 	isInTable,
@@ -21,6 +22,21 @@ import { CellAttributes, tableNodeTypes } from './schema';
 import { CellSelection } from './cellSelection';
 import { Direction } from './input';
 import { createNode, createNodeAndFill } from '../../commands';
+import { Align } from '../../kits/Button';
+
+export const setCellSelection =
+	(type: 'col' | 'row') =>
+	({ state, dispatch }: EditorView, pos: number) => {
+		const $cell = cellAround(state.doc.resolve(pos));
+		if ($cell) {
+			const sel =
+				type === 'row'
+					? CellSelection.rowSelection($cell)
+					: CellSelection.colSelection($cell);
+			dispatch(state.tr.setSelection(sel));
+		}
+	};
+
 export const createTable: (rows: number, columns: number) => Command =
 	(rows, columns) => (state, dispatch, view) => {
 		const { table, tableRow, tableHeader, tableCell, paragraph } =
@@ -39,7 +55,8 @@ export const createTable: (rows: number, columns: number) => Command =
 							.fill(null)
 							.map((_, col) =>
 								createNode(
-									row === 0 ? tableHeader : tableCell,
+									// row === 0 ? tableHeader : tableCell,
+									tableCell,
 									null,
 									createNode(
 										paragraph,
@@ -153,11 +170,9 @@ export function addColumn(
 			tr.insert(tr.mapping.map(tableStart + pos), createNodeAndFill(type)!);
 		}
 	}
-	tr.setNodeAttribute(
-		tableStart - 1,
-		'cols',
-		table.attrs.cols.concat({ width: cellMinWidth })
-	);
+	const cols = table.attrs.cols.concat();
+	cols.splice(col, 0, { width: cellMinWidth });
+	tr.setNodeAttribute(tableStart - 1, 'cols', cols);
 	return tr;
 }
 
@@ -249,6 +264,19 @@ export const deleteColumn: Command = (state, dispatch) => {
 		dispatch(tr);
 	}
 	return true;
+};
+
+export const deleteColumnAtEnd = (view: EditorView, pos: number) => {
+	const $pos = view.state.doc.resolve(pos);
+	const table = $pos.nodeAfter!;
+	const map = TableMap.get(table);
+	if (map.width <= 1) return;
+	const tr = removeColumn(
+		view.state.tr,
+		{ map, table, tableStart: pos + 1 },
+		map.width - 1
+	);
+	view.dispatch(tr);
 };
 
 export const rowIsHeader = (
@@ -402,6 +430,19 @@ export const deleteRow: Command = (state, dispatch) => {
 	return true;
 };
 
+export const deleteRowAtEnd = (view: EditorView, pos: number) => {
+	const $pos = view.state.doc.resolve(pos);
+	const table = $pos.nodeAfter!;
+	const map = TableMap.get(table);
+	if (map.height <= 1) return;
+	const tr = removeRow(
+		view.state.tr,
+		{ map, table, tableStart: pos + 1 },
+		map.height - 1
+	);
+	view.dispatch(tr);
+};
+
 const cellsOverlapRectangle = (
 	{ width, height, map }: TableMap,
 	rect: Rect
@@ -541,7 +582,7 @@ function isHeaderEnabledByType(
 
 	for (let i = 0; i < cellPositions.length; i++) {
 		const cell = rect.table.nodeAt(cellPositions[i]);
-		if (cell && cell.type !== types.header_cell) {
+		if (cell && cell.type !== types.headerCell) {
 			return false;
 		}
 	}
@@ -689,3 +730,20 @@ export const deleteTable: Command = (state, dispatch) => {
 	}
 	return false;
 };
+
+export const attrsChange =
+	(
+		key: 'textAlign' | 'color' | 'backgroundColor',
+		val: Align | string
+	): Command =>
+	(state, dispatch) => {
+		const { map, tableStart, ...rect } = selectedRect(state);
+		if (dispatch) {
+			const tr = state.tr;
+			map.cellsInRect(rect).forEach((pos) => {
+				tr.setNodeAttribute(pos + tableStart, key, val);
+			});
+			dispatch(tr);
+		}
+		return false;
+	};

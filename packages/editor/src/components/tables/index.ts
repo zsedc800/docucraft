@@ -1,5 +1,11 @@
 import { EditorState, Plugin } from 'prosemirror-state';
-import { TableState, cellAround, isEmpty, tableEditingKey } from './utils';
+import {
+	TableState,
+	cellAround,
+	isEmpty,
+	pointsAtCellSelection,
+	tableEditingKey
+} from './utils';
 import {
 	CellSelection,
 	drawCellSelection,
@@ -11,16 +17,17 @@ export { tableNodeTypes, tableNodes } from './schema';
 export { TableView } from './tableView';
 export { columnResizing } from './columnresizing';
 import {
-	domInCell,
 	handleKeyDown,
 	handleMouseDown,
 	handlePaste,
 	handleTripleClick
 } from './input';
-import { Decoration, DecorationSet, EditorView } from 'prosemirror-view';
-import { TableView, TableViewConstructor } from './tableView';
+import { Decoration, DecorationSet } from 'prosemirror-view';
+import { TableViewConstructor } from './tableView';
 import './style.scss';
 import { TableCellView, TableHeadCellView, TableRowView } from './view';
+import { callNodeView, fixSelection } from '../../utils';
+import { preventDispatch } from '../../utils/hooks';
 
 export type TableEditingOptions = {
 	allowTableNodeSelection?: boolean;
@@ -32,9 +39,6 @@ export function tableEditing({
 	const getDecorations = (state: EditorState) => {
 		let decs: Decoration[] = [];
 		decs = decs.concat(drawCellSelection(state));
-		state.doc.descendants((node, pos) => {
-			if (node.type.name !== 'table') return;
-		});
 		return decs;
 	};
 
@@ -71,6 +75,7 @@ export function tableEditing({
 				};
 			}
 		},
+
 		props: {
 			nodeViews: {
 				table: TableViewConstructor,
@@ -82,20 +87,64 @@ export function tableEditing({
 				return this.getState(state)?.decorations;
 			},
 			handleDOMEvents: {
-				mousedown: handleMouseDown
+				mousedown: handleMouseDown,
+				focus(view) {
+					callNodeView(view, 'onFocusIn')?.();
+				},
+				blur(view, event) {
+					callNodeView(view, 'onFocusOut')?.({ reason: 'blur', event });
+				},
+				mouseup(view, event) {
+					const { clientX: x, clientY: y } = event;
+					if (event.button === 2 && pointsAtCellSelection(view, { x, y })) {
+						preventDispatch();
+					}
+				}
 			},
 			handlePaste,
 			handleTripleClick,
 			handleKeyDown
 			// createSelectionBetween(view) {
-			// 	console.log('cre');
-
 			// 	const set = tableEditingKey.getState(view.state)?.set;
 			// 	console.log(set, 'selection');
 
 			// 	return !isEmpty(set) ? view.state.selection : null;
 			// }
+		},
+		view(view) {
+			let timeout: number;
+			const onSelectionChange = () => {
+				timeout = setTimeout(() => {
+					const selection = document.getSelection();
+					const { state } = view;
+					const { from, to, anchor } = state.selection;
+
+					if (selection && selection.anchorNode) {
+						const { anchorNode, anchorOffset } = selection;
+						const pos = view.posAtDOM(anchorNode, anchorOffset);
+						if (pos < 0) return;
+
+						if (pos !== anchor) fixSelection(view, from, to);
+					}
+				}, 0);
+			};
+			document.addEventListener('selectionchange', onSelectionChange);
+			return {
+				update({ state: { selection }, dom }, { selection: sel }) {
+					if (timeout) clearTimeout(timeout);
+					if (!selection.eq(sel)) {
+						if (selection instanceof CellSelection) {
+							window.getSelection()?.removeAllRanges();
+							dom.blur();
+						}
+					}
+				},
+				destroy() {
+					document.removeEventListener('selectionchange', onSelectionChange);
+				}
+			};
 		}
+
 		// appendTransaction(_, oldState, newState) {
 		// 	return normalizeSelection(
 		// 		newState,

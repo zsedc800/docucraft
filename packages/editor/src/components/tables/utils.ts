@@ -8,12 +8,7 @@ import {
 	TextSelection
 } from 'prosemirror-state';
 import { CellSelection } from './cellSelection';
-import {
-	Decoration,
-	DecorationSet,
-	DecorationSource,
-	EditorView
-} from 'prosemirror-view';
+import { Decoration, DecorationSet, EditorView } from 'prosemirror-view';
 
 export const cellMinWidth = 80;
 
@@ -195,4 +190,29 @@ export function drawCellSel(
 		);
 	});
 	dispatch(state.tr.setMeta(tableEditingKey, { cellDecos: cells }));
+}
+
+export function pointsAtCellSelection(
+	view: EditorView,
+	{ x, y }: { x: number; y: number }
+) {
+	const {
+		state: { selection, doc }
+	} = view;
+
+	if (!(selection instanceof CellSelection)) return false;
+	const pos = view.posAtCoords({
+		left: x,
+		top: y
+	});
+
+	console.log(pos, 'pos');
+	if (!pos) return;
+	const $cell = cellAround(doc.resolve(pos.pos));
+	if (!$cell) return;
+	let res = false;
+	selection.forEachCell((node, pos) => {
+		if ($cell.pos === pos) res = true;
+	});
+	return res;
 }

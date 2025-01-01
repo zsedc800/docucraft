@@ -1,4 +1,5 @@
 import { Ref, useRef } from '@docucraft/srender';
+import { Transaction } from 'prosemirror-state';
 import { useCallback } from 'react';
 
 export function useEvent<
@@ -24,4 +25,18 @@ export function useForkRef<T>(...refs: (Ref<T> | undefined)[]) {
 	return (node: T) => {
 		for (const ref of refs) setRef(node, ref);
 	};
+}
+
+let canPending = false;
+
+export function preventDispatch() {
+	canPending = true;
+}
+
+export function onDispatch(tr: Transaction) {
+	if (canPending) {
+		canPending = false;
+		return false;
+	}
+	return true;
 }

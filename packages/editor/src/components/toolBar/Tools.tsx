@@ -58,9 +58,10 @@ const Toolbar = ({
 
 							insert(
 								pos,
-								node.type,
-								{},
-								node.isTextblock ? void 0 : createNode(schema.nodes.paragraph)
+								// node.type,
+								schema.nodes.paragraph,
+								{}
+								// node.isTextblock ? void 0 : createNode(schema.nodes.paragraph)
 							)(view.state, view.dispatch, view);
 							view.focus();
 						}
@@ -90,9 +91,16 @@ interface Props {
 	toolsBefore?: ReactNode;
 	toolsAfter?: ReactNode;
 	visible?: boolean;
+	style?: CSSProperties;
 }
 
-export default ({ children, toolsAfter, toolsBefore, visible }: Props) => {
+export default ({
+	children,
+	toolsAfter,
+	toolsBefore,
+	visible,
+	style
+}: Props) => {
 	const anchorEl = useRef<HTMLElement>(null);
 	const [height, setHeight] = useState<number | undefined>(undefined);
 	useEffect(() => {
@@ -115,7 +123,11 @@ export default ({ children, toolsAfter, toolsBefore, visible }: Props) => {
 			onClose={handleClose}
 			onOpen={handleOpen}
 			title={
-				<Toolbar style={{ height }} before={toolsBefore} after={toolsAfter} />
+				<Toolbar
+					style={{ ...style, height }}
+					before={toolsBefore}
+					after={toolsAfter}
+				/>
 			}
 			placement="left-start"
 			slotProps={{

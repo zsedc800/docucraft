@@ -1,0 +1,21 @@
+.toggle-button-group {
+	display: flex;
+	align-items: center;
+	padding: 4px;
+	border-radius: 4px;
+	& > [role='button'] {
+		margin-right: 4px;
+		border-radius: 4px;
+		&[data-actived='true'] {
+			background-color: #cdcdcd;
+		}
+		&:last-child {
+			margin-right: 0;
+		}
+	}
+}
+
+[role='button'] {
+	border-radius: 4px;
+	padding: 2px;
+}

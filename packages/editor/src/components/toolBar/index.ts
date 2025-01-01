@@ -1,6 +1,7 @@
 import { Plugin } from 'prosemirror-state';
 import { closeFloatBar, showFloatBar } from './FloatBar';
-
+import { getNodeView } from '../../utils/view';
+import { findParentNode, selectInTypes } from '../../utils';
 export default () => {
 	let updated = false;
 	return new Plugin({
@@ -19,11 +20,27 @@ export default () => {
 				}
 			}
 		},
-		view() {
+		view(v) {
+			const types = selectInTypes(v);
 			return {
-				update(view, { selection: { from, to } }) {
+				update(view, { selection: sel }) {
 					const { state } = view;
 					const { selection } = state;
+					const { from, to } = sel;
+
+					if (!selection.eq(sel)) {
+						let node = findParentNode(selection.$head, types);
+						const blockId = node?.attrs.blockId;
+						if (node)
+							// getNodeView(node.attrs.blockId)?.setProps({ selectIn: true });
+							getNodeView(blockId)?.onFocusIn();
+
+						node = findParentNode(sel.$head, types);
+
+						if (node && node.attrs.blockId !== blockId)
+							// getNodeView(node.attrs.blockId)?.setProps({ selectIn: false });
+							getNodeView(node.attrs.blockId)?.onFocusOut({ reason: 'change' });
+					}
 					if (selection.from !== from || selection.to !== to) {
 						closeFloatBar();
 						updated = true;

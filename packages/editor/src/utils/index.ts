@@ -1,6 +1,8 @@
-import { Node, NodeType } from 'prosemirror-model';
+import { Node, NodeType, ResolvedPos } from 'prosemirror-model';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
+import { schema } from '../model';
+import { BaseNodeView, getNodeView } from './view';
 
 let view: { current?: EditorView } = {};
 export const addView = (v: EditorView) => (view.current = v);
@@ -251,4 +253,73 @@ export function hasChildOfType(node: Node, type: NodeType) {
 		}
 	});
 	return found;
+}
+
+export function findParentNode($head: ResolvedPos, types: NodeType[]) {
+	let node: Node | null = null;
+	for (let d = $head.depth; d >= 0; d--) {
+		node = $head.node(d);
+		if (types.includes(node.type)) break;
+	}
+	return node;
+}
+
+export function fixSelection(view: EditorView, from: number, to: number) {
+	const startResolved = view.domAtPos(from);
+	const endResolved = view.domAtPos(to);
+	try {
+		const range = document.createRange();
+		range.setStart(startResolved.node, startResolved.offset);
+		if (from === to) {
+			range.collapse(true);
+		} else {
+			range.setEnd(endResolved.node, endResolved.offset);
+		}
+		const nativeSelection = window.getSelection();
+		if (nativeSelection) {
+			nativeSelection.removeAllRanges();
+			nativeSelection.addRange(range);
+		}
+	} catch (error) {
+		console.error('Failed to change native selection: ', error);
+	}
+}
+
+const types = ['table'];
+export const selectInTypes = ({ state: { schema } }: EditorView) =>
+	types.map((key) => schema.nodes[key]);
+
+type FunctionKeys<T> = Exclude<
+	{
+		[K in keyof T]: T[K] extends (...args: any[]) => any ? K : never;
+	}[keyof T],
+	undefined
+>;
+
+export function callNodeView<
+	T extends BaseNodeView = BaseNodeView,
+	K extends FunctionKeys<T> = FunctionKeys<T>
+>(view: EditorView, key: K): T[K] | undefined {
+	const { state } = view;
+	const {
+		selection: { $anchor }
+	} = state;
+	const node = findParentNode($anchor, selectInTypes(view));
+	if (node) {
+		const nodeView = getNodeView(node.attrs.blockId) as T;
+		if (nodeView) {
+			const fn = nodeView[key];
+			return typeof fn === 'function' ? fn.bind(nodeView) : void 0;
+		}
+	}
+}
+
+export function setSelectIn(view: EditorView, selectIn: boolean = false) {
+	const { state } = view;
+	const {
+		selection: { $anchor }
+	} = state;
+	const node = findParentNode($anchor, selectInTypes(view));
+	if (node) getNodeView(node.attrs.blockId)?.setProps({ selectIn });
+	return node;
 }

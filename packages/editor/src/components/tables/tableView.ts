@@ -35,30 +35,13 @@ export class TableView extends BaseNodeView {
 	) {
 		console.log('table create');
 		super(node, view, getPos);
-		// this.dom = createElement('div', {
-		// 	class: tableClassName
-		// });
-		// this.dom.appendChild(
-		// 	createElement('div', { tabindex: '0', class: 'hiddenfocus' })
-		// );
-		// this.table = this.dom.appendChild(createElement('table'));
-		// this.colgroup = this.table.appendChild(createElement('colgroup'));
-		// this.contentDOM = this.table.appendChild(createElement('tbody'));
 		this.table = document.createElement('table');
 		this.colgroup = document.createElement('colgroup');
 		this.bottmBar = document.createElement('div');
 		this.rightBar = document.createElement('div');
 		this.component = Table;
 		this.render();
-
-		// updateColumnsOnResize(
-		// 	this.node,
-		// 	this.colgroup,
-		// 	this.table,
-		// 	this.cellMinWidth
-		// );
 		this.dom.addEventListener('mouseover', this.handleMouseMove);
-		// this.dom.addEventListener('mouseleave', this.handleMouseLeave);
 	}
 	handleMouseMove = (event: MouseEvent) => {
 		const { clientX, clientY } = event;
@@ -101,31 +84,28 @@ export class TableView extends BaseNodeView {
 		this.dom.removeEventListener('mouseover', this.handleMouseMove);
 	}
 
-	update(node: Node): boolean {
-		const { firstChild } = node;
-		const { firstChild: fc } = this.node;
-		if (!super.update(node)) return false;
-		// if (firstChild && fc && firstChild.childCount !== fc.childCount) {
-		// 	updateColumnsOnResize(
-		// 		this.node,
-		// 		this.colgroup,
-		// 		this.table,
-		// 		this.cellMinWidth
-		// 	);
-		// }
-
-		this.node = node;
-		// this.dom.className = node.attrs.class || tableClassName;
-		return true;
+	onFocusIn(): void {
+		this.setProps({ selectIn: true });
 	}
 
-	ignoreMutation(record: MutationRecord): boolean {
-		return (
-			record.target !== this.table ||
-			(record.type == 'attributes' &&
-				(record.target == this.table || this.colgroup.contains(record.target)))
-		);
+	onFocusOut({
+		reason,
+		event
+	}: {
+		reason: 'change' | 'blur';
+		event?: FocusEvent | undefined;
+	}): void {
+		if (reason === 'blur' && event?.relatedTarget) return;
+		this.setProps({ selectIn: false });
 	}
+
+	// ignoreMutation(record: MutationRecord): boolean {
+	// 	return (
+	// 		record.target !== this.table ||
+	// 		(record.type == 'attributes' &&
+	// 			(record.target == this.table || this.colgroup.contains(record.target)))
+	// 	);
+	// }
 	selectNode() {
 		console.log('select', this);
 	}

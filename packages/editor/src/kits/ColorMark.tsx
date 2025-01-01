@@ -229,7 +229,14 @@ export default ({
 			</div>
 			<Divider />
 			<div className="footer">
-				<Button onClick={onReset}>取消设置</Button>
+				<Button
+					onClick={() => {
+						// setState({color});
+						onReset && onReset();
+					}}
+				>
+					取消设置
+				</Button>
 			</div>
 		</Box>
 	);

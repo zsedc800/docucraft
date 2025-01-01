@@ -13,25 +13,29 @@ interface Props {
 		| ReactNode
 		| ((p: { close: () => void } & { [k: string]: any }) => ReactNode);
 	slotProps?: { paper: PaperProps };
-	trigger: 'click' | 'hover' | 'contextmenu';
+	trigger?: 'click' | 'hover' | 'contextmenu';
 }
 
 export default function Menu({
 	children,
 	content,
 	placement = 'right-start',
-	trigger = 'click'
+	trigger = 'click',
+	slotProps
 }: Props) {
 	const [anchorEl, setAnchorEl] = useState<
 		HTMLElement | PopoverVirtualElement | null
 	>(null);
 	const popperRef = useRef<HTMLDivElement>(null);
 	const childRef = useRef<HTMLElement>(null);
+	const event = useRef<Event>(null);
 	const handleOpen = (e: Event) => {
 		if (e.currentTarget !== anchorEl)
 			setAnchorEl(e.currentTarget as HTMLElement);
 	};
-	const handleClose = () => (anchorEl ? setAnchorEl(null) : void 0);
+	const handleClose = () => {
+		anchorEl ? setAnchorEl(null) : void 0;
+	};
 	const open = Boolean(anchorEl);
 	const originalChildProps = children.props;
 	const onClick = (e: Event) => {
@@ -41,6 +45,7 @@ export default function Menu({
 	};
 	const onContextMenu = (e: MouseEvent) => {
 		e.preventDefault();
+		event.current = e;
 		const { onContextMenu: fn } = originalChildProps;
 		if (typeof fn === 'function') fn(e);
 		setAnchorEl({
@@ -72,6 +77,7 @@ export default function Menu({
 			else if (ref) ref.current = node;
 		}
 	};
+
 	if (trigger === 'click') {
 		childProps['onClick'] = onClick;
 	} else if (trigger === 'hover') {
@@ -81,6 +87,9 @@ export default function Menu({
 		childProps['onContextMenu'] = onContextMenu;
 		childProps['onMouseLeave'] = onMouseLeave;
 	}
+
+	console.log(event, 'ev');
+
 	return (
 		<>
 			{cloneElement(children, { ...originalChildProps, ...childProps })}
@@ -88,18 +97,19 @@ export default function Menu({
 				anchorEl={anchorEl}
 				open={open}
 				placement={placement}
-				sx={{ zIndex: 99 }}
+				sx={{ zIndex: 9999 }}
 			>
 				<ClickAwayListener onClickAway={handleClose}>
 					<Paper
-						onMouseLeave={() =>
-							childRef.current?.matches(':hover') ? void 0 : handleClose()
-						}
+						// onMouseLeave={() =>
+						// 	childRef.current?.matches(':hover') ? void 0 : handleClose()
+						// }
 						ref={popperRef}
 						elevation={8}
+						{...slotProps?.paper}
 					>
 						{typeof content === 'function'
-							? content({ close: handleClose })
+							? content({ close: handleClose, event: event.current })
 							: content}
 					</Paper>
 				</ClickAwayListener>

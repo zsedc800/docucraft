@@ -1,13 +1,17 @@
 .text-block {
 	position: relative;
 	padding: 3px 2px;
-	font-size: 16px;
 	// & > p {
 	// min-height: 1em;
 	// &::after {
 	// 	opacity: 0.5;
 	// }
 	// }
+	& > p {
+		font-size: inherit;
+		font-weight: inherit;
+		color: inherit;
+	}
 	&.empty {
 		&[data-placeholder] {
 			&::after {

@@ -97,3 +97,12 @@ body {
 	justify-content: center;
 	align-items: center;
 }
+
+[role='button'] {
+	display: flex;
+	align-items: center;
+	cursor: pointer;
+	&:hover {
+		background-color: #ededed;
+	}
+}
