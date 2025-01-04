@@ -15,7 +15,6 @@ import { fixTables } from './fixtables';
 
 export { tableNodeTypes, tableNodes } from './schema';
 export { TableView } from './tableView';
-export { columnResizing } from './columnresizing';
 import {
 	handleKeyDown,
 	handleMouseDown,

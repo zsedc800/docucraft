@@ -394,7 +394,6 @@ export default ({
 }) => {
 	const [color, setColor] = useState('#ff0000');
 	const instance = useRef<{ close: () => void }>(null);
-	console.log(color, 'xcxx');
 
 	return (
 		// @ts-ignore

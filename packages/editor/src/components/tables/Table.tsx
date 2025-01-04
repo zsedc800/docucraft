@@ -6,10 +6,10 @@ import {
 	useRef,
 	useState
 } from '@docucraft/srender';
-import { classnames, nextTick } from '../../utils';
+import { classnames } from '../../utils';
 import { useNodeView } from '../../utils/view';
 import { TableView } from './tableView';
-import { cellAround, drawCellSel, pointsAtCellSelection } from './utils';
+import { cellAround, cellMinWidth, drawCellSel, hasMergedCells } from './utils';
 import { EditorView } from 'prosemirror-view';
 import SvgDragIndicator from '@docucraft/icons/svg/DragIndicator';
 import Popover from '../../kits/Popover';
@@ -37,6 +37,7 @@ import {
 	addRowAtEnd,
 	addRowBefore,
 	attrsChange,
+	clearContent,
 	deleteColumn,
 	deleteColumnAtEnd,
 	deleteRow,
@@ -45,6 +46,7 @@ import {
 	mergeCells,
 	selectedRect,
 	setCellSelection,
+	splitCell,
 	toggleHeader
 } from './commands';
 import { ResolvedPos } from 'prosemirror-model';
@@ -55,6 +57,16 @@ import { ToggleButton } from '../../kits/ToggleButton';
 import { AlignButton } from '../../kits/Button';
 import ColorButton from '../../kits/Button/ColorButton';
 import { CellSelection } from './cellSelection';
+import { TableMap } from './tableMap';
+import {
+	Direction,
+	getResizingCellDOM,
+	getResizingPos,
+	handleMouseDown,
+	isResizing,
+	setResizingCellDOM,
+	setResizingPos
+} from './resizing';
 
 interface Props {
 	nodeView: TableView;
@@ -71,20 +83,33 @@ interface PosCtx {
 function initTableToolbars(tableView: TableView, posCtx: RefObject<PosCtx>) {
 	const { view, table, dom, getPos } = tableView;
 	let mousePos: ReturnType<typeof view.posAtCoords> = null;
+	let mousedown = false,
+		dir: Direction = 'vertical';
 	const rowToolbar = dom.querySelector('.row-toolbar') as HTMLElement;
 	const columnToolbar = dom.querySelector('.column-toolbar') as HTMLElement;
 	const tableContainer = dom.querySelector('.table-box') as HTMLElement;
 	const rightBar = dom.querySelector('.right-bar') as HTMLElement;
 	const bottomBar = dom.querySelector('.bottom-bar') as HTMLElement;
 	const tableFloatBar = dom.querySelector('.table-float-bar') as HTMLElement;
+	const rowResizeHandler = dom.querySelector(
+		'.row-resize-handle'
+	) as HTMLElement;
+	const colResizeHandler = dom.querySelector(
+		'.column-resize-handle'
+	) as HTMLElement;
 
 	// 更新工具条位置和尺寸
-	function updateToolbars() {
+	function updateToolbars(event: MouseEvent) {
 		if (!mousePos) return;
 		const $cell = cellAround(view.state.doc.resolve(mousePos.pos));
 		if (!$cell) {
 			rowToolbar.style.display = 'none';
 			columnToolbar.style.display = 'none';
+			rowResizeHandler.style.display = 'none';
+			colResizeHandler.style.display = 'none';
+			dom.classList.remove('column-resize-cursor');
+			dom.classList.remove('row-resize-cursor');
+			setResizingPos(-1);
 			if (rowToolbar.matches(':hover')) rowToolbar.style.display = 'flex';
 			if (columnToolbar.matches(':hover')) columnToolbar.style.display = 'flex';
 
@@ -96,15 +121,95 @@ function initTableToolbars(tableView: TableView, posCtx: RefObject<PosCtx>) {
 		const { top: offsetTop, left: offsetLeft } = table.getBoundingClientRect();
 		if (!cellDOM) return;
 
+		const { height, top, width, left, bottom, right } =
+			cellDOM.getBoundingClientRect();
+
 		rowToolbar.style.display = 'flex';
 		columnToolbar.style.display = 'flex';
-		const { height, top, width, left } = cellDOM.getBoundingClientRect();
 		const { scrollLeft, scrollTop } = tableContainer;
 
 		rowToolbar.style.height = height + 'px';
 		rowToolbar.style.transform = `translate(0, ${top - offsetTop - scrollTop}px)`;
 		columnToolbar.style.width = width + 'px';
 		columnToolbar.style.transform = `translate(${left - offsetLeft - scrollLeft}px, 0)`;
+
+		const map = TableMap.get($cell.node(-1)),
+			start = $cell.start(-1);
+		const index = map.map.indexOf($cell.pos - start);
+		let cellPos = $cell.pos;
+
+		const showResizeHandler = (type: 'col' | 'row' | 'clear') => {
+			if (type === 'col') {
+				dir = 'vertical';
+				colResizeHandler.style.display = 'block';
+				rowResizeHandler.style.display = 'none';
+				dom.classList.add('column-resize-cursor');
+				dom.classList.remove('row-resize-cursor');
+			} else if (type === 'row') {
+				dir = 'horizontal';
+				rowResizeHandler.style.display = 'block';
+				colResizeHandler.style.display = 'none';
+				dom.classList.add('row-resize-cursor');
+				dom.classList.remove('column-resize-cursor');
+			} else {
+				dir = 'none';
+				rowResizeHandler.style.display = 'none';
+				colResizeHandler.style.display = 'none';
+				dom.classList.remove('column-resize-cursor');
+				dom.classList.remove('row-resize-cursor');
+			}
+		};
+
+		const handleMove = () => {
+			if (isResizing()) return;
+
+			setResizingCellDOM(cellDOM);
+			if (right - event.clientX <= 5) {
+				showResizeHandler('col');
+			} else if (event.clientX - left <= 5) {
+				let n;
+				cellPos = start + map.map[index - 1];
+				if (
+					index % map.width !== 0 &&
+					(n = view.nodeDOM(cellPos) as HTMLElement)
+				) {
+					setResizingCellDOM(n);
+					showResizeHandler('col');
+				} else cellPos = -1;
+			} else if (bottom - event.clientY <= 5) {
+				showResizeHandler('row');
+			} else if (event.clientY - top <= 5) {
+				let n;
+				cellPos = start + map.map[index - width];
+				if (
+					Math.floor(index / map.width) > 0 &&
+					(n = view.nodeDOM(cellPos) as HTMLElement)
+				) {
+					setResizingCellDOM(n);
+					showResizeHandler('row');
+				} else cellPos = -1;
+			} else cellPos = -1;
+			setResizingPos(cellPos);
+			if (cellPos === -1) {
+				showResizeHandler('clear');
+			}
+		};
+
+		const onDragMove = () => {
+			const cellDOM = getResizingCellDOM();
+			if (!cellDOM) return;
+			const { right, bottom } = cellDOM.getBoundingClientRect();
+			if (dir === 'vertical') {
+				colResizeHandler.style.left =
+					right - offsetLeft - scrollLeft - 1 + 'px';
+			} else if (dir === 'horizontal') {
+				rowResizeHandler.style.top = bottom - offsetTop - scrollTop - 1 + 'px';
+			}
+		};
+
+		handleMove();
+
+		onDragMove();
 	}
 
 	function updateBottomBar(e: MouseEvent) {
@@ -182,15 +287,28 @@ function initTableToolbars(tableView: TableView, posCtx: RefObject<PosCtx>) {
 	bottomBar.addEventListener('mousedown', updateBottomBar);
 	rightBar.addEventListener('mousedown', updateRightBar);
 
-	view.dom.addEventListener('mousemove', (event: MouseEvent) => {
+	const onMouseDown = (e: MouseEvent) => {
+		if (getResizingPos() > -1) mousedown = true;
+		return handleMouseDown(view, e, cellMinWidth, dir);
+	};
+	const onMouseUp = (e: MouseEvent) => {
+		mousedown = false;
+	};
+	const onMouseMove = (event: MouseEvent) => {
 		const { clientX, clientY } = event;
 		mousePos = view.posAtCoords({ left: clientX, top: clientY });
 		if (!mousePos) return;
-		updateToolbars();
-	});
+		updateToolbars(event);
+	};
+
+	view.dom.addEventListener('mousedown', onMouseDown);
+	view.dom.addEventListener('mousemove', onMouseMove);
+	view.dom.addEventListener('mouseup', onMouseUp);
 
 	return () => {
-		view.dom.removeEventListener('mousemove', updateToolbars);
+		view.dom.removeEventListener('mousemove', onMouseMove);
+		view.dom.removeEventListener('mousedown', onMouseDown);
+		view.dom.removeEventListener('mouseup', onMouseUp);
 	};
 }
 
@@ -207,36 +325,37 @@ const TableMenu = ({ view, toolType, close, event }: TableMenuProps) => {
 		close();
 		if (toolType === 'contextmenu') view.focus();
 	};
-	const [isInCellSel, setCellSel] = useState(false);
-	console.log(event, 'ee');
 
 	useEffect(() => {
-		if (
-			event &&
-			pointsAtCellSelection(view, { x: event.clientX, y: event.clientY })
-		) {
-			setCellSel(true);
-		} else {
-			setCellSel(false);
-		}
 		window.getSelection()?.removeAllRanges();
 	}, [event]);
 
 	const rect = selectedRect(view.state);
-
+	const mergeStatus = hasMergedCells(view.state);
 	let inCellSelContent;
-	if (isInCellSel) {
-		inCellSelContent = (
-			<MenuItem
-				onClick={() => {
-					mergeCells(view.state, view.dispatch);
-				}}
-			>
+	const opCells = [
+		view.state.selection instanceof CellSelection &&
+			(mergeStatus === 'hasMerged' || mergeStatus === 'none') && (
+				<MenuItem
+					onClick={handler(() => mergeCells(view.state, view.dispatch))}
+				>
+					<ListItemIcon className="icon" />
+					合并单元格
+				</MenuItem>
+			),
+		(mergeStatus === 'onlyMerged' || mergeStatus === 'hasMerged') && (
+			<MenuItem onClick={handler(() => splitCell(view.state, view.dispatch))}>
 				<ListItemIcon className="icon" />
-				合并单元格
+				拆分单元格
 			</MenuItem>
-		);
-	}
+		)
+	].filter(Boolean);
+	inCellSelContent = (
+		<>
+			{opCells.length > 0 && <Divider />}
+			{opCells}
+		</>
+	);
 
 	return (
 		<MenuList
@@ -298,7 +417,9 @@ const TableMenu = ({ view, toolType, close, event }: TableMenuProps) => {
 					</MenuItem>
 				</>
 			)}
-			<MenuItem>
+			<MenuItem
+				onClick={handler(() => clearContent(view.state, view.dispatch))}
+			>
 				<ListItemIcon className="icon">
 					<SvgClear />
 				</ListItemIcon>
@@ -416,7 +537,10 @@ export default ({
 			data-selectin={selectIn}
 		>
 			<div className="table-float-bar" contentEditable={false}>
-				<Paper className="content" sx={{ display: 'flex' }}>
+				<Paper
+					className="content"
+					sx={{ display: 'flex', width: 'max-content' }}
+				>
 					<ColorButton
 						trigger="hover"
 						closePanel={!selectIn}
@@ -549,6 +673,8 @@ export default ({
 							))}
 						</colgroup>
 						<tbody ref={$contentDOM}></tbody>
+						<div className="row-resize-handle"></div>
+						<div className="column-resize-handle"></div>
 					</table>
 				</div>
 			</Menu>

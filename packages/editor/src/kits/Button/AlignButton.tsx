@@ -34,16 +34,64 @@ export default ({ onChange, style, closePanel, trigger }: Props) => {
 			}}
 			value={align}
 		>
-			<ToggleButton value="left">
+			<ToggleButton
+				title={
+					<>
+						左对齐
+						<br />
+						<span
+							style={{ opacity: 0.5 }}
+							dangerouslySetInnerHTML={{ __html: 'Ctrl+&#8657+L' }}
+						/>
+					</>
+				}
+				value="left"
+			>
 				<SvgFormatAlignLeft />
 			</ToggleButton>
-			<ToggleButton value="center">
+			<ToggleButton
+				title={
+					<>
+						居中对齐
+						<br />
+						<span
+							style={{ opacity: 0.5 }}
+							dangerouslySetInnerHTML={{ __html: 'Ctrl+&#8657+C' }}
+						/>
+					</>
+				}
+				value="center"
+			>
 				<SvgFormatAlignCenter />
 			</ToggleButton>
-			<ToggleButton value="right">
+			<ToggleButton
+				title={
+					<>
+						右对齐
+						<br />
+						<span
+							style={{ opacity: 0.5 }}
+							dangerouslySetInnerHTML={{ __html: 'Ctrl+&#8657+R' }}
+						/>
+					</>
+				}
+				value="right"
+			>
 				<SvgFormatAlignRight />
 			</ToggleButton>
-			<ToggleButton value="justify">
+			<ToggleButton
+				title={
+					<>
+						两端对齐
+						<br />
+						<span
+							style={{ opacity: 0.5 }}
+							dangerouslySetInnerHTML={{ __html: 'Ctrl+&#8657+J' }}
+						/>
+					</>
+				}
+				value="justify"
+			>
 				<SvgFormatAlignJustify />
 			</ToggleButton>
 		</ToggleButtonGroup>
@@ -54,6 +102,7 @@ export default ({ onChange, style, closePanel, trigger }: Props) => {
 			style={style}
 			subPanel={closePanel ? null : subPanel}
 			trigger={trigger}
+			placement="top"
 		>
 			<Icon />
 		</ToggleButton>

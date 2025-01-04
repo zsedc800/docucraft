@@ -140,6 +140,8 @@ const deleteChild = (domParent: HTMLElement, fiber: Fiber) => {
 		node = traverseFiber(
 			node,
 			(f) => {
+				console.log(f.pendingProps.className, 'f');
+
 				if (f.tag === FiberTag.Portal) return true;
 				if (f.tag === FiberTag.HostComponent || f.tag === FiberTag.HostText) {
 					const el = f.stateNode as Element;
@@ -164,6 +166,10 @@ function commitDeletion(fiber: Fiber) {
 			node = node.sibling;
 		}
 	};
+
+	if (fiber.tag === FiberTag.Portal) {
+		deleteChildren(fiber.stateNode as HTMLElement, fiber);
+	}
 
 	let node = fiber.child;
 	while (node) {

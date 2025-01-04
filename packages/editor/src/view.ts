@@ -1,15 +1,14 @@
 // view.ts
 import { EditorView } from 'prosemirror-view';
-import { EditorState, Plugin, PluginKey } from 'prosemirror-state';
+import { EditorState } from 'prosemirror-state';
 import { schema } from './model';
 import { keymap } from 'prosemirror-keymap';
 import { history } from 'prosemirror-history';
 import { CodeBlockViewConstructor } from './components/codeBlock/codeBlockView';
-// import { highlightCodePlugin } from './components/codeBlock/highlightCodePlugin';
 import { getMyKeyMap, buildInputRules } from './commands';
 import buildToolbar from './components/toolBar';
-import { TaskItemViewConstructor, taskItem } from './components/taskList';
-import { columnResizing, tableEditing } from './components/tables';
+import { TaskItemViewConstructor } from './components/taskList';
+import { tableEditing } from './components/tables';
 import { addView } from './utils';
 import { mathRender } from './components/katex';
 import { HeadingViewConstructor } from './components/heading';
@@ -21,9 +20,9 @@ import {
 import { BlockTileViewConstructor } from './components/blockTile';
 import { ListItemViewConstructor } from './components/listItem';
 import { LinkViewConstructor } from './components/link';
-import './themes/default.scss';
 import { DividerViewConstructor } from './components/divider';
 import { onDispatch } from './utils/hooks';
+import './themes/default.scss';
 
 export class Editor {
 	constructor(container?: HTMLElement) {
@@ -36,7 +35,7 @@ export class Editor {
 export const setupEditor = (el: HTMLElement | null) => {
 	if (!el) return;
 
-	const toolbar = buildToolbar();
+	// const toolbar = buildToolbar();
 
 	// 根据 schema 定义，创建 editorState 数据实例
 	const editorState = EditorState.create({
@@ -45,9 +44,6 @@ export const setupEditor = (el: HTMLElement | null) => {
 			buildInputRules(),
 			keymap(getMyKeyMap()),
 			history(),
-			// toolbar.plugin,
-			// highlightCodePlugin(),
-			columnResizing(),
 			tableEditing({}),
 			mathRender(),
 			outlineTreePlugin,

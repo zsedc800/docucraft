@@ -1,14 +1,8 @@
-import { Attrs, Node as ProsemirrorNode } from 'prosemirror-model';
+import { Attrs } from 'prosemirror-model';
 import { EditorState, Plugin, PluginKey, Transaction } from 'prosemirror-state';
-import {
-	Decoration,
-	DecorationSet,
-	EditorView,
-	NodeView
-} from 'prosemirror-view';
-import { tableNodeTypes } from './schema';
+import { Decoration, DecorationSet, EditorView } from 'prosemirror-view';
 import { TableMap } from './tableMap';
-import { TableView, updateColumnsOnResize } from './tableView';
+import { TableView } from './tableView';
 import {
 	cellAround,
 	CellAttrs,
@@ -413,14 +407,6 @@ function displayColumnWidth(
 	const cols = table.attrs.cols.concat();
 	cols[col] = { width };
 	view.dispatch(view.state.tr.setNodeAttribute(start - 1, 'cols', cols));
-	// updateColumnsOnResize(
-	// 	table,
-	// 	dom.firstChild as HTMLTableColElement,
-	// 	dom as HTMLTableElement,
-	// 	cellMinWidth,
-	// 	col,
-	// 	width
-	// );
 }
 
 function displayRowHeight(view: EditorView, cell: number, height: number) {

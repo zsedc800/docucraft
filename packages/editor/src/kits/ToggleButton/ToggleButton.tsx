@@ -1,6 +1,7 @@
 import {
 	CSSProperties,
 	ForwardRefExoticComponent,
+	createPortal,
 	useRef,
 	useState
 } from '@docucraft/srender';
@@ -31,6 +32,8 @@ interface Props {
 	IconComponent?: ((e: any) => ReactNode) | ForwardRefExoticComponent<any>;
 	slotProps?: { paper: PaperProps };
 	actived?: boolean;
+	placement?: TooltipProps['placement'];
+	maskProps?: { color?: string };
 }
 
 const NormalTooltip = styled(({ className, ...props }: TooltipProps) => (
@@ -55,7 +58,9 @@ export default ({
 	style,
 	IconComponent = SvgArrowDown,
 	slotProps,
-	actived
+	actived,
+	placement = 'bottom',
+	maskProps
 }: Props) => {
 	const [anchorEl, setAnchorEl] = useState<
 		HTMLElement | PopoverVirtualElement | null
@@ -71,6 +76,7 @@ export default ({
 		setAnchorEl(e.currentTarget);
 	};
 	const onMouseLeave = (e: MouseEvent) => {
+		if (trigger !== 'hover') return;
 		if (!popperRef.current?.matches(':hover')) handleClose();
 	};
 	const onContextMenu = (e: MouseEvent) => {
@@ -112,7 +118,9 @@ export default ({
 		</div>
 	);
 	const body = title ? (
-		<NormalTooltip title={title}>{content}</NormalTooltip>
+		<NormalTooltip placement={placement} title={title} disableInteractive>
+			{content}
+		</NormalTooltip>
 	) : (
 		content
 	);
@@ -126,7 +134,12 @@ export default ({
 			sx={{ zIndex: 9999 }}
 		>
 			<ClickAwayListener onClickAway={handleClose}>
-				<div className="panel" ref={popperRef} style={{ paddingTop: offset }}>
+				<div
+					className="panel"
+					ref={popperRef}
+					style={{ paddingTop: offset }}
+					onMouseLeave={onMouseLeave}
+				>
 					<Paper elevation={8} tabIndex={-1} {...slotProps?.paper}>
 						{typeof subPanel === 'function'
 							? subPanel({ close: handleClose })
@@ -139,6 +152,9 @@ export default ({
 	return (
 		<>
 			{body}
+			{open && maskProps
+				? createPortal(<div className="tooltip-masker"></div>, document.body)
+				: null}
 			{popper}
 		</>
 	);

@@ -1,14 +1,17 @@
-import { Attrs, Node, ResolvedPos } from 'prosemirror-model';
+import { Attrs, Node, NodeType, ResolvedPos } from 'prosemirror-model';
 import { TableMap } from './tableMap';
 import { tableNodeTypes } from './schema';
 import {
 	EditorState,
 	NodeSelection,
 	PluginKey,
-	TextSelection
+	TextSelection,
+	Transaction
 } from 'prosemirror-state';
 import { CellSelection } from './cellSelection';
 import { Decoration, DecorationSet, EditorView } from 'prosemirror-view';
+import { TableRect, selectedRect } from './commands';
+import { createNodeAndFill } from '../../commands';
 
 export const cellMinWidth = 80;
 
@@ -30,10 +33,10 @@ export type MutableAttrs = Record<string, unknown>;
 
 export const addColspan = (attrs: CellAttrs, pos: number, n = 1): Attrs => {
 	const result = { ...attrs, colspan: attrs.colspan + n };
-	if (result.colwidth) {
-		result.colwidth = result.colwidth.slice();
-		for (let i = 0; i < n; i++) result.colwidth.splice(pos, 0, 0);
-	}
+	// if (result.colwidth) {
+	// 	result.colwidth = result.colwidth.slice();
+	// 	for (let i = 0; i < n; i++) result.colwidth.splice(pos, 0, 0);
+	// }
 	return result;
 };
 
@@ -131,6 +134,14 @@ export function cellNear($pos: ResolvedPos): ResolvedPos | undefined {
 	}
 }
 
+export function cellWrapping($pos: ResolvedPos) {
+	for (let d = $pos.depth; d > 0; d--) {
+		const role = $pos.node(d).type.spec.tableRole;
+		if (role === 'cell' || role === 'headerCell') return $pos.node(d);
+	}
+	return null;
+}
+
 export function selectionCell(state: EditorState): ResolvedPos {
 	const sel = state.selection as CellSelection | NodeSelection;
 	if ('$anchorCell' in sel && sel.$anchorCell) {
@@ -206,7 +217,6 @@ export function pointsAtCellSelection(
 		top: y
 	});
 
-	console.log(pos, 'pos');
 	if (!pos) return;
 	const $cell = cellAround(doc.resolve(pos.pos));
 	if (!$cell) return;
@@ -216,3 +226,94 @@ export function pointsAtCellSelection(
 	});
 	return res;
 }
+
+export type MergeCellStatus = 'hasMerged' | 'onlyMerged' | 'none';
+export function hasMergedCells(state: EditorState): MergeCellStatus {
+	const rect = selectedRect(state),
+		{ table, map } = rect;
+	let hasMerged = false,
+		cellCount = 0;
+	const seen: Record<number, boolean> = {};
+	for (let row = rect.top; row < rect.bottom; row++) {
+		for (let col = rect.left; col < rect.right; col++) {
+			const cellPos = map.map[row * map.width + col];
+			const cell = table.nodeAt(cellPos);
+			if (!cell || seen[cellPos]) continue;
+			seen[cellPos] = true;
+
+			cellCount++;
+			const colspan = cell.attrs.colspan || 1;
+			const rowspan = cell.attrs.rowspan || 1;
+			if (colspan > 1 || rowspan > 1) {
+				hasMerged = true;
+			}
+		}
+	}
+
+	return cellCount > 1
+		? hasMerged
+			? 'hasMerged'
+			: 'none'
+		: hasMerged
+			? 'onlyMerged'
+			: 'none';
+}
+
+export const splitCellOneWithType =
+	(ctx: {
+		getCellType: (e: { node: Node; row: number; col: number }) => NodeType;
+		lastCell: number;
+		tr: Transaction;
+	}) =>
+	(
+		cellNode: Node | null,
+		cellPos: number | undefined | null,
+		rect: TableRect
+	) => {
+		if (cellNode == null || cellPos == null) {
+			return false;
+		}
+		if (cellNode.attrs.colspan == 1 && cellNode.attrs.rowspan == 1) {
+			return false;
+		}
+
+		let baseAttrs = cellNode.attrs;
+		const attrs = [];
+		const colwidth = baseAttrs.colwidth;
+		if (baseAttrs.rowspan > 1) baseAttrs = { ...baseAttrs, rowspan: 1 };
+		if (baseAttrs.colspan > 1) baseAttrs = { ...baseAttrs, colspan: 1 };
+
+		const { tr } = ctx,
+			{ map, tableStart } = rect;
+		for (let i = 0; i < rect.right - rect.left; i++)
+			attrs.push(
+				colwidth
+					? {
+							...baseAttrs,
+							colwidth: colwidth && colwidth[i] ? [colwidth[i]] : null
+						}
+					: baseAttrs
+			);
+		let { getCellType, lastCell } = ctx;
+
+		// mark
+
+		for (let row = rect.top; row < rect.bottom; row++) {
+			let pos = map.positionAt(row, rect.left, rect.table);
+			if (row == rect.top) pos += cellNode.nodeSize;
+			for (let col = rect.left, i = 0; col < rect.right; col++, i++) {
+				if (col == rect.left && row == rect.top) continue;
+				const cellType = getCellType({ node: cellNode, row, col });
+				tr.insert(
+					(lastCell = tr.mapping.map(pos + tableStart, 1)),
+					createNodeAndFill(cellType, attrs[i])!
+				);
+			}
+		}
+		ctx.tr = tr.setNodeMarkup(
+			cellPos,
+			getCellType({ node: cellNode, row: rect.top, col: rect.left }),
+			attrs[0]
+		);
+		ctx.lastCell = lastCell;
+	};

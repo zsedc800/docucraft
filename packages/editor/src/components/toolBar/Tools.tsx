@@ -10,6 +10,7 @@ import { schema } from '../../model';
 import { CSSProperties, MouseEvent, ReactNode } from 'react';
 import { RichTooltip as HtmlTooltip, NormalTooltip } from '../../kits';
 import './style.scss';
+import { OPMenus } from '../../kits/Button';
 
 const Toolbar = ({
 	before,
@@ -56,19 +57,17 @@ const Toolbar = ({
 						if (curPos || curPos === 0) {
 							const pos = before ? curPos : curPos + node.nodeSize;
 
-							insert(
-								pos,
-								// node.type,
-								schema.nodes.paragraph,
-								{}
-								// node.isTextblock ? void 0 : createNode(schema.nodes.paragraph)
-							)(view.state, view.dispatch, view);
+							insert(pos, schema.nodes.paragraph, {})(
+								view.state,
+								view.dispatch,
+								view
+							);
 							view.focus();
 						}
 					}}
 				/>
 			</NormalTooltip>
-			<NormalTooltip
+			{/* <NormalTooltip
 				disableInteractive
 				title={
 					<Typography textAlign="center">
@@ -79,7 +78,10 @@ const Toolbar = ({
 				}
 			>
 				<SvgDragIndicator className="iconButton" />
-			</NormalTooltip>
+			</NormalTooltip> */}
+			<OPMenus>
+				<SvgDragIndicator className="iconButton" />
+			</OPMenus>
 			<>{after}</>
 		</Box>
 	);

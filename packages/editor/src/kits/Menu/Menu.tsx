@@ -88,8 +88,6 @@ export default function Menu({
 		childProps['onMouseLeave'] = onMouseLeave;
 	}
 
-	console.log(event, 'ev');
-
 	return (
 		<>
 			{cloneElement(children, { ...originalChildProps, ...childProps })}

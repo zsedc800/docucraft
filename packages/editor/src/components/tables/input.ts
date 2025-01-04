@@ -21,6 +21,7 @@ import { tableNodeTypes } from './schema';
 import { clipCells, fitSlice, insertCells, pastedCells } from './copypaste';
 import { TableMap } from './tableMap';
 import { createNodeAndFill } from '../../commands';
+import { getResizingPos, isResizing } from './resizing';
 
 type Axis = 'horiz' | 'vert';
 
@@ -52,6 +53,7 @@ export const handleKeyDown = keydownHandler({
 	ArrowRight: arrow('horiz', 1),
 	ArrowUp: arrow('vert', -1),
 	ArrowDown: arrow('vert', 1),
+	Tab: arrow('horiz', 1),
 	'Shift-ArrowLeft': shiftArrow('horiz', -1),
 	'Shift-ArrowRight': shiftArrow('horiz', 1),
 	'Shift-ArrowUp': shiftArrow('vert', -1),
@@ -174,7 +176,7 @@ export function handleMouseDown(
 	view: EditorView,
 	startEvent: MouseEvent
 ): void {
-	if (startEvent.ctrlKey || startEvent.metaKey) return;
+	if (startEvent.ctrlKey || startEvent.metaKey || getResizingPos() >= 0) return;
 
 	const startDOMCell = domInCell(view, startEvent.target as Node);
 	if (!startDOMCell) {

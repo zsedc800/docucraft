@@ -1,12 +1,12 @@
 .ProseMirror .column-resize-handle {
 	position: absolute;
-	right: -1px;
 	top: 0;
 	bottom: 0;
 	width: 2px;
 	z-index: 20;
 	background-color: #adf;
 	pointer-events: none;
+	display: none;
 }
 .ProseMirror.resize-cursor {
 	cursor: ew-resize;
@@ -27,13 +27,6 @@
 }
 
 .ProseMirror {
-	&.column-resize-cursor {
-		cursor: col-resize;
-	}
-	&.row-resize-cursor {
-		cursor: row-resize;
-	}
-
 	.selectedCell {
 		p {
 			caret-color: transparent;
@@ -56,16 +49,22 @@
 
 	.row-resize-handle {
 		position: absolute;
-		left: 0;
+		left: -1px;
 		right: 0;
-		bottom: -1px;
 		z-index: 20;
 		height: 2px;
+		display: none;
 		background-color: #adf;
 		pointer-events: none;
 	}
 
 	.tableWrapper {
+		&.column-resize-cursor {
+			cursor: col-resize;
+		}
+		&.row-resize-cursor {
+			cursor: row-resize;
+		}
 		&.shadow-left {
 			&::before {
 				content: '';
@@ -117,6 +116,7 @@
 			}
 			[role='button'] {
 				padding: 2px 4px;
+				flex-shrink: 0;
 			}
 		}
 
@@ -228,20 +228,22 @@
 		table {
 			position: relative;
 			margin: 0;
-			border-radius: 5px;
 		}
 	}
 	table {
 		border-collapse: separate;
 		border-spacing: 0px;
+		border: 1px solid #dfe2e5;
+		border-radius: 5px;
 		tbody {
 			caret-color: initial;
 		}
 		td,
 		th {
+			border: 1px solid #dfe2e5;
 			border-width: 0;
-			border-left-width: 1px;
-			border-top-width: 1px;
+			// border-left-width: 1px;
+			// border-top-width: 1px;
 		}
 
 		th {
@@ -256,37 +258,27 @@
 			border: none;
 			td:last-child,
 			th:last-child {
-				border-right-width: 1px;
+				border-right-width: 0;
+				&.last-in-cell {
+					border-right-width: 1px;
+				}
 			}
 		}
 		tr {
+			td,
+			th {
+				border-top-width: 1px;
+				border-right-width: 1px;
+			}
+
 			&:first-child {
-				td:first-child,
-				th:first-child {
-					border-top-left-radius: 5px;
+				td,
+				th {
+					border-top-width: 0;
 				}
 
 				th {
 					background-color: rgba(0, 0, 0, 0.1);
-				}
-
-				td:last-child,
-				th:last-child {
-					border-top-right-radius: 5px;
-				}
-			}
-			&:last-child {
-				td:first-child,
-				th:first-child {
-					border-bottom-left-radius: 5px;
-				}
-				td:last-child,
-				th:last-child {
-					border-bottom-right-radius: 5px;
-				}
-				td,
-				th {
-					border-bottom-width: 1px;
 				}
 			}
 		}

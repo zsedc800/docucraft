@@ -12,13 +12,15 @@ import {
 	addColspan,
 	cellAround,
 	cellMinWidth,
+	cellWrapping,
 	columnIsHeader,
 	isInTable,
 	moveCellForward,
 	removeColSpan,
-	selectionCell
+	selectionCell,
+	splitCellOneWithType
 } from './utils';
-import { CellAttributes, tableNodeTypes } from './schema';
+import { CellAttributes, TableRole, tableNodeTypes } from './schema';
 import { CellSelection } from './cellSelection';
 import { Direction } from './input';
 import { createNode, createNodeAndFill } from '../../commands';
@@ -491,7 +493,7 @@ export const mergeCells: Command = (state, dispatch) => {
 		return false;
 
 	const rect = selectedRect(state),
-		{ map } = rect;
+		{ map, table, tableStart } = rect;
 	if (cellsOverlapRectangle(map, rect)) return false;
 
 	if (dispatch) {
@@ -500,27 +502,42 @@ export const mergeCells: Command = (state, dispatch) => {
 		let content = Fragment.empty;
 		let mergedPos: number | undefined;
 		let mergedCell: Node | undefined;
+		let colwidth: number[] = [];
+
+		if (rect.right === map.width && rect.left > 0) {
+			for (let row = rect.top + 1; row < rect.bottom; row++) {
+				const pos = map.positionAt(row, rect.left - 1, table);
+				tr.setNodeAttribute(pos + tableStart, 'class', 'last-in-cell');
+			}
+		}
+
+		for (let col = rect.left; col < rect.right; col++) {
+			const cellPos = map.map[rect.top * map.width + col];
+			const cell = table.nodeAt(cellPos);
+			if (!cell) continue;
+			colwidth = colwidth.concat(cell.attrs.colwidth);
+		}
 		for (let row = rect.top; row < rect.bottom; row++) {
 			for (let col = rect.left; col < rect.right; col++) {
 				const cellPos = map.map[row * map.width + col];
 				const cell = rect.table.nodeAt(cellPos);
 				if (seen[cellPos] || !cell) continue;
 				seen[cellPos] = true;
+
 				if (mergedPos == null) {
 					mergedPos = cellPos;
 					mergedCell = cell;
 				} else {
 					if (!isEmpty(cell)) content = content.append(cell.content);
-					const mapped = tr.mapping.map(cellPos + rect.tableStart);
+					const mapped = tr.mapping.map(cellPos + tableStart);
 					tr.delete(mapped, mapped + cell.nodeSize);
 				}
 			}
 		}
 		if (mergedPos == null || mergedCell == null) return true;
-
-		tr.setNodeMarkup(mergedPos + rect.tableStart, null, {
+		tr.setNodeMarkup(mergedPos + tableStart, null, {
 			...addColspan(
-				mergedCell.attrs as CellAttrs,
+				{ ...(mergedCell.attrs as CellAttrs), colwidth },
 				mergedCell.attrs.colspan,
 				rect.right - rect.left - mergedCell.attrs.colspan
 			),
@@ -529,16 +546,91 @@ export const mergeCells: Command = (state, dispatch) => {
 		if (content.size) {
 			const end = mergedPos + 1 + mergedCell.content.size;
 			const start = isEmpty(mergedCell) ? mergedPos + 1 : end;
-			tr.replaceWith(start + rect.tableStart, end + rect.tableStart, content);
+			tr.replaceWith(start + tableStart, end + tableStart, content);
 		}
-		tr.setSelection(
-			new CellSelection(tr.doc.resolve(mergedPos + rect.tableStart))
-		);
+		tr.setSelection(new CellSelection(tr.doc.resolve(mergedPos + tableStart)));
 		dispatch(tr);
 	}
 
 	return true;
 };
+
+export const splitCell: Command = (state, dispatch) => {
+	const nodeTypes = tableNodeTypes(state.schema);
+	return splitCellWithType(({ node }) => {
+		return nodeTypes[node.type.spec.tableRole as TableRole];
+	})(state, dispatch);
+};
+
+function splitCellWithType(
+	getCellType: (e: { node: Node; row: number; col: number }) => NodeType
+): Command {
+	return (state, dispatch) => {
+		var _a;
+		const sel = state.selection;
+		let cellNode;
+		let cellPos;
+		const ctx = { lastCell: -1, getCellType, tr: state.tr };
+		const fn = splitCellOneWithType(ctx);
+		const rect1 = selectedRect(state),
+			{ table, tableStart, map, ...rect } = rect1;
+		if (!(sel instanceof CellSelection)) {
+			cellNode = cellWrapping(sel.$from);
+			if (!cellNode) return false;
+			cellPos = (_a = cellAround(sel.$from)) == null ? void 0 : _a.pos;
+			fn(cellNode, cellPos, rect1);
+		} else {
+			// if (sel.$anchorCell.pos != sel.$headCell.pos) return false;
+			// cellNode = sel.$anchorCell.nodeAfter;
+			// cellPos = sel.$anchorCell.pos;
+			const params = [];
+			const seen: Record<number, boolean> = {};
+			for (let row = rect.top; row < rect.bottom; row++) {
+				for (let col = rect.left; col < rect.right; col++) {
+					const cellPos = map.map[row * map.width + col]; // 获取单元格位置
+					const cell = table.nodeAt(cellPos);
+					if (!cell || seen[cellPos]) continue;
+					seen[cellPos] = true;
+					const { colspan = 1, rowspan = 1 } = cell.attrs;
+
+					if (colspan > 1 || rowspan > 1) {
+						params.push([
+							cell,
+							cellPos + tableStart,
+							{
+								top: row,
+								bottom: row + rowspan,
+								left: col,
+								right: col + colspan,
+								table,
+								map,
+								tableStart
+							}
+						] as const);
+						col += colspan - 1;
+					}
+				}
+			}
+
+			params.forEach(([node, pos, rect]) => {
+				fn(node, ctx.tr.mapping.map(pos), rect);
+			});
+		}
+
+		if (dispatch) {
+			let { tr, lastCell } = ctx;
+			if (sel instanceof CellSelection)
+				tr.setSelection(
+					new CellSelection(
+						tr.doc.resolve(tr.mapping.map(sel.$anchorCell.pos)),
+						lastCell ? tr.doc.resolve(lastCell) : void 0
+					)
+				);
+			dispatch(tr);
+		}
+		return true;
+	};
+}
 
 export const setCellAttrs =
 	(name: string, value: unknown): Command =>
@@ -747,3 +839,31 @@ export const attrsChange =
 		}
 		return false;
 	};
+
+export const clearContent: Command = (state, dispatch) => {
+	if (!isInTable(state)) return false;
+	const { map, table, tableStart, ...rect } = selectedRect(state);
+	const { tr, selection } = state;
+	let cellPos;
+	map.cellsInRect(rect).forEach((pos) => {
+		const cellNode = table.nodeAt(pos);
+		if (!cellNode) return;
+		cellPos = pos;
+		const emptyCell = createNodeAndFill(cellNode.type);
+		if (emptyCell) {
+			tr.replaceWith(
+				tr.mapping.map(tableStart + pos + 1),
+				tr.mapping.map(tableStart + pos + cellNode.nodeSize - 1),
+				emptyCell.content
+			);
+		}
+	});
+	if (selection instanceof TextSelection && cellPos)
+		tr.setSelection(TextSelection.create(tr.doc, cellPos));
+
+	if (dispatch) {
+		dispatch(tr);
+		return true;
+	}
+	return false;
+};

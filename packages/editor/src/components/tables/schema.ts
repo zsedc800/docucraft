@@ -6,7 +6,7 @@ import {
 	NodeType,
 	Schema
 } from 'prosemirror-model';
-import { CellAttrs, MutableAttrs } from './utils';
+import { CellAttrs, MutableAttrs, cellMinWidth } from './utils';
 import { createNodeSpec } from '../../model';
 
 export type getFromDOM = (dom: HTMLElement) => unknown;
@@ -22,6 +22,7 @@ export interface TableNodesOptions {
 	tableGroup?: string;
 	cellContent: string;
 	cellAttributes: { [k: string]: CellAttributes };
+	cellMinWidth?: number;
 }
 
 export type TableNodes = Record<
@@ -70,15 +71,17 @@ const setCellAttrs = (node: Node, extraAttrs: Attrs): Attrs => {
 };
 
 export const tableNodes = (options: TableNodesOptions): TableNodes => {
+	const { cellMinWidth: minWidth = cellMinWidth } = options;
 	const extraAttrs = options.cellAttributes || {};
 	const cellAttrs: Record<string, AttributeSpec> = {
 		colspan: { default: 1 },
 		rowspan: { default: 1 },
-		colwidth: { default: null },
+		colwidth: { default: minWidth ? [minWidth] : [] },
 		height: { default: null },
-		textAlign: { default: 'left' },
+		textAlign: { default: null },
 		color: { default: null },
-		backgroundColor: { default: null }
+		backgroundColor: { default: null },
+		class: { default: null }
 	};
 
 	for (const prop of Object.keys(extraAttrs))

@@ -41,7 +41,12 @@ export const SubMenu = forwardRef<{ close: () => void }, Props>(
 		return (
 			<>
 				{cloneElement(children, { ...originalChildProps, onClick })}
-				<Popper anchorEl={anchorEl} open={open} placement={placement}>
+				<Popper
+					anchorEl={anchorEl}
+					open={open}
+					placement={placement}
+					disablePortal
+				>
 					<ClickAwayListener onClickAway={handleClose}>
 						<Paper {...slotProps?.paper}>{content}</Paper>
 					</ClickAwayListener>
