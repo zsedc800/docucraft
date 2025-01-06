@@ -1,11 +1,5 @@
 // model.ts 文件命名暂时还是以 mvc 模式命名，方便理解，实际中 命名为 schema.ts 更好
-import {
-	MarkSpec,
-	Node,
-	NodeSpec,
-	Schema,
-	SchemaSpec
-} from 'prosemirror-model';
+import { MarkSpec, Node, NodeSpec, Schema } from 'prosemirror-model';
 import { codeBlock } from './components/codeBlock';
 import { taskItem, taskList } from './components/taskList';
 import { tableNodes } from './components/tables';
@@ -13,6 +7,7 @@ import { mathNodeSpec } from './components/katex';
 import { blockTileSpec } from './components/blockTile';
 import { LinkSpec } from './components/link';
 import { DividerSpec } from './components/divider';
+import { imageNodeSpec } from './components/image';
 
 export function createNodeSpec(config: NodeSpec): NodeSpec {
 	config.attrs = {
@@ -171,31 +166,7 @@ const nodes = {
 	}),
 	divider: createNodeSpec(DividerSpec),
 	link: createNodeSpec(LinkSpec),
-	image: createNodeSpec({
-		inline: true,
-		attrs: {
-			src: {},
-			alt: { default: null },
-			title: { default: null }
-		},
-		group: 'inline',
-		draggable: true,
-		parseDOM: [
-			{
-				tag: 'img[src]',
-				getAttrs: (dom) => ({
-					src: dom.getAttribute('src'),
-					title: dom.getAttribute('title'),
-					alt: dom.getAttribute('alt')
-				})
-			}
-		],
-		toDOM: (node) => {
-			const { title, src, alt } = node.attrs;
-
-			return ['img', { title, src, alt }];
-		}
-	}),
+	image: createNodeSpec(imageNodeSpec),
 	hardBreak: createNodeSpec({
 		inline: true,
 		group: 'inline',

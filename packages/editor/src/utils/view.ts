@@ -84,6 +84,15 @@ export class BaseNodeView implements NodeView {
 		this.render();
 	};
 
+	setNodeAttribute = (key: string, val: any) => {
+		const pos = this.getPos();
+		const { state, dispatch } = this.view;
+		if (pos || pos === 0) {
+			const tr = state.tr.setNodeAttribute(pos, key, val);
+			dispatch(tr);
+		}
+	};
+
 	render(p?: any) {
 		const props = { nodeView: this, ...this.node.attrs, ...this.props, ...p };
 		let element = h(this.component, props);

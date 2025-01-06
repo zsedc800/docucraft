@@ -22,6 +22,7 @@ import { ListItemViewConstructor } from './components/listItem';
 import { LinkViewConstructor } from './components/link';
 import { DividerViewConstructor } from './components/divider';
 import { onDispatch } from './utils/hooks';
+import { handleImagePaste, ImageNodeViewConstructor } from './components/image';
 import './themes/default.scss';
 
 export class Editor {
@@ -48,7 +49,8 @@ export const setupEditor = (el: HTMLElement | null) => {
 			mathRender(),
 			outlineTreePlugin,
 			textblockPlugin,
-			buildToolbar()
+			buildToolbar(),
+			handleImagePaste()
 		]
 	});
 
@@ -69,7 +71,8 @@ export const setupEditor = (el: HTMLElement | null) => {
 			blockTile: BlockTileViewConstructor,
 			list_item: ListItemViewConstructor,
 			link: LinkViewConstructor,
-			divider: DividerViewConstructor
+			divider: DividerViewConstructor,
+			image: ImageNodeViewConstructor
 		},
 		handleClickOn(view, pos, node, nodePos, event, direct) {
 			const markType = view.state.schema.marks.link;

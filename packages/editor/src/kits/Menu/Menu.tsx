@@ -14,6 +14,8 @@ interface Props {
 		| ((p: { close: () => void } & { [k: string]: any }) => ReactNode);
 	slotProps?: { paper: PaperProps };
 	trigger?: 'click' | 'hover' | 'contextmenu';
+	onOpen?: () => void;
+	onClose?: () => void;
 }
 
 export default function Menu({
@@ -21,7 +23,9 @@ export default function Menu({
 	content,
 	placement = 'right-start',
 	trigger = 'click',
-	slotProps
+	slotProps,
+	onOpen,
+	onClose
 }: Props) {
 	const [anchorEl, setAnchorEl] = useState<
 		HTMLElement | PopoverVirtualElement | null
@@ -32,9 +36,11 @@ export default function Menu({
 	const handleOpen = (e: Event) => {
 		if (e.currentTarget !== anchorEl)
 			setAnchorEl(e.currentTarget as HTMLElement);
+		onOpen?.();
 	};
 	const handleClose = () => {
 		anchorEl ? setAnchorEl(null) : void 0;
+		onClose?.();
 	};
 	const open = Boolean(anchorEl);
 	const originalChildProps = children.props;

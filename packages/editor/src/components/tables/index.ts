@@ -111,7 +111,7 @@ export function tableEditing({
 			// }
 		},
 		view(view) {
-			let timeout: number;
+			let timeout: any;
 			const onSelectionChange = () => {
 				timeout = setTimeout(() => {
 					const selection = document.getSelection();

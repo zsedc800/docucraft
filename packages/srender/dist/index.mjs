@@ -1099,7 +1099,6 @@ const deleteChild = (domParent, fiber) => {
   let node = fiber;
   while (node) {
     node = traverseFiber(node, f => {
-      console.log(f.pendingProps.className, 'f');
       if (f.tag === FiberTag.Portal) return true;
       if (f.tag === FiberTag.HostComponent || f.tag === FiberTag.HostText) {
         const el = f.stateNode;
