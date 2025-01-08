@@ -9,19 +9,22 @@ interface Props {
 }
 export default ({ nodeView, hasSublist = false }: Props) => {
 	const { $dom, $contentDOM } = useNodeView<HTMLLIElement>(nodeView);
-
-	return (
-		<Tools visible={hasSublist ? false : void 0}>
-			<li
-				ref={$dom}
-				className={classnames('list-item', {
-					hasSublist,
-					inlist: nodeView.inlist
-				})}
-			>
-				{hasSublist ? <></> : <div className="marker"></div>}
-				<div className="list-item-content" ref={$contentDOM}></div>
-			</li>
-		</Tools>
+	const isToplevel = nodeView.depth === 0;
+	const body = (
+		<li
+			ref={$dom}
+			className={classnames('list-item', {
+				hasSublist,
+				inlist: nodeView.inlist
+			})}
+		>
+			{hasSublist ? <></> : <div className="marker"></div>}
+			<div className="list-item-content" ref={$contentDOM}></div>
+		</li>
+	);
+	return isToplevel ? (
+		<Tools visible={hasSublist ? false : void 0}>{body}</Tools>
+	) : (
+		body
 	);
 };

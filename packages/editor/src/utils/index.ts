@@ -1,4 +1,4 @@
-import { Node, NodeType, ResolvedPos } from 'prosemirror-model';
+import { Node, NodeType, ResolvedPos, Schema } from 'prosemirror-model';
 import { EditorState, TextSelection } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { schema } from '../model';
@@ -323,3 +323,15 @@ export function setSelectIn(view: EditorView, selectIn: boolean = false) {
 	if (node) getNodeView(node.attrs.blockId)?.setProps({ selectIn });
 	return node;
 }
+
+export const getNodeTypesByKeys =
+	<K extends string>(keys: readonly K[]) =>
+	(nodes: Schema['nodes']): Record<K, NodeType> => {
+		return keys.reduce(
+			(pre, key) => {
+				pre[key] = nodes[key];
+				return pre;
+			},
+			{} as Record<K, Schema['nodes'][K]>
+		);
+	};

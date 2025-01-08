@@ -3,7 +3,8 @@ import {
 	Decoration,
 	DecorationSource,
 	EditorView,
-	NodeView
+	NodeView,
+	ViewMutationRecord
 } from 'prosemirror-view';
 import createElement from '../createElement';
 import {
@@ -79,10 +80,7 @@ export class BaseNodeView implements NodeView {
 		);
 	}
 
-	setProps = (props: Record<string, any>) => {
-		this.props = { ...this.props, ...props };
-		this.render();
-	};
+	// ------ prosemirror node operate methods start
 
 	setNodeAttribute = (key: string, val: any) => {
 		const pos = this.getPos();
@@ -93,6 +91,21 @@ export class BaseNodeView implements NodeView {
 		}
 	};
 
+	deleteNode = () => {
+		const pos = this.getPos();
+		const { state, dispatch } = this.view;
+		if (pos || pos === 0) {
+			const tr = state.tr.delete(pos, pos + this.node.nodeSize);
+			dispatch(tr);
+		}
+	};
+
+	// ------ prosemirror node operate methods end
+	// render
+	setProps = (props: Record<string, any>) => {
+		this.props = { ...this.props, ...props };
+		this.render();
+	};
 	render(p?: any) {
 		const props = { nodeView: this, ...this.node.attrs, ...this.props, ...p };
 		let element = h(this.component, props);
@@ -113,7 +126,7 @@ export class BaseNodeView implements NodeView {
 		this.rootRender.render(element);
 	}
 
-	ignoreMutation(mutation: MutationRecord) {
+	ignoreMutation(mutation: ViewMutationRecord) {
 		return mutation.target !== this.contentDOM;
 	}
 

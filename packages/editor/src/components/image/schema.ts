@@ -7,7 +7,8 @@ export const imageNodeSpec: NodeSpec = {
 		alt: { default: null },
 		title: { default: null },
 		link: { default: null },
-		width: { default: null }
+		width: { default: null },
+		align: { default: 'left' }
 	},
 	group: 'block',
 	draggable: false,

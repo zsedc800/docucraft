@@ -1,0 +1,37 @@
+.timeline {
+	&[data-pos='left'] {
+		.timeline-item-opposite {
+			text-align: right;
+		}
+	}
+	&[data-pos='alternate'] {
+		.timeline-item:nth-child(odd) {
+			.timeline-item-opposite {
+				text-align: right;
+			}
+		}
+	}
+	& > &-item {
+		&::before {
+			content: '';
+			display: none;
+		}
+	}
+	&-item {
+		& > &-opposite {
+			padding: 0 16px 0 0;
+			flex: none;
+		}
+		& > &-content {
+			padding: 4px 16px;
+			h1,
+			h2,
+			h3,
+			h4,
+			h5,
+			h6 {
+				margin: 0;
+			}
+		}
+	}
+}

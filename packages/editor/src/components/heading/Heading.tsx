@@ -1,12 +1,8 @@
 import {
 	Children,
-	ComponentChildren,
-	FC,
 	VNode,
 	cloneElement,
 	useEffect,
-	useLayoutEffect,
-	useRef,
 	useState
 } from '@docucraft/srender';
 import ArrowRight from '@docucraft/icons/svg/ArrowRightFill';
@@ -142,76 +138,74 @@ export default ({ view, level, fold, hidden, id }: Props) => {
 	const outlineTree = view.outlineTree;
 	const { $dom, $contentDOM } = useNodeView(view);
 	const Tag = `h${level}`;
+	const isToplevel = view.depth === 0;
+	const toolsAfter = (
+		<>
+			<NormalTooltip disableInteractive title="点击复制标题">
+				<span
+					style={{ fontSize: 16, padding: '4px', opacity: 0.8 }}
+					className="iconButton"
+					onClick={() => {
+						navigator.clipboard
+							.writeText(view.node.textContent)
+							.then(() => Toast.success('已复制'));
+					}}
+				>
+					{`h${level}`}
+				</span>
+			</NormalTooltip>
+			<NormalTooltip disableInteractive title={fold ? '展开' : '折叠'}>
+				<span
+					className="iconButton"
+					style={{ marginRight: 4 }}
+					onClick={() => {
+						const pos = view.getPos();
 
-	return (
-		<Tools
-			toolsAfter={
-				<>
-					<NormalTooltip disableInteractive title="点击复制标题">
-						<span
-							style={{ fontSize: 16, padding: '4px', opacity: 0.8 }}
-							className="iconButton"
-							onClick={() => {
-								navigator.clipboard
-									.writeText(view.node.textContent)
-									.then(() => Toast.success('已复制'));
-							}}
-						>
-							{`h${level}`}
-						</span>
-					</NormalTooltip>
-					<NormalTooltip disableInteractive title={fold ? '展开' : '折叠'}>
-						<span
-							className="iconButton"
-							style={{ marginRight: 4 }}
-							onClick={() => {
-								const pos = view.getPos();
+						let tr = view.view.state.tr.setMeta('toggleHeading', {
+							hidden: !fold,
+							pos
+						});
 
-								let tr = view.view.state.tr.setMeta('toggleHeading', {
-									hidden: !fold,
-									pos
-								});
-
-								if (typeof pos !== 'undefined')
-									tr = tr.setNodeMarkup(pos, null, {
-										...view.node.attrs,
-										fold: !fold
-									});
-								view.view.dispatch(tr);
-							}}
-						>
-							{fold ? <ArrowRight /> : <ArrowDown />}
-						</span>
-					</NormalTooltip>
-				</>
-			}
-		>
-			<Tag
-				ref={$dom}
-				id={id}
-				className={classnames('heading relative', {
-					hidden,
-					empty: !view.node.textContent
-				})}
-				data-placeholder={`标题${level}`}
-			>
-				<div className="heading-tools tools" contentEditable="false"></div>
-				{outlineTree && outlineTree.orderType ? (
-					<BasicPopover outlineTree={outlineTree}>
-						<span
-							className="list-symbol"
-							data-type={outlineTree.orderType}
-							data-level={outlineTree.dataLevel(view.id)}
-							contentEditable="false"
-						>
-							{outlineTree.calculateOrderNumber(view.id)}
-						</span>
-					</BasicPopover>
-				) : (
-					<></>
-				)}
-				<div ref={$contentDOM} className="heading-content" />
-			</Tag>
-		</Tools>
+						if (typeof pos !== 'undefined')
+							tr = tr.setNodeMarkup(pos, null, {
+								...view.node.attrs,
+								fold: !fold
+							});
+						view.view.dispatch(tr);
+					}}
+				>
+					{fold ? <ArrowRight /> : <ArrowDown />}
+				</span>
+			</NormalTooltip>
+		</>
 	);
+	const body = (
+		<Tag
+			ref={$dom}
+			id={id}
+			className={classnames('heading relative', {
+				hidden,
+				empty: !view.node.textContent
+			})}
+			data-placeholder={`标题${level}`}
+		>
+			<div className="heading-tools tools" contentEditable="false"></div>
+			{outlineTree && outlineTree.orderType ? (
+				<BasicPopover outlineTree={outlineTree}>
+					<span
+						className="list-symbol"
+						data-type={outlineTree.orderType}
+						data-level={outlineTree.dataLevel(view.id)}
+						contentEditable="false"
+					>
+						{outlineTree.calculateOrderNumber(view.id)}
+					</span>
+				</BasicPopover>
+			) : (
+				<></>
+			)}
+			<div ref={$contentDOM} className="heading-content" />
+		</Tag>
+	);
+	return isToplevel ? <Tools toolsAfter={toolsAfter}>{body}</Tools> : body;
 };

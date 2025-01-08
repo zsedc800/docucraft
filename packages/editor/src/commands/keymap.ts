@@ -24,6 +24,7 @@ import { DecorationSet, EditorView } from 'prosemirror-view';
 import { createTaskList } from '../components/taskList';
 import { createNode, createNodeAndFill } from './commands';
 import { closeFloatBar, showFloatBar } from '../components/toolBar/FloatBar';
+import { splitTimeline } from '../components/timeline';
 
 const splitListItem = (itemTypes: NodeType[], itemAttrs?: Attrs): Command => {
 	return (state, dispatch) => {
@@ -167,6 +168,7 @@ export const getMyKeyMap = () => {
 		Enter: chainCommands(
 			headingEnter,
 			splitListItem([schema.nodes.list_item, schema.nodes.taskItem]),
+			splitTimeline,
 			newlineInCode,
 			createParagraphNear,
 			liftEmptyBlock,

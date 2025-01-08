@@ -67,18 +67,6 @@ const Toolbar = ({
 					}}
 				/>
 			</NormalTooltip>
-			{/* <NormalTooltip
-				disableInteractive
-				title={
-					<Typography textAlign="center">
-						按住可以拖动
-						<br />
-						点击展开更多
-					</Typography>
-				}
-			>
-				<SvgDragIndicator className="iconButton" />
-			</NormalTooltip> */}
 			<OPMenus>
 				<SvgDragIndicator className="iconButton" />
 			</OPMenus>

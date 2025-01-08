@@ -39,6 +39,7 @@ import Paper from '@mui/material/Paper';
 import { ReactNode } from 'react';
 import { Command, NodeSelection } from 'prosemirror-state';
 import { createTable } from '../tables/commands';
+import { insertTimeline } from '../timeline';
 
 interface Props extends BaseNodeViewProps {
 	nodeView: ParagraphView;
@@ -172,6 +173,13 @@ const blocklist: BlockItem[] = [
 		cover: SvgEmphsis,
 		name: 'emphsis',
 		handler: transformToNode(schema.nodes.divider)
+	},
+	{
+		title: '时间轴',
+		description: '时间线',
+		name: 'timeline',
+		cover: SvgEmphsis,
+		handler: insertTimeline()
 	}
 ];
 

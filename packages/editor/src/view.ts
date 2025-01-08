@@ -23,6 +23,7 @@ import { LinkViewConstructor } from './components/link';
 import { DividerViewConstructor } from './components/divider';
 import { onDispatch } from './utils/hooks';
 import { handleImagePaste, ImageNodeViewConstructor } from './components/image';
+import { createTimelineViews } from './components/timeline';
 import './themes/default.scss';
 
 export class Editor {
@@ -72,7 +73,8 @@ export const setupEditor = (el: HTMLElement | null) => {
 			list_item: ListItemViewConstructor,
 			link: LinkViewConstructor,
 			divider: DividerViewConstructor,
-			image: ImageNodeViewConstructor
+			image: ImageNodeViewConstructor,
+			...createTimelineViews()
 		},
 		handleClickOn(view, pos, node, nodePos, event, direct) {
 			const markType = view.state.schema.marks.link;
