@@ -42,7 +42,7 @@ const nonBubblingEvents = [
 	'onAnimationIteration',
 	'onTransitionStart',
 	'onTransitionEnd'
-];
+] as const;
 
 const bubblingEvents = [
 	// 鼠标事件
@@ -99,7 +99,11 @@ const bubblingEvents = [
 	'onAnimationEnd',
 	'onAnimationIteration',
 	'onAnimationStart'
-];
+] as const;
+
+export type EventName =
+	| (typeof bubblingEvents)[number]
+	| (typeof nonBubblingEvents)[number];
 
 class SytheticEvent {
 	private isPropStopped = false;
@@ -172,7 +176,7 @@ function isTextInput(element: HTMLInputElement) {
 }
 
 function getEventHandler(
-	eventName: string,
+	eventName: EventName,
 	props: Record<string, any>,
 	e: Event
 ) {
@@ -207,7 +211,7 @@ function getDirectChildren(fiber: Fiber) {
 
 export const registerEvent = (root: HTMLElement | Document) => {
 	const listener =
-		(eventName: string, capture = false) =>
+		(eventName: EventName, capture = false) =>
 		(e: Event) => {
 			const fiber = domMap.get(e.target as HTMLElement);
 			let current: Fiber | null | undefined = fiber;
@@ -223,6 +227,7 @@ export const registerEvent = (root: HTMLElement | Document) => {
 				) {
 					const handler = getEventHandler(eventName, current.pendingProps, e);
 					clonedEvent.currentTarget = current.stateNode as Element;
+
 					if (handler) {
 						batchedUpdates(handler, clonedEvent);
 					}
@@ -238,7 +243,10 @@ export const registerEvent = (root: HTMLElement | Document) => {
 						node = node.parentNode as HTMLElement;
 					}
 
-					if (f) current = f;
+					if (f) {
+						current = f;
+						continue;
+					}
 				}
 				current = current.parent;
 			}

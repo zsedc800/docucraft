@@ -131,6 +131,7 @@ export function tableEditing({
 			return {
 				update({ state: { selection }, dom }, { selection: sel }) {
 					if (timeout) clearTimeout(timeout);
+
 					if (!selection.eq(sel)) {
 						if (selection instanceof CellSelection) {
 							window.getSelection()?.removeAllRanges();

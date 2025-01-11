@@ -30,18 +30,6 @@ export const TableCell = ({
 	class: className
 }: { nodeView: TableCellView } & Styles) => {
 	const { $dom } = useNodeView<HTMLTableCellElement>(nodeView);
-	// const { getPos, view } = nodeView;
-	// const pos = getPos();
-	// let nolastCell = false;
-	// if (pos) {
-	// 	const $pos = view.state.doc.resolve(pos);
-	// 	const table = $pos.node(-1);
-	// 	const map = TableMap.get(table);
-	// 	const childCount = $pos.parent.childCount;
-	// 	const index = $pos.index();
-	// 	nolastCell = index + 1 === childCount && childCount < map.width;
-	// 	console.log(childCount, index, map.width, nolastCell);
-	// }
 
 	return (
 		<td

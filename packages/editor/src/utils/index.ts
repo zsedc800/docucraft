@@ -1,5 +1,10 @@
 import { Node, NodeType, ResolvedPos, Schema } from 'prosemirror-model';
-import { EditorState, TextSelection } from 'prosemirror-state';
+import {
+	EditorState,
+	NodeSelection,
+	Selection,
+	TextSelection
+} from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
 import { schema } from '../model';
 import { BaseNodeView, getNodeView } from './view';
@@ -255,10 +260,16 @@ export function hasChildOfType(node: Node, type: NodeType) {
 	return found;
 }
 
-export function findParentNode($head: ResolvedPos, types: NodeType[]) {
+export function findParentNode(selection: Selection, types: NodeType[]) {
 	let node: Node | null = null;
-	for (let d = $head.depth; d >= 0; d--) {
-		node = $head.node(d);
+	const { $from } = selection;
+	if (selection instanceof NodeSelection) {
+		node = selection.node;
+		if (types.includes(node.type)) return node;
+	}
+
+	for (let d = $from.depth; d >= 0; d--) {
+		node = $from.node(d);
 		if (types.includes(node.type)) break;
 	}
 	return node;
@@ -285,7 +296,7 @@ export function fixSelection(view: EditorView, from: number, to: number) {
 	}
 }
 
-const types = ['table'];
+const types = ['table', 'timelineSeparator'];
 export const selectInTypes = ({ state: { schema } }: EditorView) =>
 	types.map((key) => schema.nodes[key]);
 
@@ -301,10 +312,8 @@ export function callNodeView<
 	K extends FunctionKeys<T> = FunctionKeys<T>
 >(view: EditorView, key: K): T[K] | undefined {
 	const { state } = view;
-	const {
-		selection: { $anchor }
-	} = state;
-	const node = findParentNode($anchor, selectInTypes(view));
+	const { selection } = state;
+	const node = findParentNode(selection, selectInTypes(view));
 	if (node) {
 		const nodeView = getNodeView(node.attrs.blockId) as T;
 		if (nodeView) {
@@ -316,10 +325,8 @@ export function callNodeView<
 
 export function setSelectIn(view: EditorView, selectIn: boolean = false) {
 	const { state } = view;
-	const {
-		selection: { $anchor }
-	} = state;
-	const node = findParentNode($anchor, selectInTypes(view));
+	const { selection } = state;
+	const node = findParentNode(selection, selectInTypes(view));
 	if (node) getNodeView(node.attrs.blockId)?.setProps({ selectIn });
 	return node;
 }

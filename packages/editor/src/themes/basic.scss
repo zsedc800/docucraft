@@ -106,3 +106,10 @@ body {
 		background-color: #ededed;
 	}
 }
+
+.menu-list {
+	& &-icon.MuiListItemIcon-root {
+		min-width: 28px;
+		font-size: 20px;
+	}
+}

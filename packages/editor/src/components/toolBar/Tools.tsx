@@ -15,11 +15,13 @@ import { OPMenus } from '../../kits/Button';
 const Toolbar = ({
 	before,
 	after,
-	style
+	style,
+	close
 }: {
 	before: ReactNode;
 	after: ReactNode;
 	style?: CSSProperties;
+	close?: () => void;
 }) => {
 	const { nodeView } = useContext(nodeViewContext);
 
@@ -50,14 +52,13 @@ const Toolbar = ({
 					className="iconButton"
 					onClick={(e: MouseEvent) => {
 						const before = e.altKey;
-
 						const curPos = nodeView.getPos();
 						const { view, node } = nodeView;
 
 						if (curPos || curPos === 0) {
 							const pos = before ? curPos : curPos + node.nodeSize;
 
-							insert(pos, schema.nodes.paragraph, {})(
+							insert(pos, schema.nodes.paragraph, { toInsert: true })(
 								view.state,
 								view.dispatch,
 								view
@@ -67,7 +68,7 @@ const Toolbar = ({
 					}}
 				/>
 			</NormalTooltip>
-			<OPMenus>
+			<OPMenus close={close}>
 				<SvgDragIndicator className="iconButton" />
 			</OPMenus>
 			<>{after}</>
@@ -117,6 +118,7 @@ export default ({
 					style={{ ...style, height }}
 					before={toolsBefore}
 					after={toolsAfter}
+					close={handleClose}
 				/>
 			}
 			placement="left-start"

@@ -3,7 +3,7 @@ import { BaseNodeView, BaseNodeViewProps, useNodeView } from '../../utils/view';
 import { ParagraphView } from '.';
 import Tools from '../toolBar/Tools';
 import Popper from '@mui/material/Popper';
-import { useContext, useEffect, useState } from '@docucraft/srender';
+import { useContext, useEffect, useRef, useState } from '@docucraft/srender';
 import ClickAwayListener from '@mui/material/ClickAwayListener';
 import Box from '@mui/material/Box';
 import Chip from '@mui/material/Chip';
@@ -45,6 +45,7 @@ interface Props extends BaseNodeViewProps {
 	nodeView: ParagraphView;
 	placeholder: string;
 	text?: string;
+	toInsert?: boolean;
 }
 
 const basicTools: ToolItem[] = [
@@ -183,12 +184,21 @@ const blocklist: BlockItem[] = [
 	}
 ];
 
-export default ({ nodeView, placeholder, hidden, text = '' }: Props) => {
+export default ({
+	nodeView,
+	placeholder,
+	toInsert,
+	hidden,
+	text = ''
+}: Props) => {
 	const { $dom, $contentDOM } = useNodeView<HTMLDivElement>(nodeView);
 
 	const [{ plain }, childrenHolder] = usePopover(nodeView.view);
 
 	const isToplevel = nodeView.depth === 0;
+	const plainPopoverCtx = useRef<{ visible: boolean; close: () => void }>(null);
+
+	const [initialPop, setInitialPop] = useState(false);
 
 	const poper = (
 		<Paper
@@ -296,12 +306,23 @@ export default ({ nodeView, placeholder, hidden, text = '' }: Props) => {
 	useEffect(() => {
 		if (!isToplevel) return;
 
-		if (/^\//.test(text)) {
-			if (!plain.visible) plain(poper);
+		if (/^\//.test(text) || initialPop) {
+			if (!plain.visible) {
+				plain(poper);
+			}
 		} else if (plain.visible) {
 			plain.close();
 		}
 	}, [text]);
+
+	useEffect(() => {
+		if (toInsert) {
+			plain(poper, () => {
+				setInitialPop(false);
+			});
+			setInitialPop(true);
+		}
+	}, []);
 
 	const body = (
 		<div

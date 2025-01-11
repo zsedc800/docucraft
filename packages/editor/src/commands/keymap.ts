@@ -6,7 +6,6 @@ import {
 	liftEmptyBlock,
 	baseKeymap,
 	deleteSelection,
-	joinBackward,
 	selectNodeBackward
 } from 'prosemirror-commands';
 import { Attrs, Fragment, Node, NodeType, Slice } from 'prosemirror-model';
@@ -25,6 +24,7 @@ import { createTaskList } from '../components/taskList';
 import { createNode, createNodeAndFill } from './commands';
 import { closeFloatBar, showFloatBar } from '../components/toolBar/FloatBar';
 import { splitTimeline } from '../components/timeline';
+import { joinBackward } from './utils';
 
 const splitListItem = (itemTypes: NodeType[], itemAttrs?: Attrs): Command => {
 	return (state, dispatch) => {
@@ -130,17 +130,6 @@ const headingEnter: Command = (state, dispatch) => {
 	return false;
 };
 
-function isAtWidget(state: EditorState, decorations?: DecorationSet) {
-	const { selection } = state;
-	const { $from } = selection;
-	const pos = $from.pos;
-
-	const [widget] = decorations?.find(pos, pos) || [];
-	// console.log(widget.inline);
-
-	return widget && !(widget as any).inline;
-}
-
 let timer: ReturnType<typeof setTimeout>;
 
 const openFloatBar: Command = (state, dispatch, view) => {
@@ -161,6 +150,22 @@ const openFloatBar: Command = (state, dispatch, view) => {
 
 	return false;
 };
+
+const backspace = chainCommands(
+	deleteSelection,
+	joinBackward,
+	selectNodeBackward
+);
+
+[
+	'Backspace',
+	'Mod-Backspace',
+	'Shift-Backspace',
+	'Ctrl-h',
+	'Alt-Backspace'
+].forEach((key) => {
+	baseKeymap[key] = backspace;
+});
 
 export const getMyKeyMap = () => {
 	const myKeymap: { [key: string]: Command } = {

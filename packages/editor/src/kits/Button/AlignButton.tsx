@@ -49,6 +49,7 @@ interface Props {
 	closePanel?: boolean;
 	trigger?: Trigger;
 	filter?: (item: (typeof alignItems)[number]) => boolean;
+	command?: boolean;
 }
 
 export default ({
@@ -57,7 +58,8 @@ export default ({
 	closePanel,
 	trigger,
 	align: value,
-	filter
+	filter,
+	command: needCommand = true
 }: Props) => {
 	const [align, setAlign] = useState<Align>('left');
 	const Icon = alignMap[align];
@@ -78,14 +80,18 @@ export default ({
 			{items.map(({ title, Icon, command, align }) => (
 				<ToggleButton
 					title={
-						<>
-							{title}
-							<br />
-							<span
-								style={{ opacity: 0.5 }}
-								dangerouslySetInnerHTML={{ __html: command }}
-							/>
-						</>
+						needCommand ? (
+							<>
+								{title}
+								<br />
+								<span
+									style={{ opacity: 0.5 }}
+									dangerouslySetInnerHTML={{ __html: command }}
+								/>
+							</>
+						) : (
+							title
+						)
 					}
 					value={align}
 				>

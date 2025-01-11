@@ -7,7 +7,6 @@ import {
 import { createNode, createNodeAndFill } from '../../commands';
 import { getTimelineNodeTypes } from './schema';
 import { Attrs, ContentMatch, NodeType } from 'prosemirror-model';
-import { canSplit } from 'prosemirror-transform';
 import { isInTimeline } from './utils';
 
 export function insertTimeline(): Command {
@@ -24,7 +23,7 @@ export function insertTimeline(): Command {
 			timeline,
 			{},
 			createNode(timelineItem, {}, [
-				createNode(timelineOpposite),
+				// createNode(timelineOpposite),
 				createNode(timelineSeparator),
 				createNodeAndFill(timelineContent)!
 			])

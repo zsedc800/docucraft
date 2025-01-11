@@ -8,6 +8,7 @@ import {
 	RCTimelineSeparator
 } from './Timeline';
 import { TimelineKeys } from './schema';
+import { TextSelection } from 'prosemirror-state';
 
 export class TimelineNodeView extends BaseNodeView {
 	constructor(...[node, view, getPos]: Parameters<NodeViewConstructor>) {
@@ -15,6 +16,10 @@ export class TimelineNodeView extends BaseNodeView {
 		this.component = RCTimeline;
 		this.render();
 		this.contentDOM = this.dom;
+	}
+	ignoreMutation(mutation: ViewMutationRecord): boolean {
+		if (super.ignoreMutation(mutation)) return true;
+		return mutation.type === 'attributes';
 	}
 }
 
@@ -24,6 +29,10 @@ export class TimelineItemView extends BaseNodeView {
 		this.component = RCTimelineItem;
 		this.render();
 		this.contentDOM = this.dom;
+	}
+	ignoreMutation(mutation: ViewMutationRecord): boolean {
+		if (super.ignoreMutation(mutation)) return true;
+		return mutation.type === 'attributes';
 	}
 }
 
@@ -45,6 +54,14 @@ export class TimelineSeparatorView extends BaseNodeView {
 		super(node, view, getPos);
 		this.component = RCTimelineSeparator;
 		this.render();
+	}
+	onFocusIn(): void {
+		const { view, getPos } = this;
+		const pos = getPos();
+		if (!pos) return;
+		const { state, dispatch } = view;
+
+		dispatch(state.tr.setSelection(TextSelection.create(state.doc, pos + 1)));
 	}
 }
 export class TimelineContentView extends BaseNodeView {

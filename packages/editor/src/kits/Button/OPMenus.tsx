@@ -3,10 +3,14 @@ import { ListItemIcon, ListItemText, MenuItem, MenuList } from '@mui/material';
 import SvgDelete from '@docucraft/icons/svg/Delete';
 import { ToggleButton } from '../ToggleButton';
 import Typography from '@mui/material/Typography';
+import { useContext } from '@docucraft/srender';
+import { nodeViewContext } from '../../utils/view';
 interface Props {
 	children: ReactNode;
+	close?: () => void;
 }
-export default ({ children }: Props) => {
+export default ({ children, close }: Props) => {
+	const { nodeView } = useContext(nodeViewContext);
 	return (
 		<ToggleButton
 			title={
@@ -21,7 +25,13 @@ export default ({ children }: Props) => {
 			slotProps={{ paper: { style: { width: 210 } } }}
 			subPanel={
 				<MenuList>
-					<MenuItem>
+					<MenuItem
+						onClick={() => {
+							console.log(close, 'xxx');
+							close?.();
+							nodeView.deleteNode();
+						}}
+					>
 						<ListItemIcon>
 							<SvgDelete />
 						</ListItemIcon>

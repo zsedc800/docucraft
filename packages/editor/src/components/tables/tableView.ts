@@ -82,6 +82,7 @@ export class TableView extends BaseNodeView {
 	destroy() {
 		console.log('table destroy');
 		this.dom.removeEventListener('mouseover', this.handleMouseMove);
+		super.destroy();
 	}
 
 	onFocusIn(): void {

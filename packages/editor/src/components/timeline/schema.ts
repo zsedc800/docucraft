@@ -26,7 +26,7 @@ export default function createStepperSpec(): Record<TimelineKeys, NodeSpec> {
 		}),
 		timelineItem: createNodeSpec({
 			attrs: {},
-			content: 'timelineOpposite|timelineContent|timelineSeparator',
+			content: '(timelineOpposite|timelineSeparator|timelineContent)+',
 			group: 'block',
 			parseDOM: [{ tag: 'li.timeline-item' }],
 			toDOM(node) {
@@ -36,6 +36,7 @@ export default function createStepperSpec(): Record<TimelineKeys, NodeSpec> {
 		timelineOpposite: createNodeSpec({
 			group: 'block',
 			content: 'inline*',
+			isolating: true,
 			parseDOM: [{ tag: 'div.timeline-opposite' }],
 			toDOM() {
 				return ['div', { class: 'timeline-opposite' }, 0];
@@ -52,7 +53,6 @@ export default function createStepperSpec(): Record<TimelineKeys, NodeSpec> {
 		}),
 		timelineSeparator: createNodeSpec({
 			group: 'block',
-			atom: true,
 			parseDOM: [{ tag: 'div.timeline-separator' }],
 			toDOM() {
 				return ['div', { class: 'timeline-separator' }];

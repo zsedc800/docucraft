@@ -1,4 +1,4 @@
-import { NodeViewConstructor } from 'prosemirror-view';
+import { NodeViewConstructor, ViewMutationRecord } from 'prosemirror-view';
 import { BaseNodeView } from '../../utils/view';
 import { TableCell, TableHeadCell, TableRow } from './cell';
 
@@ -11,7 +11,8 @@ export class TableRowView extends BaseNodeView {
 		this.render();
 		this.contentDOM = this.dom;
 	}
-	ignoreMutation(mutation: MutationRecord): boolean {
+
+	ignoreMutation(mutation: ViewMutationRecord): boolean {
 		return super.ignoreMutation(mutation) || mutation.type === 'attributes';
 	}
 }

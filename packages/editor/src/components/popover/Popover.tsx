@@ -208,17 +208,24 @@ export const usePopover = (view: EditorView) => {
 		{ visible: promptVisible }
 	);
 
+	const $onClose = useRef<() => void>(null);
+
 	const [plainVisible, setPlainVisible] = useState(false);
 	const plainChildren = useRef(<></>);
-	const closePlain = () => setPlainVisible(false);
-
-	const plain = useEvent(
-		function plain(children: JSX.Element) {
-			plainChildren.current = children;
-			setPlainVisible(true);
-		},
-		{ visible: plainVisible, close: closePlain }
-	);
+	const closePlain = () => {
+		setPlainVisible(false);
+		$onClose.current && $onClose.current();
+	};
+	const ctx = { visible: plainVisible, close: closePlain };
+	const plain = useEvent(function plain(
+		children: JSX.Element,
+		onClose?: () => void
+	) {
+		plainChildren.current = children;
+		setPlainVisible(true);
+		$onClose.current = onClose ?? null;
+		return ctx;
+	}, ctx);
 
 	const Popover = {
 		prompt,

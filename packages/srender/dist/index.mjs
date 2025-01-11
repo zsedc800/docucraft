@@ -937,7 +937,10 @@ const registerEvent = root => {
             f = domMap.get(node);
             node = node.parentNode;
           }
-          if (f) current = f;
+          if (f) {
+            current = f;
+            continue;
+          }
         }
         current = current.parent;
       }

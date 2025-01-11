@@ -100,6 +100,11 @@ export class BaseNodeView implements NodeView {
 		}
 	};
 
+	getResolvedPos = () => {
+		const pos = this.getPos();
+		return pos || pos === 0 ? this.view.state.doc.resolve(pos) : null;
+	};
+
 	// ------ prosemirror node operate methods end
 	// render
 	setProps = (props: Record<string, any>) => {
