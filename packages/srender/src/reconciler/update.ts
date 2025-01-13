@@ -266,6 +266,8 @@ export function updateClassComponent(wipFiber: Fiber, lanes: Lanes) {
 	instance.context = nextContext;
 	instance.props = pendingProps;
 	instance.state = nextState;
+	//
+	instance.__fiber = wipFiber;
 	wipFiber.memoizedState = nextState;
 
 	reconcileChildrenArray(wipFiber, instance.render(), lanes);

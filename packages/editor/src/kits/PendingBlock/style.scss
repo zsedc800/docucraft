@@ -1,0 +1,13 @@
+.pending-block {
+	padding: 8px;
+	border-radius: 5px;
+	display: flex;
+	align-items: center;
+	background-color: #e3e4e5;
+	width: 100%;
+	cursor: pointer;
+	svg {
+		font-size: 28px;
+		margin-right: 8px;
+	}
+}

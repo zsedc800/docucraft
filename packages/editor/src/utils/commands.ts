@@ -47,6 +47,16 @@ export function joinMaybeClear(
 		index = $pos.index();
 	if (!before || !after || !before.type.compatibleContent(after.type))
 		return false;
+
+	if (after.attrs.initialPop) {
+		if (dispatch) {
+			dispatch(
+				state.tr.delete($pos.pos, $pos.pos + after.nodeSize).scrollIntoView()
+			);
+			return true;
+		}
+	}
+
 	if (!before.content.size && $pos.parent.canReplace(index - 1, index)) {
 		if (dispatch)
 			dispatch(

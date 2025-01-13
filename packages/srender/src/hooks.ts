@@ -8,11 +8,11 @@ import {
 } from './reconciler/fiberHooks';
 import { shallowEqual, wait } from './utils';
 
-export const useRef: <T = any>(initValue: T | null) => RefObject<T> = (
-	initValue
-) => {
+export const useRef = <T>(initValue: T | null) => {
 	const hook = createWorkInProgressHook({ current: initValue });
-	return hook.state;
+	return hook.state as typeof initValue extends null
+		? RefObject<T | null>
+		: RefObject<T>;
 };
 
 export const useState = <T = any>(initialState: T | null) => {

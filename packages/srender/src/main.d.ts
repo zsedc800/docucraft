@@ -27,5 +27,9 @@ export {
 	ReactNode,
 	FC,
 	ForwardRefExoticComponent,
-	ForwardRefRenderFunction
+	ForwardRefRenderFunction,
+	ReactElement,
+	SyntheticEvent,
+	MouseEvent,
+	MouseEventHandler
 } from 'react';

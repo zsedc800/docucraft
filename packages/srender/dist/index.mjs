@@ -540,13 +540,6 @@ function shallowEqual(obj1, obj2) {
   }
   return true;
 }
-function nextTick(fn) {
-  if (requestAnimationFrame) {
-    requestAnimationFrame(fn);
-  } else {
-    setTimeout(fn, 17);
-  }
-}
 
 function markCurrentFiber(wip, old) {
   if (wip) wip.flags |= FiberFlags.PerformWork;
@@ -1544,7 +1537,8 @@ function commitAllWork(fiber) {
   nextUnitOfWork = null;
   effects.forEach(commitWork);
   setBatchingUpdates(false);
-  nextTick(() => ensureRootIsScheduled(root));
+  // nextTick(() => ensureRootIsScheduled(root));
+  ensureRootIsScheduled(root);
 }
 
 function createUpdate(payload, eventTime, lane) {
@@ -1718,6 +1712,8 @@ function updateClassComponent(wipFiber, lanes) {
   instance.context = nextContext;
   instance.props = pendingProps;
   instance.state = nextState;
+  //
+  instance.__fiber = wipFiber;
   wipFiber.memoizedState = nextState;
   reconcileChildrenArray(wipFiber, instance.render(), lanes);
   if (instance.getSnapshotBeforeUpdate) {

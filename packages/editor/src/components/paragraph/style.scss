@@ -13,7 +13,28 @@
 		color: inherit;
 		text-align: inherit;
 	}
+	&.initialPop {
+		p {
+			padding: 2px 4px;
+			// display: inline-flex;
+			width: fit-content;
+			background-color: #e5e6e7;
+			border-radius: 4px;
+		}
+	}
 	&.empty {
+		&.initialPop {
+			&::after {
+				display: none;
+			}
+			p > br {
+				display: none;
+			}
+			p::after {
+				content: '输入以筛选...';
+				opacity: 0.3;
+			}
+		}
 		&[data-placeholder] {
 			&::after {
 				content: attr(data-placeholder);

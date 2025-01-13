@@ -3,7 +3,7 @@ import { NodeSpec } from 'prosemirror-model';
 export const imageNodeSpec: NodeSpec = {
 	inline: false,
 	attrs: {
-		src: { default: null },
+		src: { default: '' },
 		alt: { default: null },
 		title: { default: null },
 		link: { default: null },

@@ -78,6 +78,8 @@ const PlainBoard = ({
 	);
 };
 
+PlainBoard.displayName = 'PlainBoard';
+
 export function basePop({
 	render: ChildrenRender,
 	view,
@@ -208,12 +210,14 @@ export const usePopover = (view: EditorView) => {
 		{ visible: promptVisible }
 	);
 
-	const $onClose = useRef<() => void>(null);
+	const $onClose = useRef<(() => void) | null>(null);
 
 	const [plainVisible, setPlainVisible] = useState(false);
 	const plainChildren = useRef(<></>);
 	const closePlain = () => {
 		setPlainVisible(false);
+		console.log($onClose, 'onclose');
+
 		$onClose.current && $onClose.current();
 	};
 	const ctx = { visible: plainVisible, close: closePlain };

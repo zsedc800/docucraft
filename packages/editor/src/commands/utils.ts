@@ -149,6 +149,9 @@ export const joinBackward: Command = (state, dispatch, view) => {
 		}
 		return true;
 	}
+
+	console.log(11);
+
 	// Apply the joining algorithm
 	if (deleteBarrier(state, $cut, dispatch, -1)) return true;
 

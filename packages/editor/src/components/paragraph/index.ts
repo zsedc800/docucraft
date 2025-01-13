@@ -1,34 +1,9 @@
-import { NodeViewConstructor } from 'prosemirror-view';
-import { BaseNodeView } from '../../utils/view';
-import Paragraph from './Paragraph';
-import { Node, NodeType } from 'prosemirror-model';
+import { NodeType } from 'prosemirror-model';
 import { Plugin } from 'prosemirror-state';
 import { schema } from '../../model';
-import { shallowEqual } from '../../utils';
 import './style.scss';
 
-export class ParagraphView extends BaseNodeView {
-	placeholder: string = ' ';
-	constructor(...args: Parameters<NodeViewConstructor>) {
-		const [node, view, getPos] = args;
-		super(node, view, getPos);
-		this.component = Paragraph;
-		this.render({ text: node.textContent });
-	}
-
-	update(node: Node) {
-		const { type, attrs, textContent: txt } = node;
-		const { attrs: props, type: t, textContent: text } = this.node;
-		if (type !== t) return false;
-		this.node = node;
-
-		if (!shallowEqual(attrs, props) || txt !== text) this.render({ text: txt });
-		return true;
-	}
-}
-
-export const ParagraphViewConstructor: NodeViewConstructor = (...args) =>
-	new ParagraphView(...args);
+export * from './view';
 
 function getTextByNodeType(type: NodeType) {
 	if (type === schema.nodes.list_item) {

@@ -57,12 +57,14 @@ export function render(
 
 export function createRoot(): RootRender {
 	const rootFiberNode = createRootFiber(null, Mode.Concurrent);
+
 	return {
 		render: (children: ComponentChildren, dom?: HTMLElement) =>
 			renderOnRootFiber(children, dom, rootFiberNode),
 		unmount() {
 			const { current } = rootFiberNode;
 			rootFiberNode.deletedAt = Date.now();
+
 			if (current) {
 				let child = current.child;
 				while (child) {
@@ -265,6 +267,7 @@ function commitAllWork(fiber: Fiber) {
 	beforeCommit();
 	const root = fiber.stateNode as RootFiberNode;
 	root.current = fiber;
+
 	const effects = fiber.effects || [];
 	fiber.effects = [];
 	root.finishedWork = null;
@@ -272,5 +275,6 @@ function commitAllWork(fiber: Fiber) {
 
 	effects.forEach(commitWork);
 	setBatchingUpdates(false);
-	nextTick(() => ensureRootIsScheduled(root));
+	// nextTick(() => ensureRootIsScheduled(root));
+	ensureRootIsScheduled(root);
 }

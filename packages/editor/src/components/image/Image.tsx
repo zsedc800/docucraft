@@ -6,6 +6,7 @@ import { useEffect, useRef, useState } from '@docucraft/srender';
 import ImageTools from './ImageTools';
 import { initResizer } from './buildTools';
 import Tools from '../toolBar/Tools';
+import { MediaPendingBlock } from '../../kits/PendingBlock';
 interface Props {
 	title: string;
 	alt: string;
@@ -63,19 +64,23 @@ export default ({
 			ref={$dom}
 			style={{ display: 'flex', justifyContent: align, marginBottom: 8 }}
 		>
-			<Menu
-				placement="top-end"
-				content={<ImageTools />}
-				onOpen={() => setActived(true)}
-				onClose={() => setActived(false)}
-			>
-				<div className="image-wrapper">
-					<Paper style={{ width }} className="image-box">
-						{image}
-					</Paper>
-					{actived && <ResizeBar nodeView={nodeView} />}
-				</div>
-			</Menu>
+			{src ? (
+				<Menu
+					placement="top-end"
+					content={<ImageTools />}
+					onOpen={() => setActived(true)}
+					onClose={() => setActived(false)}
+				>
+					<div className="image-wrapper">
+						<Paper style={{ width }} className="image-box">
+							{image}
+						</Paper>
+						{actived && <ResizeBar nodeView={nodeView} />}
+					</div>
+				</Menu>
+			) : (
+				<MediaPendingBlock nodeView={nodeView}>添加图片</MediaPendingBlock>
+			)}
 		</div>
 	);
 	return <Tools>{body}</Tools>;

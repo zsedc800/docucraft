@@ -104,7 +104,7 @@ export interface VNode<P = any> {
 export type Key = string | number | any;
 
 export interface RefObject<T = any> {
-	current: T | null;
+	current: T;
 }
 
 export interface RefCallback<T> {
@@ -207,6 +207,7 @@ export interface RootFiberNode {
 	callbackNode: Task | null;
 	callbackId: Lanes;
 	deletedAt?: number;
+	id?: number;
 }
 
 export interface RootRender {

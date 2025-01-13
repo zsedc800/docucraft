@@ -58,7 +58,7 @@ const Toolbar = ({
 						if (curPos || curPos === 0) {
 							const pos = before ? curPos : curPos + node.nodeSize;
 
-							insert(pos, schema.nodes.paragraph, { toInsert: true })(
+							insert(pos, schema.nodes.paragraph, { initialPop: true })(
 								view.state,
 								view.dispatch,
 								view
