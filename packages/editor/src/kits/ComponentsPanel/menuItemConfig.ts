@@ -155,5 +155,12 @@ export const blocklist: BlockItem[] = [
 		name: 'image',
 		cover: SvgImage,
 		handler: transformToNode(schema.nodes.image)
+	},
+	{
+		title: '图片列表',
+		description: '图片库，图片画廊',
+		name: 'imageGallery',
+		cover: SvgImage,
+		handler: transformToNode(schema.nodes.imageGallery)
 	}
 ];

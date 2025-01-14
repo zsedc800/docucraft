@@ -9,6 +9,7 @@ import { LinkSpec } from './components/link';
 import { DividerSpec } from './components/divider';
 import { imageNodeSpec } from './components/image';
 import { createTimelineNodes } from './components/timeline';
+import { imageGalleryNodeSpec } from './components/imageGallery';
 
 export function createNodeSpec(config: NodeSpec): NodeSpec {
 	config.attrs = {
@@ -170,6 +171,7 @@ const nodes = {
 	divider: createNodeSpec(DividerSpec),
 	link: createNodeSpec(LinkSpec),
 	image: createNodeSpec(imageNodeSpec),
+	imageGallery: createNodeSpec(imageGalleryNodeSpec),
 	hardBreak: createNodeSpec({
 		inline: true,
 		group: 'inline',

@@ -25,6 +25,7 @@ import { onDispatch } from './utils/hooks';
 import { handleImagePaste, ImageNodeViewConstructor } from './components/image';
 import { createTimelineViews } from './components/timeline';
 import './themes/default.scss';
+import { ImageGalleryViewConstructor } from './components/imageGallery';
 
 export class Editor {
 	constructor(container?: HTMLElement) {
@@ -74,6 +75,7 @@ export const setupEditor = (el: HTMLElement | null) => {
 			link: LinkViewConstructor,
 			divider: DividerViewConstructor,
 			image: ImageNodeViewConstructor,
+			imageGallery: ImageGalleryViewConstructor,
 			...createTimelineViews()
 		},
 		handleClickOn(view, pos, node, nodePos, event, direct) {

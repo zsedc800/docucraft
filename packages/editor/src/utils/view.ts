@@ -78,39 +78,43 @@ export class BaseNodeView implements NodeView {
 		Promise.resolve().then(() =>
 			this.rootRender.updateContainer(this.dom.parentElement!)
 		);
+
+		this.setNodeAttribute = this.setNodeAttribute.bind(this);
+		this.deleteNode = this.deleteNode.bind(this);
+		this.getResolvedPos = this.getResolvedPos.bind(this);
 	}
 
 	// ------ prosemirror node operate methods start
 
-	setNodeAttribute = (key: string, val: any) => {
+	setNodeAttribute(key: string, val: any) {
 		const pos = this.getPos();
 		const { state, dispatch } = this.view;
 		if (pos || pos === 0) {
 			const tr = state.tr.setNodeAttribute(pos, key, val);
 			dispatch(tr);
 		}
-	};
+	}
 
-	deleteNode = () => {
+	deleteNode() {
 		const pos = this.getPos();
 		const { state, dispatch } = this.view;
 		if (pos || pos === 0) {
 			const tr = state.tr.delete(pos, pos + this.node.nodeSize);
 			dispatch(tr);
 		}
-	};
+	}
 
-	getResolvedPos = () => {
+	getResolvedPos() {
 		const pos = this.getPos();
 		return pos || pos === 0 ? this.view.state.doc.resolve(pos) : null;
-	};
+	}
 
 	// ------ prosemirror node operate methods end
 	// render
-	setProps = (props: Record<string, any>) => {
+	setProps(props: Record<string, any>) {
 		this.props = { ...this.props, ...props };
 		this.render();
-	};
+	}
 	render(p?: any) {
 		const props = { nodeView: this, ...this.node.attrs, ...this.props, ...p };
 		let element = h(this.component, props);

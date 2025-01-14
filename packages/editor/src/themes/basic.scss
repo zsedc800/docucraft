@@ -115,8 +115,22 @@ body {
 }
 
 .loading-box {
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	padding-top: 100px;
+	&.loading {
+		&::after {
+			content: '';
+			position: fixed;
+			left: 0;
+			top: 0;
+			right: 0;
+			bottom: 0;
+			background-color: rgba(255, 255, 255, 0.6);
+		}
+		.loading-bar {
+			position: fixed;
+			left: 50%;
+			top: 50%;
+			transform: translate(-50%, -50%);
+			z-index: 100;
+		}
+	}
 }

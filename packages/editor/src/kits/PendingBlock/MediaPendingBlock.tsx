@@ -20,7 +20,19 @@ export default forwardRef<HTMLDivElement, Props>(
 	({ type = 'image', children, nodeView }, ref) => {
 		const Icon = IconMap[type];
 		return (
-			<Menu content={<ImageUploader nodeView={nodeView} />} placement="bottom">
+			<Menu
+				content={
+					<ImageUploader
+						onChange={(img) =>
+							nodeView.setNodeAttribute(
+								'src',
+								nodeView.node.type.name === 'imageGallery' ? img : img.src
+							)
+						}
+					/>
+				}
+				placement="bottom"
+			>
 				<div ref={ref} className="pending-block">
 					<Icon className="icon" />
 					{children}

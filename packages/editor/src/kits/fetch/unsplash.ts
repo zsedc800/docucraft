@@ -49,6 +49,7 @@ function getUnsplashApi<T>(path: string, params: Record<string, any>) {
 }
 
 export const searchPhotos = async (params: QueryParams) => {
+	if (!params.query) params.query = '""';
 	return getUnsplashApi<QueryResult<PhotoItemRes>>(
 		'/search/photos',
 		mapToPageParams(params)
