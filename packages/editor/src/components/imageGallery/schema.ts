@@ -6,7 +6,7 @@ export const imageGalleryNodeSpec: NodeSpec = {
 	attrs: {
 		images: { default: [] },
 		layout: { default: 'quilted' },
-		cols: { default: null },
+		cols: { default: 3 },
 		rowHeight: { default: null },
 		gap: { default: null }
 	},

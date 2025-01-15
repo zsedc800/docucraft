@@ -15,9 +15,17 @@
 	}
 }
 
-[role='button'] {
-	border-radius: 4px;
-	padding: 2px;
+[role='tooltip'] {
+	[role='button'] {
+		display: flex;
+		align-items: center;
+		cursor: pointer;
+		border-radius: 4px;
+		padding: 2px;
+		&:hover {
+			background-color: #ededed;
+		}
+	}
 }
 
 .tooltip-masker {

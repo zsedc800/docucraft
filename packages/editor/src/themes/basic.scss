@@ -97,13 +97,16 @@ body {
 	justify-content: center;
 	align-items: center;
 }
-
-[role='button'] {
-	display: flex;
-	align-items: center;
-	cursor: pointer;
-	&:hover {
-		background-color: #ededed;
+.ProseMirror {
+	[role='button'] {
+		display: flex;
+		align-items: center;
+		cursor: pointer;
+		border-radius: 4px;
+		padding: 2px;
+		&:hover {
+			background-color: #ededed;
+		}
 	}
 }
 
@@ -133,4 +136,9 @@ body {
 			z-index: 100;
 		}
 	}
+}
+
+.flex-center {
+	display: flex;
+	align-items: center;
 }
