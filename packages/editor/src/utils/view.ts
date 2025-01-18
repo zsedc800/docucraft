@@ -80,6 +80,7 @@ export class BaseNodeView implements NodeView {
 		);
 
 		this.setNodeAttribute = this.setNodeAttribute.bind(this);
+		this.setNodeAttributes = this.setNodeAttributes.bind(this);
 		this.deleteNode = this.deleteNode.bind(this);
 		this.getResolvedPos = this.getResolvedPos.bind(this);
 	}
@@ -91,6 +92,18 @@ export class BaseNodeView implements NodeView {
 		const { state, dispatch } = this.view;
 		if (pos || pos === 0) {
 			const tr = state.tr.setNodeAttribute(pos, key, val);
+			dispatch(tr);
+		}
+	}
+
+	setNodeAttributes(attrs: Record<string, any>) {
+		const pos = this.getPos();
+		const { state, dispatch } = this.view;
+		if (pos || pos === 0) {
+			const tr = state.tr.setNodeMarkup(pos, null, {
+				...this.node.attrs,
+				...attrs
+			});
 			dispatch(tr);
 		}
 	}

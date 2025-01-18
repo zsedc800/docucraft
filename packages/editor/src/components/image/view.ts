@@ -1,4 +1,4 @@
-import { NodeViewConstructor } from 'prosemirror-view';
+import { NodeViewConstructor, ViewMutationRecord } from 'prosemirror-view';
 import { BaseNodeView } from '../../utils/view';
 import Image from './Image';
 
@@ -7,6 +7,10 @@ export class ImageNodeView extends BaseNodeView {
 		super(node, view, getPos);
 		this.component = Image;
 		this.render();
+	}
+	ignoreMutation(mutation: ViewMutationRecord): boolean {
+		if (super.ignoreMutation(mutation)) return true;
+		return true;
 	}
 }
 

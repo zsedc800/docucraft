@@ -7,6 +7,7 @@ import SvgArrowsOutward from '@docucraft/icons/svg/ArrowsOutward';
 import SvgMore from '@docucraft/icons/svg/More1';
 import SvgDelete from '@docucraft/icons/svg/Delete';
 import SvgCopy from '@docucraft/icons/svg/ContentCopy';
+import SvgCrop from '@docucraft/icons/svg/Crop';
 import { ToggleButton } from '../../kits/ToggleButton';
 import { BaseForm } from '../Form';
 import Box from '@mui/material/Box';
@@ -16,7 +17,11 @@ import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import { ListItemIcon, ListItemText } from '@mui/material';
 
-export default function ImageTools() {
+interface Props {
+	onCropStart?: () => void;
+}
+
+export default function ImageTools({ onCropStart }: Props) {
 	const { nodeView } = useContext(nodeViewContext);
 	const { setNodeAttribute, node, deleteNode } = nodeView;
 	return (
@@ -33,6 +38,10 @@ export default function ImageTools() {
 				onClick={() => setNodeAttribute('width', 'auto')}
 			>
 				<SvgArrowsOutward />
+			</ToggleButton>
+			<Divider orientation="vertical" flexItem variant="middle" />
+			<ToggleButton title="裁剪" onClick={onCropStart}>
+				<SvgCrop />
 			</ToggleButton>
 			<Divider orientation="vertical" flexItem variant="middle" />
 			<ToggleButton

@@ -142,3 +142,11 @@ body {
 	display: flex;
 	align-items: center;
 }
+
+.abs-full {
+	position: absolute;
+	left: 0;
+	top: 0;
+	right: 0;
+	bottom: 0;
+}

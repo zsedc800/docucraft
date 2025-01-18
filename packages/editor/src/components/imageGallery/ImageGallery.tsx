@@ -120,7 +120,10 @@ export default ({ nodeView, images, layout, cols = 3 }: Props) => {
 						<div className="image-item-tools flex-center">
 							<ToggleButton
 								title="查看大图"
-								onClick={() => viewer.current?.view(index)}
+								onClick={(e) => {
+									e.stopPropagation();
+									viewer.current?.view(index);
+								}}
 							>
 								<SvgZoom />
 							</ToggleButton>

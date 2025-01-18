@@ -8,7 +8,9 @@ export const imageNodeSpec: NodeSpec = {
 		title: { default: null },
 		link: { default: null },
 		width: { default: null },
-		align: { default: 'left' }
+		align: { default: 'left' },
+		clip: { default: null },
+		origin: { default: {} }
 	},
 	group: 'block',
 	draggable: false,

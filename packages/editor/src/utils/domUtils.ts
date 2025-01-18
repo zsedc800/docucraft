@@ -16,6 +16,7 @@ const isUnitlessNumber = [
 export function setStyles(dom: HTMLElement, style: CSSProperties) {
 	for (const key of Object.keys(style) as (keyof CSSProperties)[]) {
 		const val = style[key];
+
 		dom.style.setProperty(
 			hyphenateStyleName(key),
 			typeof val === 'number' && !isUnitlessNumber.includes(key)

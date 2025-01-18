@@ -10,9 +10,7 @@ import { shallowEqual, wait } from './utils';
 
 export const useRef = <T>(initValue: T | null) => {
 	const hook = createWorkInProgressHook({ current: initValue });
-	return hook.state as typeof initValue extends null
-		? RefObject<T | null>
-		: RefObject<T>;
+	return hook.state as { current: T };
 };
 
 export const useState = <T = any>(initialState: T | null) => {

@@ -56,7 +56,8 @@ export default function ImageTools() {
 			style={{
 				display: 'flex',
 				padding: '2px',
-				fontSize: '16px'
+				fontSize: '16px',
+				marginBottom: 6
 			}}
 		>
 			<ToggleButton

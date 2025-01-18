@@ -956,7 +956,7 @@ const isAttribute = name => !(isEvent(name) || blacklist.includes(name));
 const isNew = (prev, next) => key => prev[key] !== next[key];
 const isGone = next => key => !(key in next);
 function convertName(name) {
-  return name === 'className' ? 'class' : name;
+  return name === 'className' ? 'class' : name.startsWith('stroke') ? hyphenateStyleName(name) : name;
 }
 const svgElements = new Set(['svg', 'circle', 'rect', 'path', 'line', 'polygon', 'polyline', 'ellipse', 'g', 'text', 'tspan', 'defs', 'linearGradient', 'radialGradient', 'stop', 'use']);
 const booleanAttributes = new Set(['disabled', 'checked', 'readonly', 'selected', 'multiple', 'hidden', 'autofocus', 'required']);

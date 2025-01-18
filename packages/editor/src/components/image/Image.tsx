@@ -1,28 +1,32 @@
 import Paper from '@mui/material/Paper';
+
+import { CSSProperties, useEffect, useRef, useState } from '@docucraft/srender';
 import { BaseNodeView, useNodeView } from '../../utils/view';
-import { ImageNodeView } from './view';
 import Menu from '../../kits/Menu';
-import { useEffect, useRef, useState } from '@docucraft/srender';
 import ImageTools from './ImageTools';
-import { initResizer } from './buildTools';
+import { initCroper, initResizer } from './buildTools';
 import Tools from '../toolBar/Tools';
 import { MediaPendingBlock } from '../../kits/PendingBlock';
-interface Props {
+import { classnames, shallowEqual } from '../../utils';
+import { BaseProps, CropProps, ImageRect, ResizeProps } from './interface';
+
+interface Props extends BaseProps {
 	title: string;
 	alt: string;
 	src: string;
 	srcSet: string;
 	loading: 'lazy' | 'eager';
-	nodeView: ImageNodeView;
 	link: string;
-	width: number;
+	width: number | 'auto';
 	align: 'left' | 'center' | 'right';
+	clip: ImageRect | null;
+	origin: Omit<ImageRect, 'left' | 'top'>;
 }
 
-function ResizeBar({ nodeView }: { nodeView: BaseNodeView }) {
+function ResizeBar({ onResize }: ResizeProps) {
 	const resizeBox = useRef<HTMLDivElement>(null);
 	useEffect(() => {
-		resizeBox.current && initResizer(resizeBox.current, nodeView);
+		resizeBox.current && initResizer(resizeBox.current, { onResize });
 	}, []);
 	return (
 		<div ref={resizeBox} className="resizer-box">
@@ -35,30 +39,141 @@ function ResizeBar({ nodeView }: { nodeView: BaseNodeView }) {
 	);
 }
 
+function CropBar({ nodeView, onCrop }: CropProps) {
+	const cropBox = useRef<HTMLDivElement>(null);
+	useEffect(() => {
+		if (!cropBox.current) return;
+		initCroper(cropBox.current, { nodeView, onCrop });
+	}, []);
+
+	const box = (
+		<div ref={cropBox} className="croper-box">
+			<svg
+				xmlns="http://www.w3.org/2000/svg"
+				viewBox="0 0 20 20"
+				data-placement="tl"
+				className="croper croper-tl"
+			>
+				<path
+					d="M2,18 L2,2 L18,2"
+					stroke="currentColor"
+					strokeWidth="4"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					fill="none"
+				/>
+			</svg>
+			<svg viewBox="0 0 20 20" data-placement="tr" className="croper croper-tr">
+				<path
+					d="M2,2 L18,2 L18,18"
+					stroke="currentColor"
+					strokeWidth="4"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					fill="none"
+				/>
+			</svg>
+			<svg viewBox="0 0 20 20" data-placement="bl" className="croper croper-bl">
+				<path
+					d="M2,2 L2,18  L18,18"
+					stroke="currentColor"
+					strokeWidth="4"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					fill="none"
+				/>
+			</svg>
+			<svg viewBox="0 0 20 20" data-placement="br" className="croper croper-br">
+				<path
+					d="M2,18  L18,18 L18,2"
+					stroke="currentColor"
+					strokeWidth="4"
+					strokeLinecap="round"
+					strokeLinejoin="round"
+					fill="none"
+				/>
+			</svg>
+			<div data-placement="top" className="croper croper-top"></div>
+			<div data-placement="right" className="croper croper-right"></div>
+			<div data-placement="bottom" className="croper croper-bottom"></div>
+			<div data-placement="left" className="croper croper-left"></div>
+		</div>
+	);
+
+	return (
+		<>
+			<div className="crop-bg abs-full"></div>
+			<div className="crop-area abs-full"></div>
+			{box}
+		</>
+	);
+}
+
 export default ({
 	title,
 	src,
-	srcSet,
 	nodeView,
 	loading,
 	link,
 	width,
-	align
+	align,
+	clip,
+	origin
 }: Props) => {
 	const { $dom } = useNodeView(nodeView);
-	let image = <img src={src} loading={loading} title={title ?? ''} />;
+	const [actived, setActived] = useState(false);
+	const [cropStart, setCropStatus] = useState(false);
+	const $clip = useRef<ImageRect>(clip);
+	useEffect(() => {
+		$dom.current?.addEventListener('dragstart', (e) => {
+			e.preventDefault();
+		});
+	}, []);
+
+	useEffect(() => {
+		if (src) {
+			const img = nodeView.dom.querySelector('.image');
+			if (img) {
+				const { width, height } = img.getBoundingClientRect();
+				nodeView.setNodeAttribute('origin', { width, height });
+			}
+		}
+	}, [src]);
+
+	let boxStyle: CSSProperties = { width };
+	let imgStyle: CSSProperties = {};
+	if (clip && !cropStart) {
+		if (width === 'auto') width = origin.width;
+		const height = width * (clip.height / clip.width);
+		boxStyle = { ...boxStyle, height };
+		const w = (origin.width * width) / clip.width;
+		const h = (origin.height * height) / clip.height;
+		const ratio = width / clip.width;
+		const offsetX = clip.left * ratio;
+		const offsetY = clip.top * ratio;
+
+		imgStyle.width = w;
+		imgStyle.height = h;
+		imgStyle.transform = `translate(${-offsetX}px, ${-offsetY}px)`;
+		imgStyle.maxWidth = 'none';
+	}
+
+	let image = (
+		<img
+			className="image"
+			style={imgStyle}
+			src={src}
+			loading={loading}
+			title={title ?? ''}
+		/>
+	);
 	if (link)
 		image = (
 			<a target="_blank" href={link}>
 				{image}
 			</a>
 		);
-	const [actived, setActived] = useState(false);
-	useEffect(() => {
-		$dom.current?.addEventListener('dragstart', (e) => {
-			e.preventDefault();
-		});
-	}, []);
+
 	const body = (
 		<div
 			ref={$dom}
@@ -67,15 +182,47 @@ export default ({
 			{src ? (
 				<Menu
 					placement="top-end"
-					content={<ImageTools />}
+					content={
+						<ImageTools
+							onCropStart={() => {
+								nodeView.setNodeAttribute('width', origin.width);
+								setCropStatus(true);
+							}}
+						/>
+					}
 					onOpen={() => setActived(true)}
-					onClose={() => setActived(false)}
+					onClose={() => {
+						if ($clip.current && !shallowEqual($clip.current, clip)) {
+							nodeView.setNodeAttributes({
+								clip: $clip.current,
+								width: $clip.current.width
+							});
+						}
+						setActived(false);
+						setCropStatus(false);
+					}}
 				>
-					<div className="image-wrapper">
-						<Paper style={{ width }} className="image-box">
+					<div className={classnames('image-wrapper', { cropping: cropStart })}>
+						<Paper style={boxStyle} className="image-box">
 							{image}
 						</Paper>
-						{actived && <ResizeBar nodeView={nodeView} />}
+						{actived ? (
+							cropStart ? (
+								<CropBar
+									onCrop={(clip) => ($clip.current = clip)}
+									nodeView={nodeView}
+								/>
+							) : (
+								<ResizeBar
+									onResize={(w) => {
+										nodeView.setNodeAttribute(
+											'width',
+											Math.min(origin.width, w)
+										);
+									}}
+								/>
+							)
+						) : null}
 					</div>
 				</Menu>
 			) : (

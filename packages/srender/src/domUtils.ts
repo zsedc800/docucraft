@@ -9,7 +9,11 @@ const isNew = (prev: IState, next: IState) => (key: string) =>
 	prev[key] !== next[key];
 const isGone = (next: IState) => (key: string) => !(key in next);
 function convertName(name: string) {
-	return name === 'className' ? 'class' : name;
+	return name === 'className'
+		? 'class'
+		: name.startsWith('stroke')
+			? hyphenateStyleName(name)
+			: name;
 }
 
 const svgElements = new Set([
@@ -102,6 +106,7 @@ export function updateDomProperties(
 				(dom as IState)[name] = value;
 			} else if (svgElements.has(dom.tagName) && name !== 'xmlns') {
 				// const svgPropName = name.replace(/(a-z)(A-Z)/g, '$1-$2').toLowerCase();
+
 				dom.setAttributeNS(null, convertName(name), value);
 			} else if (booleanAttributes.has(name)) {
 				if (value) dom.setAttribute(name, 'true');
