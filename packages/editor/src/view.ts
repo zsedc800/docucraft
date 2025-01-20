@@ -4,12 +4,13 @@ import { EditorState } from 'prosemirror-state';
 import { schema } from './model';
 import { keymap } from 'prosemirror-keymap';
 import { history } from 'prosemirror-history';
+import { addView } from './utils';
+import { onDispatch } from './utils/hooks';
 import { CodeBlockViewConstructor } from './components/codeBlock/codeBlockView';
 import { getMyKeyMap, buildInputRules } from './commands';
 import buildToolbar from './components/toolBar';
 import { TaskItemViewConstructor } from './components/taskList';
 import { tableEditing } from './components/tables';
-import { addView } from './utils';
 import { mathRender } from './components/katex';
 import { HeadingViewConstructor } from './components/heading';
 import { outlineTreePlugin } from './components/outline';
@@ -21,11 +22,10 @@ import { BlockTileViewConstructor } from './components/blockTile';
 import { ListItemViewConstructor } from './components/listItem';
 import { LinkViewConstructor } from './components/link';
 import { DividerViewConstructor } from './components/divider';
-import { onDispatch } from './utils/hooks';
 import { handleImagePaste, ImageNodeViewConstructor } from './components/image';
 import { createTimelineViews } from './components/timeline';
-import './themes/default.scss';
 import { ImageGalleryViewConstructor } from './components/imageGallery';
+import './themes/default.scss';
 
 export class Editor {
 	constructor(container?: HTMLElement) {

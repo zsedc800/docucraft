@@ -10,12 +10,14 @@ import { DividerSpec } from './components/divider';
 import { imageNodeSpec } from './components/image';
 import { createTimelineNodes } from './components/timeline';
 import { imageGalleryNodeSpec } from './components/imageGallery';
+import { emojiNodeSpec } from './components/emoji';
 
 export function createNodeSpec(config: NodeSpec): NodeSpec {
 	config.attrs = {
 		...config.attrs,
 		hidden: { default: false },
-		blockId: { default: null }
+		blockId: { default: null },
+		focused: { default: false }
 	};
 	const toDOM = config.toDOM;
 	if (toDOM)
@@ -172,6 +174,7 @@ const nodes = {
 	link: createNodeSpec(LinkSpec),
 	image: createNodeSpec(imageNodeSpec),
 	imageGallery: createNodeSpec(imageGalleryNodeSpec),
+	emoji: createNodeSpec(emojiNodeSpec),
 	hardBreak: createNodeSpec({
 		inline: true,
 		group: 'inline',

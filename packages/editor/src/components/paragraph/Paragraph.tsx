@@ -27,7 +27,7 @@ export default ({
 
 	const isToplevel = nodeView.depth === 0;
 
-	const poper = <ComponentsPanel />;
+	const poper = <ComponentsPanel close={plain.close} />;
 
 	useEffect(() => {
 		if (!isToplevel) return;

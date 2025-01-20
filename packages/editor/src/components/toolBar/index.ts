@@ -1,4 +1,4 @@
-import { Plugin } from 'prosemirror-state';
+import { NodeSelection, Plugin } from 'prosemirror-state';
 import { closeFloatBar, showFloatBar } from './FloatBar';
 import { getNodeView } from '../../utils/view';
 import { findParentNode, selectInTypes } from '../../utils';

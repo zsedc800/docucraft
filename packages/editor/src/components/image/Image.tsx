@@ -130,16 +130,6 @@ export default ({
 		});
 	}, []);
 
-	useEffect(() => {
-		if (src) {
-			const img = nodeView.dom.querySelector('.image');
-			if (img) {
-				const { width, height } = img.getBoundingClientRect();
-				nodeView.setNodeAttribute('origin', { width, height });
-			}
-		}
-	}, [src]);
-
 	let boxStyle: CSSProperties = { width };
 	let imgStyle: CSSProperties = {};
 	if (clip && !cropStart) {
@@ -165,6 +155,11 @@ export default ({
 			src={src}
 			loading={loading}
 			title={title ?? ''}
+			onLoad={(e) => {
+				const img = e.currentTarget as HTMLImageElement;
+				const { width, height } = img.getBoundingClientRect();
+				nodeView.setNodeAttribute('origin', { width, height });
+			}}
 		/>
 	);
 	if (link)
@@ -186,6 +181,7 @@ export default ({
 						<ImageTools
 							onCropStart={() => {
 								nodeView.setNodeAttribute('width', origin.width);
+								console.log(origin, 'origin');
 								setCropStatus(true);
 							}}
 						/>

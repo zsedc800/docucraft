@@ -150,3 +150,15 @@ body {
 	right: 0;
 	bottom: 0;
 }
+
+[data-emoji] {
+	font-style: normal;
+	font-family:
+		Apple Color Emoji,
+		Segoe UI Emoji,
+		NotoColorEmoji,
+		Noto Color Emoji,
+		Segoe UI Symbol,
+		Android Emoji,
+		EmojiSymbols;
+}

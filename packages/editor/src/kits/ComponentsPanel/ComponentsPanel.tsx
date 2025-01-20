@@ -19,7 +19,7 @@ import { useContext } from '@docucraft/srender';
 import { nodeViewContext } from '../../utils/view';
 import { overrides } from '../../utils';
 
-export default () => {
+export default ({ close }: { close?: () => void }) => {
 	const { nodeView } = useContext(nodeViewContext);
 	return (
 		<Paper
@@ -99,7 +99,6 @@ export default () => {
 									doc
 								} = state;
 								const start = $from.before();
-								console.log(start, 'start');
 
 								let transction = tr.setSelection(
 									NodeSelection.create(doc, start)
@@ -108,13 +107,12 @@ export default () => {
 								if (node.type === schema.nodes.paragraph)
 									transction = transction.delete(
 										start + 1,
-										start + node.nodeSize
+										start + node.nodeSize - 1
 									);
-								console.log(node, $from, 111);
 
 								handler(overrides(state, { tr: transction }), dispatch, view);
-								// handler(view.state, view.dispatch, view);
 								view.focus();
+								close && close();
 							}}
 						>
 							<ListItemButton>

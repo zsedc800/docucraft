@@ -87,7 +87,7 @@ export function basePop({
 	slotProps
 }: {
 	view: EditorView;
-	render: (props: Pick<Props, 'close'>) => ReactNode;
+	render: (props: Pick<Props, 'close' | 'open'>) => ReactNode;
 } & Pick<Props, 'placement' | 'slotProps'>) {
 	const rootRender = createRoot();
 	const container = document.createElement('div');
@@ -106,7 +106,7 @@ export function basePop({
 				placement={placement}
 				slotProps={slotProps}
 			>
-				<ChildrenRender close={close} />
+				<ChildrenRender close={close} open={open} />
 			</PlainBoard>,
 			container
 		);

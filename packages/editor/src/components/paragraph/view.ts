@@ -16,6 +16,7 @@ export class ParagraphView extends BaseNodeView {
 	update(node: Node) {
 		const { type, attrs, textContent: txt } = node;
 		const { attrs: props, type: t, textContent: text } = this.node;
+
 		if (type !== t) return false;
 		this.node = node;
 

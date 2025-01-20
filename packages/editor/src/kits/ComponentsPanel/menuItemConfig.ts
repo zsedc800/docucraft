@@ -11,6 +11,7 @@ import SvgAddTask from '@docucraft/icons/svg/AddTaskFill';
 import SvgLink from '@docucraft/icons/svg/LinkFill';
 import SvgCodeBlock from '@docucraft/icons/svg/CodeBlocks';
 import SvgImage from '@docucraft/icons/svg/ImagesmodeFill';
+import SvgMood from '@docucraft/icons/svg/Mood';
 import SvgTable from '../../assets/svg/SvgTable';
 import SvgBlockQuote from '../../assets/svg/BlockQuote';
 import SvgDivider from '../../assets/svg/Divider';
@@ -19,9 +20,11 @@ import { BlockItem, ToolItem } from './interface';
 import { transformToNode } from '../../commands';
 import { schema } from '../../model';
 import { nextTick } from '../../utils';
-import { prompt } from '../../components/popover';
+import { basePop, prompt } from '../../components/popover';
 import { createTable } from '../../components/tables/commands';
 import { insertTimeline } from '../../components/timeline';
+import { EmojiPicker, EmojiPickerPop } from '../Picker';
+import { TextSelection } from 'prosemirror-state';
 export const basicTools: ToolItem[] = [
 	{
 		title: '文本',
@@ -162,5 +165,19 @@ export const blocklist: BlockItem[] = [
 		name: 'imageGallery',
 		cover: SvgImage,
 		handler: transformToNode(schema.nodes.imageGallery)
+	},
+	{
+		title: 'emoji表情',
+		description: 'emoji',
+		name: 'emoji',
+		cover: SvgMood,
+		handler: ({ tr }, dispatch, view) => {
+			if (!view) return false;
+			dispatch?.(
+				tr.setSelection(TextSelection.create(tr.doc, tr.selection.from + 1))
+			);
+			EmojiPickerPop(view);
+			return false;
+		}
 	}
 ];

@@ -182,6 +182,9 @@ export class BaseNodeView implements NodeView {
 		nodeViewContainer.delete(this.blockId);
 		this.dom.remove();
 	}
+	selectNode() {
+		console.log('selectNode');
+	}
 	// 抽象方法
 	onFocusIn() {}
 	onFocusOut(e: { reason: 'change' | 'blur'; event?: Event }) {}
