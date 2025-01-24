@@ -1,5 +1,15 @@
-.dUI-icons-round {
-	font-family: 'Material Symbols Rounded Variable';
+@font-face {
+	font-family: 'Material Icons';
+	font-style: normal;
+	font-weight: 400;
+	font-display: block;
+	src:
+		url('./material-icons.woff2') format('woff2'),
+		url('./material-icons.woff') format('woff');
+}
+
+.dUI-icons {
+	font-family: 'Material Icons';
 	font-weight: normal;
 	font-style: normal;
 	font-size: inherit;
@@ -13,14 +23,4 @@
 	-moz-osx-font-smoothing: grayscale;
 	text-rendering: optimizeLegibility;
 	font-feature-settings: 'liga';
-}
-
-.dUI-icons-round::before {
-	content: attr(data-icon);
-}
-
-svg[data-micon='true'] {
-	display: inline-block;
-	width: 1em;
-	height: 1em;
 }

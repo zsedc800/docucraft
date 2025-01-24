@@ -1,41 +1,31 @@
-import { MaterialIcon } from './iconName';
+// import { MaterialIcon } from './iconName';
+import { IconNames, iconNameMap } from './iconConf';
 import { IconType, getIconType } from './vars';
-import {
-	Ref,
-	forwardRef,
-	useEffect,
-	useState,
-	type CSSProperties
-} from 'react';
-export interface Props {
-	name: MaterialIcon;
-	className?: string;
-	style?: CSSProperties;
-	type?: IconType;
-	onClick?: (e: any) => void;
+import { HTMLAttributes, forwardRef } from 'react';
+import { classnames } from './utils';
+export interface Props extends HTMLAttributes<HTMLElement> {
+	name: IconNames;
 }
-export type IconName = MaterialIcon;
-export const SVGIcon = () => null;
+export type IconName = IconNames;
 
-export default forwardRef(
-	(
-		{ name, type, onClick, className, style = {} }: Props,
-		ref: Ref<HTMLElement>
-	) => {
-		type = type || getIconType();
-		const [isFontLoaded, setState] = useState(false);
-		useEffect(() => {
-			document.fonts.ready.then(() => setState(true));
-		}, []);
+export * from './svg';
+
+export default forwardRef<HTMLElement, Props>(
+	({ name, className, ...attrs }, ref) => {
+		// type = type || getIconType();
+		// const [isFontLoaded, setState] = useState(false);
+		// useEffect(() => {
+		// 	document.fonts.ready.then(() => setState(true));
+		// }, []);
 		return (
 			<i
 				ref={ref}
-				style={style}
-				onClick={onClick}
-				className={`dUI-icons${type === 'filled' ? '' : '-' + type}${className ? ' ' + className : ''}`}
-			>
-				{isFontLoaded ? name : ''}
-			</i>
+				className={classnames(className, 'dUI-icons')}
+				{...attrs}
+				dangerouslySetInnerHTML={{
+					__html: `&#${iconNameMap[name]};`
+				}}
+			/>
 		);
 	}
 );

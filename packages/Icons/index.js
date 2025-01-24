@@ -1,12 +1,16 @@
 import { jsx as _jsx } from "react/jsx-runtime";
-import { getIconType } from './vars';
-import { forwardRef, useEffect, useState } from 'react';
-export const SVGIcon = () => null;
-export default forwardRef(({ name, type, onClick, className, style = {} }, ref) => {
-    type = type || getIconType();
-    const [isFontLoaded, setState] = useState(false);
-    useEffect(() => {
-        document.fonts.ready.then(() => setState(true));
-    }, []);
-    return (_jsx("i", { ref: ref, style: style, onClick: onClick, className: `dUI-icons${type === 'filled' ? '' : '-' + type}${className ? ' ' + className : ''}`, children: isFontLoaded ? name : '' }));
+// import { MaterialIcon } from './iconName';
+import { iconNameMap } from './iconConf';
+import { forwardRef } from 'react';
+import { classnames } from './utils';
+export * from './svg';
+export default forwardRef(({ name, className, ...attrs }, ref) => {
+    // type = type || getIconType();
+    // const [isFontLoaded, setState] = useState(false);
+    // useEffect(() => {
+    // 	document.fonts.ready.then(() => setState(true));
+    // }, []);
+    return (_jsx("i", { ref: ref, className: classnames(className, 'dUI-icons'), ...attrs, dangerouslySetInnerHTML: {
+            __html: `&#${iconNameMap[name]};`
+        } }));
 });
