@@ -3,7 +3,7 @@ import { jsx as _jsx } from "react/jsx-runtime";
 import { iconNameMap } from './iconConf';
 import { forwardRef } from 'react';
 import { classnames } from './utils';
-export * from './svg';
+export { iconNameMap } from './iconConf';
 export default forwardRef(({ name, className, ...attrs }, ref) => {
     // type = type || getIconType();
     // const [isFontLoaded, setState] = useState(false);

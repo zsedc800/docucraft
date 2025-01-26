@@ -11,6 +11,7 @@ import { imageNodeSpec } from './components/image';
 import { createTimelineNodes } from './components/timeline';
 import { imageGalleryNodeSpec } from './components/imageGallery';
 import { emojiNodeSpec } from './components/emoji';
+import { iconNodeSpec } from './components/icon';
 
 export function createNodeSpec(config: NodeSpec): NodeSpec {
 	config.attrs = {
@@ -175,6 +176,7 @@ const nodes = {
 	image: createNodeSpec(imageNodeSpec),
 	imageGallery: createNodeSpec(imageGalleryNodeSpec),
 	emoji: createNodeSpec(emojiNodeSpec),
+	icon: createNodeSpec(iconNodeSpec),
 	hardBreak: createNodeSpec({
 		inline: true,
 		group: 'inline',

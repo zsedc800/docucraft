@@ -19,9 +19,9 @@ export const NormalTooltip = styled(({ className, ...props }: TooltipProps) => (
 ))(({ theme }) => ({
 	[`& .${tooltipClasses.tooltip}`]: {
 		backgroundColor: theme.palette.common.black,
-		fontSize: 12
+		fontSize: 14
 	},
 	'& p': {
-		fontSize: 12
+		fontSize: 14
 	}
 }));

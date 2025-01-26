@@ -10,7 +10,7 @@ interface Props {
 	pickerOptions?: EmojiPickerConfig;
 }
 
-function EmojiPicker({ pickerOptions }: Props) {
+export function EmojiPicker({ pickerOptions }: Props) {
 	const box = useRef<HTMLDivElement>(null);
 	useEffect(() => {
 		const picker = new Picker({

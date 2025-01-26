@@ -82,6 +82,7 @@ function SearchUnsplashImageList({ onChange }: { onChange?: OnChange }) {
 		<SearchBox
 			onChange={(q) => (params.current.query = q)}
 			onSearch={execQuery}
+			placeholder="搜索Unsplash图片"
 		>
 			<LoadingBox
 				loading={loading}

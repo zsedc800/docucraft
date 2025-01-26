@@ -87,16 +87,17 @@ const textGrey = [
 	borderColor: grey[700]
 }));
 type ColorOpts = (typeof baseColors)[number];
+type OnChange = (
+	val: { bgColor?: string; color?: string },
+	opts?: ColorOpts
+) => void;
 export default ({
 	onChange,
 	color,
 	bgColor,
 	onReset
 }: {
-	onChange?: (
-		val: { bgColor?: string; color?: string },
-		opts?: ColorOpts
-	) => void;
+	onChange?: OnChange;
 	onReset?: () => void;
 	color?: string;
 	bgColor?: string;
@@ -237,6 +238,94 @@ export default ({
 				>
 					取消设置
 				</Button>
+			</div>
+		</Box>
+	);
+};
+
+export const BaseColorMark = ({
+	onChange,
+	extra = [],
+	title
+}: {
+	title: string;
+	onChange?: (v: string, opts?: ColorOpts) => void;
+	extra?: ColorOpts[];
+}) => {
+	const handleChange = (color: string, opts?: ColorOpts) => {
+		onChange && onChange(color, opts);
+	};
+	const [color, setColor] = useState('');
+	const colors = baseColors.concat(extra);
+	return (
+		<Box
+			className="box"
+			sx={{
+				padding: '6px 12px',
+				[`& .${typographyClasses.h4}`]: {
+					fontSize: 14,
+					flexGrow: 1
+				},
+				'& .header': {
+					display: 'flex',
+					alignItems: 'center',
+					paddingBottom: '6px'
+				},
+				'& .more': {
+					fontSize: 12,
+					display: 'flex',
+					alignItems: 'center',
+					flexShrink: 0,
+					cursor: 'pointer'
+				},
+				'& .colorItem': {
+					display: 'inline-flex',
+					borderRadius: '5px',
+					width: '24px',
+					height: '24px',
+					boxSizing: 'border-box',
+					justifyContent: 'center',
+					alignItems: 'center',
+					cursor: 'pointer',
+					borderWidth: 0,
+					'&:hover': {
+						borderWidth: '1px'
+					},
+					'&.active': {
+						borderWidth: '1px'
+					}
+				},
+				'& .colorList': {
+					display: 'grid',
+					gridTemplateColumns: 'repeat(6, 1fr)',
+					gap: '10px'
+				}
+			}}
+		>
+			<div className="header">
+				<Typography variant="h4">{title}</Typography>
+				<ColorPicker
+					value={color}
+					onChange={(bgColor) => handleChange(bgColor)}
+				>
+					<div className="more">
+						更多颜色
+						<SvgArrowRight />
+					</div>
+				</ColorPicker>
+			</div>
+			<div className="colorList">
+				{colors.map(({ bgColor, name, borderColor, ...rest }) => (
+					<ColorItem
+						name={name}
+						borderColor={borderColor}
+						backgroundColor={bgColor}
+						active={bgColor === color}
+						onClick={() =>
+							handleChange(bgColor, { bgColor, name, borderColor, ...rest })
+						}
+					/>
+				))}
 			</div>
 		</Box>
 	);

@@ -8,11 +8,14 @@ export const iconNodeSpec: NodeSpec = {
 	group: 'inline',
 	parseDOM: [
 		{
-			tag: 'i.docIcon',
+			tag: 'i.dUI-icons',
 			getAttrs: (dom) => ({ code: dom.textContent })
 		}
 	],
 	toDOM(node) {
-		return ['i', { class: 'docIcon' }, node.attrs.code];
+		return ['i', { class: 'dUI-icons' }, node.attrs.code];
+	},
+	leafText(node) {
+		return node.attrs.code;
 	}
 };

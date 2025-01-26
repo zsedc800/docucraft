@@ -2029,7 +2029,6 @@ function memo(component) {
   return typeof component === 'function' ? render : component;
 }
 
-// export * from './interface';
 const Children = {
   map,
   forEach,
@@ -2068,5 +2067,5 @@ var index = {
   ExtendedComponent
 };
 
-export { Children, Component, ExtendedComponent, Fragment, Offscreen, Suspense, cloneElement, createContext, createElement, createPortal, createRef, createRoot, index as default, forwardRef, isValidElement, lazy, memo, render, startTransition, useCallback, useContext, useDebugValue, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, useTransition, wrapPromise };
+export { Children, Component, Effect, ExtendedComponent, FiberFlags, FiberTag, Flags, Fragment, ITag, Mode, Offscreen, Suspense, UpdateState, cloneElement, createContext, createElement, createPortal, createRef, createRoot, index as default, forwardRef, isValidElement, lazy, memo, render, startTransition, useCallback, useContext, useDebugValue, useEffect, useId, useImperativeHandle, useLayoutEffect, useMemo, useRef, useState, useTransition, wrapPromise };
 //# sourceMappingURL=index.mjs.map

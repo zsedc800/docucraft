@@ -23,7 +23,12 @@ import { nextTick } from '../../utils';
 import { basePop, prompt } from '../../components/popover';
 import { createTable } from '../../components/tables/commands';
 import { insertTimeline } from '../../components/timeline';
-import { EmojiPicker, EmojiPickerPop } from '../Picker';
+import {
+	EmojiPicker,
+	EmojiPickerPop,
+	IconPicker,
+	IconPickerPop
+} from '../Picker';
 import { TextSelection } from 'prosemirror-state';
 export const basicTools: ToolItem[] = [
 	{
@@ -177,6 +182,20 @@ export const blocklist: BlockItem[] = [
 				tr.setSelection(TextSelection.create(tr.doc, tr.selection.from + 1))
 			);
 			EmojiPickerPop(view);
+			return false;
+		}
+	},
+	{
+		title: '图标',
+		description: '图标',
+		name: 'icon',
+		cover: SvgMood,
+		handler: ({ tr }, dispatch, view) => {
+			if (!view) return false;
+			dispatch?.(
+				tr.setSelection(TextSelection.create(tr.doc, tr.selection.from + 1))
+			);
+			IconPickerPop(view);
 			return false;
 		}
 	}

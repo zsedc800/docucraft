@@ -7,8 +7,7 @@ export interface Props extends HTMLAttributes<HTMLElement> {
 	name: IconNames;
 }
 export type IconName = IconNames;
-
-export * from './svg';
+export { iconNameMap } from './iconConf';
 
 export default forwardRef<HTMLElement, Props>(
 	({ name, className, ...attrs }, ref) => {

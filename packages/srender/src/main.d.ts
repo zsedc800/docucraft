@@ -4,14 +4,14 @@ import {
 	Suspense as Suspen,
 	ReactPortal
 } from 'react';
-import {
-	ExoticComponent,
-	ForwardRefExoticComponent,
-	SuspenseProps
-} from './interface';
+// import {
+// 	ExoticComponent,
+// 	ForwardRefExoticComponent,
+// 	SuspenseProps
+// } from './interface';
 import './jsx';
 import { ReactElement } from 'react';
-export * from './interface';
+// export * from './interface';
 export * from './index';
 
 export const Suspense: typeof Suspen;
@@ -31,5 +31,6 @@ export {
 	ReactElement,
 	SyntheticEvent,
 	MouseEvent,
-	MouseEventHandler
+	MouseEventHandler,
+	HTMLAttributes
 } from 'react';
