@@ -1,12 +1,15 @@
-import Typography, { typographyClasses } from '@mui/material/Typography';
+import Typography from '@mui/material/Typography';
 import Box from '@mui/material/Box';
 import * as ColorBases from '@mui/material/colors';
+import { ReactNode, useEffect, useState } from '@docucraft/srender';
+import Button from '@mui/material/Button';
+import Divider from '@mui/material/Divider';
 import SvgArrowRight from '@docucraft/icons/svg/ArrowForwardIos';
-import { NormalTooltip } from './Tooltip';
-import { useEffect, useState } from '@docucraft/srender';
-import { classnames } from '../utils';
-import { Button, Divider } from '@mui/material';
-import ColorPicker from './ColorPicker';
+import { NormalTooltip } from '../Tooltip';
+import { classnames } from '../../utils';
+import ColorPicker from '../ColorPicker';
+import './style.scss';
+
 interface ColorProps {
 	content?: string;
 	color?: string;
@@ -113,61 +116,12 @@ export default ({
 	}, [color, bgColor]);
 
 	return (
-		<Box
-			sx={(t) => ({
-				width: 240,
-				paddingTop: '6px',
-				[`& .${typographyClasses.h4}`]: {
-					fontSize: 14,
-					flexGrow: 1
-				},
-				'& .box': {
-					padding: '6px 12px',
-					'.header': {
-						display: 'flex',
-						alignItems: 'center',
-						paddingBottom: '6px'
-					},
-					'.more': {
-						fontSize: 12,
-						display: 'flex',
-						alignItems: 'center',
-						flexShrink: 0,
-						cursor: 'pointer'
-					}
-				},
-				'& .colorItem': {
-					display: 'inline-flex',
-					borderRadius: '5px',
-					width: '24px',
-					height: '24px',
-					boxSizing: 'border-box',
-					justifyContent: 'center',
-					alignItems: 'center',
-					cursor: 'pointer',
-					borderWidth: 0,
-					'&:hover': {
-						borderWidth: '1px'
-					},
-					'&.active': {
-						borderWidth: '1px'
-					}
-				},
-				'& .colorList': {
-					display: 'grid',
-					gridTemplateColumns: 'repeat(6, 1fr)',
-					gap: '10px'
-				},
-				'& .footer': {
-					display: 'flex',
-					justifyContent: 'flex-end',
-					padding: '6px 10px'
-				}
-			})}
-		>
-			<div className="box">
+		<Box className="color-mark">
+			<div className="box color-mark-box">
 				<div className="header">
-					<Typography variant="h4">文本颜色</Typography>
+					<Typography className="box-title" variant="h4">
+						文本颜色
+					</Typography>
 					<ColorPicker
 						value={state.color}
 						onChange={(color) => handleChange({ ...state, color })}
@@ -198,9 +152,11 @@ export default ({
 						))}
 				</div>
 			</div>
-			<div className="box">
+			<div className="box  color-mark-box">
 				<div className="header">
-					<Typography variant="h4">背景颜色</Typography>
+					<Typography className="box-title" variant="h4">
+						背景颜色
+					</Typography>
 					<ColorPicker
 						value={state.bgColor}
 						onChange={(bgColor) => handleChange({ ...state, bgColor })}
@@ -245,65 +201,25 @@ export default ({
 
 export const BaseColorMark = ({
 	onChange,
-	extra = [],
-	title
+	title,
+	children
 }: {
 	title: string;
 	onChange?: (v: string, opts?: ColorOpts) => void;
-	extra?: ColorOpts[];
+	children?: ReactNode;
 }) => {
+	const [color, setColor] = useState('');
 	const handleChange = (color: string, opts?: ColorOpts) => {
+		setColor(color);
 		onChange && onChange(color, opts);
 	};
-	const [color, setColor] = useState('');
-	const colors = baseColors.concat(extra);
+	const colors = baseColors.concat();
 	return (
-		<Box
-			className="box"
-			sx={{
-				padding: '6px 12px',
-				[`& .${typographyClasses.h4}`]: {
-					fontSize: 14,
-					flexGrow: 1
-				},
-				'& .header': {
-					display: 'flex',
-					alignItems: 'center',
-					paddingBottom: '6px'
-				},
-				'& .more': {
-					fontSize: 12,
-					display: 'flex',
-					alignItems: 'center',
-					flexShrink: 0,
-					cursor: 'pointer'
-				},
-				'& .colorItem': {
-					display: 'inline-flex',
-					borderRadius: '5px',
-					width: '24px',
-					height: '24px',
-					boxSizing: 'border-box',
-					justifyContent: 'center',
-					alignItems: 'center',
-					cursor: 'pointer',
-					borderWidth: 0,
-					'&:hover': {
-						borderWidth: '1px'
-					},
-					'&.active': {
-						borderWidth: '1px'
-					}
-				},
-				'& .colorList': {
-					display: 'grid',
-					gridTemplateColumns: 'repeat(6, 1fr)',
-					gap: '10px'
-				}
-			}}
-		>
+		<Box className="color-mark-box">
 			<div className="header">
-				<Typography variant="h4">{title}</Typography>
+				<Typography className="box-title" variant="h4">
+					{title}
+				</Typography>
 				<ColorPicker
 					value={color}
 					onChange={(bgColor) => handleChange(bgColor)}
@@ -327,6 +243,7 @@ export const BaseColorMark = ({
 					/>
 				))}
 			</div>
+			{children}
 		</Box>
 	);
 };

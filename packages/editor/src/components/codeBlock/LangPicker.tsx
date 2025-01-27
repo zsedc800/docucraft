@@ -139,7 +139,7 @@ export interface LangPickerProps {
 }
 
 export default function LangPicker({ onChange, value: val }: LangPickerProps) {
-	const [anchorEl, setAnchorEl] = useState<HTMLElement>(null);
+	const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
 	const [value, setValue] = useState<LanguageType | null>(null);
 	const [inputValue, setInputValue] = useState('');
 	// const [pendingValue, setPendingValue] = React.useState<[]>([]);

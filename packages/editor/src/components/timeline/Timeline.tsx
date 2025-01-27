@@ -1,11 +1,4 @@
-import { useNodeView } from '../../utils/view';
-import {
-	TimelineContentView,
-	TimelineItemView,
-	TimelineNodeView,
-	TimelineOppositeView,
-	TimelineSeparatorView
-} from './view';
+import { TextSelection } from 'prosemirror-state';
 import Timeline from '@mui/lab/Timeline';
 import TimelineItem from '@mui/lab/TimelineItem';
 import TimelineOppositeContent from '@mui/lab/TimelineOppositeContent';
@@ -13,19 +6,26 @@ import TimelineContent from '@mui/lab/TimelineContent';
 import TimelineConnector from '@mui/lab/TimelineConnector';
 import TimelineDot from '@mui/lab/TimelineDot';
 import TimelineSeparator from '@mui/lab/TimelineSeparator';
-import SvgHome from '@docucraft/icons/svg/Home';
-import { useEffect } from '@docucraft/srender';
-import Menu from '../../kits/Menu';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemText from '@mui/material/ListItemText';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import SvgHome from '@docucraft/icons/svg/Home';
+import { useEffect } from '@docucraft/srender';
 import { createNode, createNodeAndFill } from '../../commands';
 import { getTimelineNodeTypes } from './schema';
-import { ListItemIcon } from '@mui/material';
-import { TextSelection } from 'prosemirror-state';
+import Menu from '../../kits/Menu';
+import { useNodeView } from '../../utils/view';
 import { preventDispatch } from '../../utils/hooks';
 import Tools from '../toolBar/Tools';
 import { Align, AlignButton } from '../../kits/Button';
+import {
+	TimelineContentView,
+	TimelineItemView,
+	TimelineNodeView,
+	TimelineOppositeView,
+	TimelineSeparatorView
+} from './view';
 
 const getMappedVal = (pos: Align | 'alternate') =>
 	pos === 'alternate' ? 'center' : pos;

@@ -180,6 +180,7 @@ export const ColorPickerPanel = ({
 			alignItems="center"
 			gap={1}
 			padding={1}
+			style={{ minWidth: 210 }}
 		>
 			{/* 饱和度/亮度面板 */}
 			<Box

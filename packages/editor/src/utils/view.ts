@@ -16,8 +16,7 @@ import {
 	useRef,
 	createContext
 } from '@docucraft/srender';
-import { assignUniqueId, generateUniqueId, shallowEqual } from '.';
-import { ThemeProvider, createTheme } from '@mui/material/styles';
+import { generateUniqueId, shallowEqual } from '.';
 
 export function useNodeView<
 	T extends HTMLElement = HTMLDivElement,

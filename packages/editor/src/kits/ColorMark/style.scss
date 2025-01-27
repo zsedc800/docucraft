@@ -1,0 +1,50 @@
+.color-mark {
+	width: 240;
+	padding-top: 6px;
+	&-box {
+		padding: 6px 12px;
+		& .header {
+			display: flex;
+			align-items: center;
+			padding-bottom: 6px;
+			& > h4.box-title {
+				font-size: 14px;
+				flex-grow: 1;
+			}
+		}
+		& .more {
+			font-size: 12px;
+			display: flex;
+			align-items: center;
+			flex-shrink: 0;
+			cursor: pointer;
+		}
+		& .colorItem {
+			display: inline-flex;
+			border-radius: 5px;
+			width: 24px;
+			height: 24px;
+			box-sizing: border-box;
+			justify-content: center;
+			align-items: center;
+			cursor: pointer;
+			border-width: 0;
+			&:hover {
+				border-width: 1px;
+			}
+			&:active {
+				border-width: 1px;
+			}
+		}
+		& .colorList {
+			display: grid;
+			grid-template-columns: repeat(6, 1fr);
+			gap: 10px;
+		}
+	}
+	& .footer {
+		display: flex;
+		justify-content: flex-end;
+		padding: 6px 10px;
+	}
+}
