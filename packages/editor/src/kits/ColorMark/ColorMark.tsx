@@ -231,14 +231,16 @@ export const BaseColorMark = ({
 				</ColorPicker>
 			</div>
 			<div className="colorList">
-				{colors.map(({ bgColor, name, borderColor, ...rest }) => (
+				{colors.map(({ bgColor, name, borderColor, color: c, ...rest }) => (
 					<ColorItem
+						content="A"
+						color={c}
 						name={name}
 						borderColor={borderColor}
 						backgroundColor={bgColor}
-						active={bgColor === color}
+						active={c === color}
 						onClick={() =>
-							handleChange(bgColor, { bgColor, name, borderColor, ...rest })
+							handleChange(c, { bgColor, name, borderColor, color: c, ...rest })
 						}
 					/>
 				))}

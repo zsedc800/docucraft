@@ -3,7 +3,6 @@ import { MarkSpec, Node, NodeSpec, Schema } from 'prosemirror-model';
 import { codeBlock } from './components/codeBlock';
 import { taskItem, taskList } from './components/taskList';
 import { tableNodes } from './components/tables';
-import { mathNodeSpec } from './components/katex';
 import { blockTileSpec } from './components/blockTile';
 import { LinkSpec } from './components/link';
 import { DividerSpec } from './components/divider';
@@ -12,6 +11,9 @@ import { createTimelineNodes } from './components/timeline';
 import { imageGalleryNodeSpec } from './components/imageGallery';
 import { emojiNodeSpec } from './components/emoji';
 import { iconNodeSpec } from './components/icon';
+import { videoNodeSpec } from './components/video';
+import { audioNodeSpec } from './components/audio';
+import { mathBlockNodeSpec, mathInlineNodeSpec } from './components/math';
 
 export function createNodeSpec(config: NodeSpec): NodeSpec {
 	config.attrs = {
@@ -74,7 +76,8 @@ const nodes = {
 		]
 	}),
 	blockTile: createNodeSpec(blockTileSpec),
-	math: createNodeSpec(mathNodeSpec),
+	mathInline: createNodeSpec(mathInlineNodeSpec),
+	mathBlock: createNodeSpec(mathBlockNodeSpec),
 	codeBlock: createNodeSpec(codeBlock),
 	blockQuote: createNodeSpec({
 		content: 'paragraph block*',
@@ -177,6 +180,8 @@ const nodes = {
 	imageGallery: createNodeSpec(imageGalleryNodeSpec),
 	emoji: createNodeSpec(emojiNodeSpec),
 	icon: createNodeSpec(iconNodeSpec),
+	video: createNodeSpec(videoNodeSpec),
+	audio: createNodeSpec(audioNodeSpec),
 	hardBreak: createNodeSpec({
 		inline: true,
 		group: 'inline',

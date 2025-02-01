@@ -30,16 +30,9 @@ export class LRUCache<K = number, T = number> {
 			return;
 		}
 
-		if (this.head === this.tail) {
-			this.tail = node;
-			this.head.next = node;
-			this.tail.prev = this.head;
-		} else {
-			node.next = this.head.next!;
-			node.prev = this.head;
-			node.next.prev = node;
-			this.head.next = node;
-		}
+		node.next = this.head;
+		this.head.prev = node;
+		this.head = node;
 	}
 
 	private remove(node: LinkNode<K, T>) {

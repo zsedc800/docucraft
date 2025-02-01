@@ -12,6 +12,8 @@ import SearchBox from '../SearchBox';
 import { basePop } from '../../components/popover';
 import { BaseColorMark } from '../ColorMark';
 import useRecents from '../hooks/useRecents';
+import { getNodeTypesByKeys } from '../../utils';
+import { createNode } from '../../commands';
 
 const iconSet = Object.keys(iconNameMap).map((key) => ({
 	name: key as IconName,
@@ -22,14 +24,12 @@ interface IconItem {
 	name: IconName;
 	code: number;
 }
-
-interface IconList {
-	title: string;
-	list: IconItem[];
+interface IconInfo extends IconItem {
+	color: string;
 }
 
-function IconPicker() {
-	const { entries, put } = useRecents<number, IconItem>(
+function IconPicker({ onChange }: { onChange?: (e: IconInfo) => void }) {
+	const { entries, put } = useRecents<string, IconItem>(
 		'icon-picker-recent',
 		15
 	);
@@ -51,7 +51,12 @@ function IconPicker() {
 		icon: IconItem;
 	} | null>(null);
 
-	const onColorSelect = (color: string) => {};
+	const onColorSelect = (color: string) => {
+		if (!panel) return;
+		put(panel.icon.name, panel.icon);
+		onChange && onChange({ ...panel.icon, color });
+		setPanel(null);
+	};
 
 	return (
 		<SearchBox onChange={setQuery} className="icon-picker">
@@ -61,7 +66,7 @@ function IconPicker() {
 					width: '100%',
 					bgcolor: 'background.paper',
 					position: 'relative',
-					overflow: 'auto',
+					overflowY: 'auto',
 					maxHeight: 380,
 					'& ul': { padding: 0 },
 					'& .icon-list': {
@@ -167,11 +172,33 @@ function IconPicker() {
 	);
 }
 
+const getNodeTypes = getNodeTypesByKeys(['icon']);
 export function IconPickerPop(view: EditorView) {
 	basePop({
 		view,
-		render(props) {
-			return <IconPicker />;
+		render({ close }) {
+			return (
+				<IconPicker
+					onChange={({ code, color }) => {
+						const { state, dispatch } = view;
+						const {
+							selection: { to },
+							schema
+						} = state;
+
+						dispatch(
+							state.tr.insert(
+								to,
+								createNode(getNodeTypes(schema.nodes).icon, {
+									color,
+									code: `&#${code};`
+								})
+							)
+						);
+						// close();
+					}}
+				/>
+			);
 		}
 	});
 }

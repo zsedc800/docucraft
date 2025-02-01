@@ -1,4 +1,3 @@
-// view.ts
 import { EditorView } from 'prosemirror-view';
 import { EditorState } from 'prosemirror-state';
 import { schema } from './model';
@@ -11,7 +10,6 @@ import { getMyKeyMap, buildInputRules } from './commands';
 import buildToolbar from './components/toolBar';
 import { TaskItemViewConstructor } from './components/taskList';
 import { tableEditing } from './components/tables';
-import { mathRender } from './components/katex';
 import { HeadingViewConstructor } from './components/heading';
 import { outlineTreePlugin } from './components/outline';
 import {
@@ -25,6 +23,9 @@ import { DividerViewConstructor } from './components/divider';
 import { handleImagePaste, ImageNodeViewConstructor } from './components/image';
 import { createTimelineViews } from './components/timeline';
 import { ImageGalleryViewConstructor } from './components/imageGallery';
+import { VideoNodeViewConstructor } from './components/video';
+import { AudioNodeViewConstructor } from './components/audio';
+import { createMathNodeView } from './components/math';
 import './themes/default.scss';
 
 export class Editor {
@@ -48,7 +49,6 @@ export const setupEditor = (el: HTMLElement | null) => {
 			keymap(getMyKeyMap()),
 			history(),
 			tableEditing({}),
-			mathRender(),
 			outlineTreePlugin,
 			textblockPlugin,
 			buildToolbar(),
@@ -76,6 +76,9 @@ export const setupEditor = (el: HTMLElement | null) => {
 			divider: DividerViewConstructor,
 			image: ImageNodeViewConstructor,
 			imageGallery: ImageGalleryViewConstructor,
+			video: VideoNodeViewConstructor,
+			audio: AudioNodeViewConstructor,
+			...createMathNodeView(),
 			...createTimelineViews()
 		},
 		handleClickOn(view, pos, node, nodePos, event, direct) {

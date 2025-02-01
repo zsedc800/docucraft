@@ -23,6 +23,7 @@ export interface Field {
 	textFieldProps?: TextFieldProps;
 	options?: Option[];
 	defaultValue?: any;
+	placeholder?: string;
 }
 
 interface FormProps {
@@ -77,6 +78,7 @@ const Form = ({
 											size="small"
 											fullWidth
 											margin="dense"
+											placeholder={field.placeholder}
 											defaultValue={field.defaultValue}
 											required={field.required}
 											{...field.textFieldProps}

@@ -11,6 +11,8 @@ import SvgAddTask from '@docucraft/icons/svg/AddTaskFill';
 import SvgLink from '@docucraft/icons/svg/LinkFill';
 import SvgCodeBlock from '@docucraft/icons/svg/CodeBlocks';
 import SvgImage from '@docucraft/icons/svg/ImagesmodeFill';
+import SvgVideo from '@docucraft/icons/svg/MovieFill';
+import SvgAudio from '@docucraft/icons/svg/MicFill';
 import SvgMood from '@docucraft/icons/svg/Mood';
 import SvgTable from '../../assets/svg/SvgTable';
 import SvgBlockQuote from '../../assets/svg/BlockQuote';
@@ -170,6 +172,20 @@ export const blocklist: BlockItem[] = [
 		name: 'imageGallery',
 		cover: SvgImage,
 		handler: transformToNode(schema.nodes.imageGallery)
+	},
+	{
+		title: '视频',
+		description: '视频链接或文件',
+		name: 'video',
+		cover: SvgVideo,
+		handler: transformToNode(schema.nodes.video)
+	},
+	{
+		title: '音频',
+		description: '音频链接或文件',
+		name: 'audio',
+		cover: SvgAudio,
+		handler: transformToNode(schema.nodes.audio)
 	},
 	{
 		title: 'emoji表情',
