@@ -7,12 +7,20 @@ module.exports = (env) => ({
 	},
 
 	resolve: {
-		mainFiles: ['index'],
+		// mainFiles: ['index'],
+		mainFields: ['main'],
+		conditionNames: ['require'],
+		fullySpecified: false,
 		extensions: ['.js', '.mjs', '.jsx', '.ts', '.tsx'],
 		alias: {
 			react: '@docucraft/srender',
 			'react-dom': '@docucraft/srender'
-		}
+		},
+		modules: [
+			'node_modules',
+			'/root/workspace/docucraft/node_modules/.pnpm/node_modules'
+		]
+		// modules: [path.resolve(__dirname, 'node_modules'), 'node_modules'] // 模块解析以当前项目为基准
 	},
 	module: {
 		rules: [

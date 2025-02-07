@@ -3,24 +3,22 @@
 		"jsx": "react-jsx",
 		"jsxImportSource": "@docucraft/srender",
 		"declarationDir": "dist",
-
 		"target": "ESNext",
-
+		"typeRoots": ["types", "node_modules/@types"],
 		"module": "ESNext",
 		"moduleResolution": "node",
 
 		"declaration": true,
 		"emitDeclarationOnly": true,
+		// "outFile": "dist/index.d.ts",
 		"esModuleInterop": true,
-		"forceConsistentCasingInFileNames": true,
-		"strict": true,
+		// "strict": true,
 		"skipLibCheck": true,
-		// "baseUrl": ".",
+		"baseUrl": "."
 		// "paths": {
 		// 	"react": ["@docucraft/srender"]
 		// }
-		"types": []
 	},
-	"include": ["./src"],
-	"exclude": ["node_modules", "srender"]
+	"include": ["./src/*", "./src/icon.d.ts"],
+	"exclude": ["node_modules"]
 }

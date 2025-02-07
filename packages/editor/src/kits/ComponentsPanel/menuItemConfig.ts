@@ -14,12 +14,13 @@ import SvgImage from '@docucraft/icons/svg/ImagesmodeFill';
 import SvgVideo from '@docucraft/icons/svg/MovieFill';
 import SvgAudio from '@docucraft/icons/svg/MicFill';
 import SvgMood from '@docucraft/icons/svg/Mood';
+import SvgMath from '@docucraft/icons/svg/Functions';
 import SvgTable from '../../assets/svg/SvgTable';
 import SvgBlockQuote from '../../assets/svg/BlockQuote';
 import SvgDivider from '../../assets/svg/Divider';
 import SvgEmphsis from '../../assets/svg/Emphsis';
 import { BlockItem, ToolItem } from './interface';
-import { transformToNode } from '../../commands';
+import { createNode, transformToNode } from '../../commands';
 import { schema } from '../../model';
 import { nextTick } from '../../utils';
 import { basePop, prompt } from '../../components/popover';
@@ -212,6 +213,31 @@ export const blocklist: BlockItem[] = [
 				tr.setSelection(TextSelection.create(tr.doc, tr.selection.from + 1))
 			);
 			IconPickerPop(view);
+			return false;
+		}
+	},
+	{
+		title: '行内公式',
+		description: '行内公式',
+		name: 'mathInline',
+		cover: SvgMath,
+		handler: transformToNode(schema.nodes.mathInline)
+	},
+	{
+		title: '公式块',
+		description: '块状公式',
+		name: 'mathBlock',
+		cover: SvgMath,
+		handler: (state, dispatch, view) => {
+			const {
+				tr,
+				selection: { $from }
+			} = state;
+			if (dispatch)
+				dispatch(
+					tr.insert($from.before() + 1, createNode(schema.nodes.mathInline))
+				);
+
 			return false;
 		}
 	}

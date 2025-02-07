@@ -65,6 +65,7 @@ async function run(fontPath) {
 		}, {})
 	)};
 	export type IconNames = keyof typeof iconNameMap;
+	export default iconNameMap;
 	`;
 
 	await fs.writeFile('./iconConf.ts', IconNameMapping);

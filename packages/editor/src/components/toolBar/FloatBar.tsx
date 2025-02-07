@@ -121,7 +121,8 @@ const FloatBar = (view: EditorView) => {
 						mark &= ~(mark ^ m);
 					}
 				});
-			const getMask = (mask: number) => (mark & mask ? 'primary' : void 0);
+			const getMask = (mask: number): 'primary' | undefined =>
+				mark & mask ? 'primary' : void 0;
 			const createAction =
 				(type: MarkType, mask: number, attrs?: Attrs | null) => () => {
 					const { state, dispatch } = view;

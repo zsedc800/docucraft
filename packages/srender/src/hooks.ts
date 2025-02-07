@@ -117,7 +117,7 @@ export function startTransition(fn: () => void) {
 export const useTransition = () => {
 	const [isPending, setPending] = useState(false);
 
-	return [isPending, _startTransition.bind(null, setPending)];
+	return [isPending, _startTransition.bind(null, setPending)] as const;
 };
 
 export const useDebugValue = () => {};

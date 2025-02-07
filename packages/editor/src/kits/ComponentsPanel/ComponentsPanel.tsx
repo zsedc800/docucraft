@@ -9,13 +9,13 @@ import { schema } from '../../model';
 import { NodeSelection } from 'prosemirror-state';
 import { basicTools, blocklist } from './menuItemConfig';
 import Typography from '@mui/material/Typography';
-import { IconBlock } from '../IconBlock';
 import ListItemButton, {
 	listItemButtonClasses
 } from '@mui/material/ListItemButton';
 import Stack from '@mui/material/Stack';
 import Chip from '@mui/material/Chip';
 import { useContext } from '@docucraft/srender';
+import { IconBlock } from '../IconBlock';
 import { nodeViewContext } from '../../utils/view';
 import { overrides } from '../../utils';
 

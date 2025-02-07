@@ -8,7 +8,7 @@ import Content from './Content';
 export default () => (
 	<div className="">
 		<Router>
-			<Content />
+			{/* <Content /> */}
 			<Routes>
 				<Route path="/" Component={Editor}></Route>
 				<Route path="/example" Component={Example} />

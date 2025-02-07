@@ -4,3 +4,5 @@ export interface ImageItem {
 	subTitle?: string;
 	description?: string;
 }
+
+export type Overrides<T, U> = Omit<T, keyof U> & U;

@@ -4,7 +4,7 @@ export const mathInlineNodeSpec: NodeSpec = {
 	group: 'inline',
 	inline: true,
 	atom: true,
-	toDOM: (node) => ['span', { class: 'math-inline-node' }, node.attrs.formula],
+	toDOM: (node) => ['span', { class: 'math-inline-node' }, node.attrs.tex],
 	parseDOM: [
 		{
 			tag: 'span.math-inline-node',
@@ -12,7 +12,10 @@ export const mathInlineNodeSpec: NodeSpec = {
 		}
 	],
 	attrs: {
-		formula: { default: '' }
+		tex: { default: '' }
+	},
+	leafText(node) {
+		return node.attrs.tex || '-1';
 	}
 };
 
@@ -20,13 +23,13 @@ export const mathBlockNodeSpec: NodeSpec = {
 	group: 'block',
 	atom: true,
 	toDOM(node) {
-		return ['div', { class: 'math-block-node' }, node.attrs.formula];
+		return ['div', { class: 'math-block-node' }, node.attrs.tex];
 	},
 	parseDOM: [
 		{
 			tag: 'div.math-block-node',
-			getAttrs: (dom) => ({ formula: dom.textContent })
+			getAttrs: (dom) => ({ tex: dom.textContent })
 		}
 	],
-	attrs: { formula: { default: '' } }
+	attrs: { tex: { default: '' } }
 };

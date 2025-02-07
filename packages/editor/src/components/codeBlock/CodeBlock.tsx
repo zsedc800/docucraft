@@ -6,7 +6,7 @@ import Icon from '@docucraft/icons';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { toggleLineNumber } from './extensions';
 import { setLanguage } from './extensions/loadLanguage';
-import { languages } from '@codemirror/language-data';
+// import { languages } from '@codemirror/language-data';
 import LangPicker from './LangPicker';
 import { useNodeView } from '../../utils/view';
 import './style.scss';

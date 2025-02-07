@@ -302,7 +302,10 @@ const LogoCmp = ({ name }: { name: string }) => {
 
 	useEffect(() => {
 		const filename = capitalizeFirstLetter(langMap[name] || name);
-		import('@docucraft/icons/logo/' + filename).then(
+		import(
+			/* webpackChunkName: "dynamic-logo-[request]" */
+			'@docucraft/icons/logo/' + filename
+		).then(
 			(m) => setIcon({ Icon: m.default }),
 			(e) => {}
 		);

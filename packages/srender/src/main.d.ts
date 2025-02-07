@@ -2,7 +2,8 @@ import {
 	ReactNode,
 	forwardRef as Rff,
 	Suspense as Suspen,
-	ReactPortal
+	ReactPortal,
+	useImperativeHandle as useImp
 } from 'react';
 // import {
 // 	ExoticComponent,
@@ -20,6 +21,7 @@ export const Suspense: typeof Suspen;
 
 export const forwardRef: typeof Rff;
 export const createPortal: (node: ReactElement, ele: HTMLElement) => ReactNode;
+export const useImperativeHandle: typeof useImp;
 // export = Srender;
 // types/index.d.ts
 export {

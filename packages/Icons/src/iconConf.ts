@@ -2235,3 +2235,4 @@ export const iconNameMap = {
 	zoom_in: 59647
 };
 export type IconNames = keyof typeof iconNameMap;
+export default iconNameMap;
