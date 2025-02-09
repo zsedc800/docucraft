@@ -5,22 +5,34 @@ module.exports = (env) => ({
 	entry: {
 		main: './src/index.ts'
 	},
-
+	context: __dirname,
 	resolve: {
 		// mainFiles: ['index'],
-		mainFields: ['main'],
-		conditionNames: ['require'],
-		fullySpecified: false,
+		// mainFields: ['browser', 'module', 'main'],
+		// mainFields: ['main'],
+		// conditionNames: ['require'],
 		extensions: ['.js', '.mjs', '.jsx', '.ts', '.tsx'],
 		alias: {
 			react: '@docucraft/srender',
 			'react-dom': '@docucraft/srender'
 		},
+		// modules: [
+		// 	'node_modules',
+		// 	'/root/workspace/docucraft/node_modules/.pnpm/next@14.2.3_@babel+core@7.24.7_react-dom@18.3.1_react@18.3.1__react@18.3.1_sass@1.77.2/node_modules/next/dist/bin/node_modules',
+		// 	'/root/workspace/docucraft/node_modules/.pnpm/next@14.2.3_@babel+core@7.24.7_react-dom@18.3.1_react@18.3.1__react@18.3.1_sass@1.77.2/node_modules/next/dist/node_modules',
+		// 	'/root/workspace/docucraft/node_modules/.pnpm/next@14.2.3_@babel+core@7.24.7_react-dom@18.3.1_react@18.3.1__react@18.3.1_sass@1.77.2/node_modules/next/node_modules',
+		// 	'/root/workspace/docucraft/node_modules/.pnpm/next@14.2.3_@babel+core@7.24.7_react-dom@18.3.1_react@18.3.1__react@18.3.1_sass@1.77.2/node_modules',
+		// 	'/root/workspace/docucraft/node_modules/.pnpm/node_modules'
+		// ]
 		modules: [
 			'node_modules',
 			'/root/workspace/docucraft/node_modules/.pnpm/node_modules'
 		]
-		// modules: [path.resolve(__dirname, 'node_modules'), 'node_modules'] // 模块解析以当前项目为基准
+		// modules: [
+		// 	'/root/workspace/docucraft/node_modules/.pnpm/node_modules',
+		// 	path.resolve(__dirname, 'node_modules'),
+		// 	'node_modules'
+		// ] // 模块解析以当前项目为基准
 	},
 	module: {
 		rules: [
@@ -44,7 +56,8 @@ module.exports = (env) => ({
 	output: {
 		path: __dirname + '/dist',
 		publicPath: '/',
-		filename: '[name].[contenthash:9].js'
+		filename: '[name].[contenthash:9].js',
+		chunkFilename: 'chunk/[name].js'
 	},
 	devServer: {
 		port: 3200,

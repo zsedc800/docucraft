@@ -4,6 +4,7 @@ import { createFilter } from '@rollup/pluginutils';
 import { parse } from '@babel/parser';
 import { transformFromAstSync } from '@babel/core';
 import traverse from '@babel/traverse';
+import removeExportType from './remove-export-type.mjs';
 import ts from 'typescript';
 
 function resolveFile(id, importer, extensions) {
@@ -91,7 +92,7 @@ function typescriptPlugin({
 				}
 
 				const opts = {
-					presets: ['@babel/preset-typescript'],
+					presets: [['@babel/preset-typescript', { optimizeConstEnums: true }]],
 					filename: id
 					// plugins: [
 					// 	({ types: t }) => ({
@@ -111,13 +112,15 @@ function typescriptPlugin({
 				// const { code: jsCode } = transformFromAstSync(ast, code, opts);
 
 				opts.plugins = [
-					['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }]
+					['@babel/plugin-transform-react-jsx', { runtime: 'automatic' }],
+					[removeExportType]
 				];
 				opts.sourceMap = sourceMap;
 				// const { code: jsCode } = transformFromAstSync(ast, code, opts)
 				if (format === 'cjs')
 					opts.plugins.push('@babel/plugin-transform-modules-commonjs');
 				const res = transformFromAstSync(ast, code, opts);
+
 				compiledFiles.set(id.replace(/\.ts(x)?/, '.js'), {
 					code: res.code,
 					map: res.map

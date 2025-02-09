@@ -5,8 +5,8 @@ module.exports = {
 			{
 				targets: {
 					browsers: ['last 2 versions', 'ie 11']
-				},
-				modules: 'cjs'
+				}
+				// modules: 'cjs'
 			}
 		],
 		'@babel/preset-typescript'

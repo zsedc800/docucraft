@@ -3,11 +3,10 @@
 		"jsx": "react-jsx",
 		"declaration": true,
 		"outDir": "dist",
-		"rootDir": "./src",
 		"module": "ESNext",
 		"target": "ESNext",
 		"moduleResolution": "node",
-		"emitDeclarationOnly": true,
+		// "emitDeclarationOnly": true,
 		"esModuleInterop": true,
 		"strict": true
 	},

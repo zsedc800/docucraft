@@ -1,6 +1,6 @@
 const nextConfig = {
 	webpack(config) {
-		console.log(config, 'webpack');
+		console.log(config, 'parser');
 
 		return config;
 	}

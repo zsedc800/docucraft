@@ -67,7 +67,10 @@ const esmConfig = {
 		format: 'esm',
 		sourcemap: true
 	},
-	plugins: [...common.plugins, babel(createBabelConfig('defaults'))]
+	plugins: [
+		...common.plugins
+		// babel(createBabelConfig('defaults'))
+	]
 };
 
 const cjsConfig = {
@@ -86,8 +89,8 @@ const cjsConfig = {
 			extensions: ['.js', '.jsx', '.ts', '.tsx'],
 			mainFields: ['main'],
 			exportConditions: ['require']
-		}),
-		babel(createBabelConfig({ browsers: ['last 2 versions', 'ie 11'] }))
+		})
+		// babel(createBabelConfig({ browsers: ['last 2 versions', 'ie 11'] }))
 	]
 };
 

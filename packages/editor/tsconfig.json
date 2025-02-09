@@ -9,7 +9,7 @@
 		"moduleResolution": "node",
 
 		"declaration": true,
-		"emitDeclarationOnly": true,
+		// "emitDeclarationOnly": true,
 		// "outFile": "dist/index.d.ts",
 		"esModuleInterop": true,
 		// "strict": true,

@@ -5,28 +5,6 @@
 	"main": "index.js",
 	"types": "index.d.ts",
 	"module": "./index.js",
-	"exports": {
-		".": {
-			"types": "./index.d.ts",
-			"import": "./index.js",
-			"require": "./index.js"
-		},
-		"./svg": {
-			"types": "./svg/index.d.ts",
-			"import": "./svg/index.js",
-			"require": "./svg/index.js"
-		},
-		"./svg/*": {
-			"types": "./svg/*.d.ts",
-			"import": "./svg/*.js",
-			"require": "./svg/*.js"
-		},
-		"./styles": {
-			"types": "./styles/index.d.ts",
-			"import": "./styles/index.js",
-			"require": "./styles/index.js"
-		}
-	},
 	"scripts": {
 		"dev": "tsc -w",
 		"build:svg": "svgr ./node_modules/@material-symbols/svg-400/rounded -d svg",
