@@ -61,9 +61,12 @@ const bubblingEvents = [
 	'onKeyUp',
 
 	// 输入事件
+	'onBeforeInput',
 	'onInput',
 	'onChange',
 	'onSelect',
+	'onCompositionEnd',
+	'onCompositionStart',
 	'onFocusIn', // focusin 会冒泡
 	'onFocusOut', // focusout 会冒泡
 
@@ -213,12 +216,17 @@ export const registerEvent = (root: HTMLElement | Document) => {
 	const listener =
 		(eventName: EventName, capture = false) =>
 		(e: Event) => {
-			const fiber = domMap.get(e.target as HTMLElement);
-			let current: Fiber | null | undefined = fiber;
+			let node = e.target as HTMLElement;
+			// const fiber = domMap.get(node);
+			let current: Fiber | null | undefined = domMap.get(node);
 
 			const clonedEvent = cloneEventWithCustomProperties(e, {
 				target: e.target
 			});
+			while (!current && node) {
+				node = node.parentNode as HTMLElement;
+				current = domMap.get(node);
+			}
 
 			while (current) {
 				if (

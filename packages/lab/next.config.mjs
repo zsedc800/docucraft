@@ -1,9 +1,3 @@
-const nextConfig = {
-	webpack(config) {
-		console.log(config, 'parser');
-
-		return config;
-	}
-};
+const nextConfig = {};
 
 export default nextConfig;

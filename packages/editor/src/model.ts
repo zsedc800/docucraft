@@ -1,44 +1,23 @@
 // model.ts 文件命名暂时还是以 mvc 模式命名，方便理解，实际中 命名为 schema.ts 更好
 import { MarkSpec, Node, NodeSpec, Schema } from 'prosemirror-model';
-import { codeBlock } from './components/codeBlock';
-import { taskItem, taskList } from './components/taskList';
-import { tableNodes } from './components/tables';
-import { blockTileSpec } from './components/blockTile';
-import { LinkSpec } from './components/link';
-import { DividerSpec } from './components/divider';
-import { imageNodeSpec } from './components/image';
-import { createTimelineNodes } from './components/timeline';
-import { imageGalleryNodeSpec } from './components/imageGallery';
+import { codeBlock } from './components/codeBlock/schema';
+import { taskItem, taskList } from './components/taskList/schema';
+import { tableNodes } from './components/tables/schema';
+import { blockTileSpec } from './components/blockTile/schema';
+import { LinkSpec } from './components/link/schema';
+import { DividerSpec } from './components/divider/schema';
+import { imageNodeSpec } from './components/image/schema';
+import { createTimelineNodes } from './components/timeline/schema';
+import { imageGalleryNodeSpec } from './components/imageGallery/schema';
 import { emojiNodeSpec } from './components/emoji';
 import { iconNodeSpec } from './components/icon';
-import { videoNodeSpec } from './components/video';
-import { audioNodeSpec } from './components/audio';
-import { mathBlockNodeSpec, mathInlineNodeSpec } from './components/math';
-
-export function createNodeSpec(config: NodeSpec): NodeSpec {
-	config.attrs = {
-		...config.attrs,
-		hidden: { default: false },
-		blockId: { default: null },
-		focused: { default: false }
-	};
-	const toDOM = config.toDOM;
-	if (toDOM)
-		config.toDOM = (node: Node) => {
-			const res = toDOM(node);
-			if (Array.isArray(res)) {
-				let [tag, attrs, content] = res;
-				if (attrs === 0) content = 0;
-				const hidden = node.attrs.hidden ? 'hidden' : '';
-				attrs = {
-					...attrs,
-					class: attrs.class ? attrs.class + ' ' + hidden : hidden
-				};
-				return [tag, attrs, content];
-			} else return res;
-		};
-	return config;
-}
+import { videoNodeSpec } from './components/video/schema';
+import { audioNodeSpec } from './components/audio/schema';
+import {
+	mathBlockNodeSpec,
+	mathInlineNodeSpec
+} from './components/math/schema';
+import { createNodeSpec } from './utils';
 
 const nodes = {
 	// 整个文档

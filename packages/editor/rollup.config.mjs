@@ -7,7 +7,6 @@ import alias from '@rollup/plugin-alias';
 import replace from '@rollup/plugin-replace';
 import { visualizer } from 'rollup-plugin-visualizer';
 import path from 'path';
-import { watch } from 'rollup';
 
 const whitelist = ['material-ui-popup-state'];
 
@@ -24,6 +23,13 @@ const createBabelConfig = (targets) => ({
 
 const common = {
 	input: 'src/index.ts',
+	onwarn(warning, warn) {
+		if (warning.code === 'CIRCULAR_DEPENDENCY') {
+			console.warn('⚠️  Circular dependency detected:', warning);
+		} else {
+			warn(warning);
+		}
+	},
 	external: (id) => {
 		return (
 			/node_modules|\@docucraft\/icons\/styles/.test(id) &&
@@ -37,12 +43,12 @@ const common = {
 				{ find: 'react-dom', replacement: path.resolve('../srender') }
 			]
 		}),
-		visualizer({
-			filename: 'stats.html', // 生成分析报告
-			// open: true, // 自动打开浏览器
-			gzipSize: true, // 显示 gzip 之后的大小
-			brotliSize: true // 显示 brotli 之后的大小
-		}),
+		// visualizer({
+		// 	filename: 'stats.html', // 生成分析报告
+		// 	// open: true, // 自动打开浏览器
+		// 	gzipSize: true, // 显示 gzip 之后的大小
+		// 	brotliSize: true // 显示 brotli 之后的大小
+		// }),
 		replace({ 'use client': '', preventAssignment: true }),
 
 		typescript({

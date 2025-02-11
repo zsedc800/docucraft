@@ -1,1 +1,1 @@
-export { default as RichTextArea } from './RichTextArea';
+export { default as RichTextArea, RichTextAreaRef } from './RichTextArea';

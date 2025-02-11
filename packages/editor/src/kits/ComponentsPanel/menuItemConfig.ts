@@ -235,7 +235,7 @@ export const blocklist: BlockItem[] = [
 			} = state;
 			if (dispatch)
 				dispatch(
-					tr.insert($from.before() + 1, createNode(schema.nodes.mathInline))
+					tr.insert($from.before() + 1, createNode(schema.nodes.mathBlock))
 				);
 
 			return false;

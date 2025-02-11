@@ -1,9 +1,9 @@
 import { Node } from 'prosemirror-model';
 import { EditorState, PluginKey, Transaction } from 'prosemirror-state';
-import { TableRole, tableNodeTypes } from './schema';
 import { TableMap } from './tableMap';
-import { CellAttrs, removeColSpan } from './utils';
+import { removeColSpan, tableNodeTypes } from './utils';
 import { createNodeAndFill } from '../../commands';
+import { CellAttrs, TableRole } from './interface';
 
 export const fixTablesKey = new PluginKey<{ fixTables: boolean }>('fix-tables');
 function changedDescendants(

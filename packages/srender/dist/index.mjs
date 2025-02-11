@@ -822,7 +822,7 @@ const bubblingEvents = [
 // 键盘事件
 'onKeyDown', 'onKeyPress', 'onKeyUp',
 // 输入事件
-'onInput', 'onChange', 'onSelect', 'onFocusIn',
+'onBeforeInput', 'onInput', 'onChange', 'onSelect', 'onCompositionEnd', 'onCompositionStart', 'onFocusIn',
 // focusin 会冒泡
 'onFocusOut',
 // focusout 会冒泡
@@ -906,11 +906,16 @@ const registerEvent = root => {
   const listener = function (eventName) {
     let capture = arguments.length > 1 && arguments[1] !== undefined ? arguments[1] : false;
     return e => {
-      const fiber = domMap.get(e.target);
-      let current = fiber;
+      let node = e.target;
+      // const fiber = domMap.get(node);
+      let current = domMap.get(node);
       const clonedEvent = cloneEventWithCustomProperties(e, {
         target: e.target
       });
+      while (!current && node) {
+        node = node.parentNode;
+        current = domMap.get(node);
+      }
       while (current) {
         if (current.tag === FiberTag.HostComponent && !clonedEvent.isPropagationStopped) {
           const handler = getEventHandler(eventName, current.pendingProps, e);

@@ -16,7 +16,7 @@ import {
 	useRef,
 	createContext
 } from '@docucraft/srender';
-import { generateUniqueId, shallowEqual } from '.';
+import { generateUniqueId, shallowEqual } from './base';
 
 export function useNodeView<
 	T extends HTMLElement = HTMLDivElement,
@@ -164,6 +164,8 @@ export class BaseNodeView implements NodeView {
 		this.node = node;
 
 		if (this.component) {
+			console.log(props, attrs, 'iii2');
+
 			if (!shallowEqual(props, attrs)) {
 				this.render();
 			}

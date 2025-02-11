@@ -1,0 +1,181 @@
+export function shallowEqual(obj1: any, obj2: any): boolean {
+	if (obj1 === obj2) return true;
+
+	if (
+		typeof obj1 !== 'object' ||
+		obj1 === null ||
+		typeof obj2 !== 'object' ||
+		obj2 === null
+	) {
+		return false;
+	}
+
+	const keys1 = Object.keys(obj1);
+	const keys2 = Object.keys(obj2);
+
+	if (keys1.length !== keys2.length) {
+		return false;
+	}
+
+	for (let key of keys1) {
+		if (obj1[key] !== obj2[key]) {
+			return false;
+		}
+	}
+
+	return true;
+}
+
+let uniqueIdCounter = 1000;
+export function generateUniqueId() {
+	uniqueIdCounter++;
+	const base36 = uniqueIdCounter.toString(36);
+	const randomPart = Math.random().toString(36).substring(2, 4);
+	return randomPart + base36;
+}
+
+export function assignUniqueId(node: any) {
+	if (!node.attrs.id) {
+		node.attrs.id = generateUniqueId();
+	}
+}
+
+export function escapeLatex(latex: string) {
+	const escapeMap: Record<string, string> = {
+		'\\': '\\\\',
+		'{': '\\{',
+		'}': '\\}',
+		$: '\\$',
+		'&': '\\&',
+		'#': '\\#',
+		_: '\\_',
+		'%': '\\%',
+		'^': '\\^',
+		'~': '\\~'
+	};
+
+	return latex.replace(/[\\{}$&#_%^~]/g, (match) => escapeMap[match]);
+}
+
+export function convertToChineseNumber(num: number): string {
+	const units = [
+		'',
+		'十',
+		'百',
+		'千',
+		'万',
+		'十',
+		'百',
+		'千',
+		'亿',
+		'十',
+		'百',
+		'千',
+		'万'
+	];
+	const digits = ['零', '一', '二', '三', '四', '五', '六', '七', '八', '九'];
+
+	if (num === 0) return '零';
+
+	const numStr = num.toString();
+	let result = '';
+	let zeroFlag = false;
+
+	for (let i = 0; i < numStr.length; i++) {
+		const digit = parseInt(numStr[i]);
+		const unitPos = numStr.length - i - 1;
+
+		if (digit === 0) {
+			zeroFlag = true;
+		} else {
+			if (zeroFlag) {
+				result += '零';
+				zeroFlag = false;
+			}
+			result += digits[digit] + units[unitPos];
+		}
+	}
+	result = result.replace(/^一十/, '十');
+	return result.replace(/零+$/, '');
+}
+
+export function convertToAlphabet(num: number): string {
+	if (num <= 0) return '';
+
+	let result = '';
+	while (num > 0) {
+		num--;
+		result = String.fromCharCode((num % 26) + 97) + result;
+		num = Math.floor(num / 26);
+	}
+
+	return result;
+}
+
+export function convertToRoman(num: number): string {
+	const romanNumerals: { [key: number]: string } = {
+		1000: 'm',
+		900: 'cm',
+		500: 'd',
+		400: 'cd',
+		100: 'c',
+		90: 'xc',
+		50: 'l',
+		40: 'xl',
+		10: 'x',
+		9: 'ix',
+		5: 'v',
+		4: 'iv',
+		1: 'i'
+	};
+
+	let result = '';
+	for (const [value, numeral] of Object.entries(romanNumerals).reverse()) {
+		while (num >= parseInt(value)) {
+			result += numeral;
+			num -= parseInt(value);
+		}
+	}
+
+	return result;
+}
+
+export function classnames(
+	...args: (string | Record<string, boolean | undefined> | undefined)[]
+) {
+	return args
+		.filter(Boolean)
+		.map((item) => {
+			if (typeof item === 'string') return item;
+			return Object.keys(item!)
+				.filter((key) => !!item![key])
+				.join(' ');
+		})
+		.join(' ');
+}
+
+export function isNotEmpty(val: any) {
+	return !!val || val === 0;
+}
+
+export function overrides<T extends Record<string | symbol, any> = any>(
+	target: T,
+	props: Record<string, any>
+) {
+	return new Proxy(target, {
+		get(target, key) {
+			if (typeof key !== 'symbol' && props[key]) return props[key];
+			return target[key];
+		}
+	});
+}
+
+export function nextTick(fn?: () => void) {
+	const { promise, resolve } = Promise.withResolvers();
+	if (requestAnimationFrame) {
+		requestAnimationFrame(resolve);
+	} else {
+		setTimeout(resolve, 17);
+	}
+	return promise.then(() => fn?.());
+}

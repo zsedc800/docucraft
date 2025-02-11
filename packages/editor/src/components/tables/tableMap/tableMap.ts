@@ -1,5 +1,5 @@
 import { Attrs, Node } from 'prosemirror-model';
-import { CellAttrs } from './utils';
+import type { CellAttrs, ColWidths, Problem, Rect } from '../interface';
 
 let readFromCache: (key: Node) => TableMap | undefined;
 let addToCache: (key: Node, value: TableMap) => TableMap;
@@ -27,36 +27,6 @@ if (typeof WeakMap !== 'undefined') {
 		return (cache[cachePos++] = value);
 	};
 }
-
-export interface Rect {
-	left: number;
-	top: number;
-	right: number;
-	bottom: number;
-}
-
-export type Problem =
-	| {
-			type: 'colwidth mismatch';
-			pos: number;
-			colwidth: ColWidths;
-	  }
-	| {
-			type: 'collision';
-			pos: number;
-			row: number;
-			n: number;
-	  }
-	| {
-			type: 'missing';
-			row: number;
-			n: number;
-	  }
-	| {
-			type: 'overlong_rowspan';
-			pos: number;
-			n: number;
-	  };
 
 export class TableMap {
 	constructor(
@@ -172,7 +142,7 @@ export class TableMap {
 		return readFromCache(table) || addToCache(table, computeMap(table));
 	}
 }
-export type ColWidths = number[];
+
 function computeMap(table: Node): TableMap {
 	if (table.type.spec.tableRole != 'table')
 		throw new RangeError('Not a table node: ' + table.type.name);

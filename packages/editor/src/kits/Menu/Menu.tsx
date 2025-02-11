@@ -11,7 +11,7 @@ interface Props {
 	placement?: PopperPlacementType;
 	content?:
 		| ReactNode
-		| ((p: { close: () => void } & { [k: string]: any }) => ReactNode);
+		| ((p: { close: (e?: any) => void } & { [k: string]: any }) => ReactNode);
 	slotProps?: { paper: PaperProps };
 	trigger?: 'click' | 'hover' | 'contextmenu';
 	onOpen?: () => void;
@@ -38,15 +38,17 @@ export default function Menu({
 			setAnchorEl(e.currentTarget as HTMLElement);
 		onOpen?.();
 	};
-	const handleClose = () => {
+	const handleClose = (c = true) => {
 		anchorEl ? setAnchorEl(null) : void 0;
-		onClose?.();
+		if (c) onClose?.();
 	};
 	const open = Boolean(anchorEl);
 	const originalChildProps = children.props;
 	const onClick = (e: Event) => {
 		const { onClick: toClick } = originalChildProps;
 		if (typeof toClick === 'function') toClick(e);
+		console.log('click', e, 'iii');
+
 		handleOpen(e);
 	};
 	const onContextMenu = (e: MouseEvent) => {

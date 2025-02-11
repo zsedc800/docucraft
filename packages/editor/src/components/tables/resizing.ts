@@ -2,7 +2,7 @@ import { Attrs } from 'prosemirror-model';
 import { EditorView } from 'prosemirror-view';
 import { TableMap } from './tableMap';
 import { TableView } from './tableView';
-import { CellAttrs } from './utils';
+import { CellAttrs } from './interface';
 
 export type ColumnResizingOptions = {
 	handleWidth?: number;

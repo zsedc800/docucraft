@@ -1,22 +1,15 @@
 import katex from 'katex';
-import {
-	HTMLAttributes,
-	forwardRef,
-	useEffect,
-	useImperativeHandle,
-	useRef,
-	useState
-} from '@docucraft/srender';
-import TextField from '@mui/material/TextField';
+import { useEffect, useRef, useState } from '@docucraft/srender';
 import Button from '@mui/material/Button';
 import SvgKBReturn from '@docucraft/icons/svg/KeyboardReturn';
 import Icon from '@docucraft/icons';
 import { BaseNodeView, useNodeView } from '../../utils/view';
 import Tools from '../toolBar/Tools';
 import Menu from '../../kits/Menu';
-import { classnames } from '../../utils';
+import { RichTextArea, RichTextAreaRef } from '../../kits/Input';
+import { classnames, nextTick } from '../../utils';
+import { BaseProps } from '../../interface';
 import './style.scss';
-import { Overrides } from '../../interface';
 
 interface Props {
 	tex: string;
@@ -26,34 +19,26 @@ interface Props {
 interface InputProps {
 	onChange?: (e: string) => void;
 	onFinish?: (e: string) => void;
+	value?: string;
 }
 
-const TextInput = forwardRef<
-	{ selectAll: () => void; clear: () => void },
-	Overrides<HTMLAttributes<HTMLDivElement>, {}>
->(function ({ className, onChange }, ref) {
-	const [val, setVal] = useState('');
-	useImperativeHandle(ref, () => ({
-		selectAll: () => {},
-		clear: () => {
-			setVal('');
-		}
-	}));
+function TexInputBox({
+	onChange,
+	onFinish,
+	value,
+	...props
+}: BaseProps<InputProps>) {
+	const ctx = useRef<RichTextAreaRef>({} as RichTextAreaRef);
+	useEffect(() => {
+		if (value) ctx.current.selectAll();
+	}, []);
 	return (
-		<div
-			className={classnames('text-input', className)}
-			contentEditable
-			dangerouslySetInnerHTML={{ __html: val.replaceAll('\n', '<br/>') }}
-		/>
-	);
-});
-
-function TexInputBox({ onChange, onFinish }: InputProps) {
-	const text = useRef('');
-	return (
-		<div className="tex-input-box">
-			<TextInput
+		<div className="tex-input-box" {...props}>
+			<RichTextArea
+				ref={ctx}
+				value={value}
 				className="tex-input"
+				onChange={onChange}
 				// onChange={(e) => {
 				// 	text.current = e.target.value;
 				// 	onChange && onChange(e.target.value);
@@ -62,7 +47,7 @@ function TexInputBox({ onChange, onFinish }: InputProps) {
 			/>
 			<div className="tex-input-extra">
 				<Button
-					onClick={() => onFinish && onFinish(text.current)}
+					onClick={() => onFinish && onFinish(ctx.current.value())}
 					variant="contained"
 					size="small"
 				>
@@ -88,6 +73,7 @@ export const MathBlockNode = ({ tex, nodeView }: Props) => {
 		<div ref={$dom} className="math-block-node">
 			<Menu
 				trigger="click"
+				placement="bottom"
 				content={
 					<TexInputBox
 						onChange={setTxt}
@@ -95,7 +81,7 @@ export const MathBlockNode = ({ tex, nodeView }: Props) => {
 					/>
 				}
 			>
-				<div ref={$content} className="math-block-content"></div>
+				<div ref={$content} className="math-block-content" />
 			</Menu>
 		</div>
 	);
@@ -104,9 +90,12 @@ export const MathBlockNode = ({ tex, nodeView }: Props) => {
 
 export const MathInlineNode = ({ tex, nodeView }: Props) => {
 	const { $dom } = useNodeView<HTMLSpanElement>(nodeView);
+	const $katex = useRef<HTMLSpanElement>(null);
 	const [txt, setTxt] = useState('');
+	console.log(tex, 'texxx');
+
 	useEffect(() => {
-		if (txt) katex.render(txt, $dom.current);
+		if (txt) katex.render(txt, $katex.current);
 	}, [txt]);
 
 	useEffect(() => {
@@ -124,17 +113,30 @@ export const MathInlineNode = ({ tex, nodeView }: Props) => {
 					输入公式
 				</>
 			)}
+			<span ref={$katex} />
 		</span>
 	);
 	return (
 		<Menu
 			trigger="click"
-			content={
+			placement="bottom"
+			onClose={() => {
+				console.log(tex, nodeView.node.attrs, 'attrs');
+
+				setTxt(tex);
+			}}
+			content={({ close }) => (
 				<TexInputBox
+					style={{ width: 280 }}
+					value={txt}
 					onChange={setTxt}
-					onFinish={(t) => nodeView.setNodeAttribute('tex', t)}
+					onFinish={(t) => {
+						console.log(t, 'xxx');
+						nodeView.setNodeAttribute('tex', t);
+						close && close(false);
+					}}
 				/>
-			}
+			)}
 		>
 			{body}
 		</Menu>

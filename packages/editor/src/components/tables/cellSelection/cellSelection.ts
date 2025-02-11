@@ -8,16 +8,11 @@ import {
 	Transaction
 } from 'prosemirror-state';
 import { Mappable } from 'prosemirror-transform';
-import { TableMap } from './tableMap';
-import { CellAttrs, inSameTable, pointsAtCell, removeColSpan } from './utils';
-import { Decoration, DecorationSet, DecorationSource } from 'prosemirror-view';
-import { createNode, createNodeAndFill } from '../../commands';
-
-export interface CellSelectionJSON {
-	type: string;
-	anchor: number;
-	head: number;
-}
+import { Decoration } from 'prosemirror-view';
+import { inSameTable, pointsAtCell, removeColSpan } from '../utils';
+import { TableMap } from '../tableMap';
+import { createNode, createNodeAndFill } from '../../../commands';
+import { CellAttrs, CellSelectionJSON } from '../interface';
 
 export class CellSelection extends Selection {
 	$anchorCell: ResolvedPos;
@@ -170,9 +165,9 @@ export class CellSelection extends Selection {
 			this.$headCell.pos - tableStart
 		);
 		const seen: Record<number, boolean> = {};
-		const rows = [];
+		const rows: Node[] = [];
 		for (let row = rect.top; row < rect.bottom; row++) {
-			const rowContent = [];
+			const rowContent: Node[] = [];
 			for (
 				let index = row * map.width + rect.left, col = rect.left;
 				col < rect.right;

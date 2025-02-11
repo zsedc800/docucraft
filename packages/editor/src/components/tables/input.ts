@@ -4,11 +4,10 @@ import {
 	inSameTable,
 	isEmpty,
 	isInTable,
-	nextCell,
-	selectionCell,
-	tableEditingKey
+	tableEditingKey,
+	tableNodeTypes
 } from './utils';
-import { CellSelection } from './cellSelection';
+import { CellSelection, selectionCell } from './cellSelection';
 import { Fragment, ResolvedPos, Slice } from 'prosemirror-model';
 import { keydownHandler } from 'prosemirror-keymap';
 import {
@@ -17,9 +16,8 @@ import {
 	Selection,
 	TextSelection
 } from 'prosemirror-state';
-import { tableNodeTypes } from './schema';
 import { clipCells, fitSlice, insertCells, pastedCells } from './copypaste';
-import { TableMap } from './tableMap';
+import { TableMap, nextCell } from './tableMap';
 import { createNodeAndFill } from '../../commands';
 import { getResizingPos, isResizing } from './resizing';
 

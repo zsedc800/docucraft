@@ -15,7 +15,7 @@ import { schema } from '../../model';
 import Toast from '../Toast';
 import { createNode } from '../../commands';
 import { classnames, nextTick } from '../../utils';
-import { ToolItem } from 'src/kits/ComponentsPanel';
+import { ToolItem } from '../../kits/ComponentsPanel';
 interface Props extends AnchorHTMLAttributes<HTMLAnchorElement> {
 	nodeView: LinkView;
 }
