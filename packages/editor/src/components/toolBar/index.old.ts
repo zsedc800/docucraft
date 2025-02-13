@@ -10,7 +10,7 @@ import { EditorView } from 'prosemirror-view';
 import { createCodeBlockCmd } from '../codeBlock';
 import { createTaskList } from '../taskList';
 import { createTable, mergeCells } from '../tables/commands';
-import { insertMath } from '../katex';
+import { insertMath } from '../math';
 import {
 	applyBold,
 	applyColor,

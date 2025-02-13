@@ -1,15 +1,12 @@
+import '@docucraft/icons/styles';
+import './styles/themes/green.css';
+import './styles/global.css';
+export { default as Button, SegmentButton } from './Button/index.js';
+export { default as Icon, getIconType, setCurrentIconType } from './Icon/index.js';
+
 // import { render as h, createElement } from '@docucraft/srender';
 // import { ComponentType } from '@docucraft/srender';
-import './styles';
-export default (() => {});
-
-// import Button from './Button';
-
-// export const render = (component: ComponentType, dom: HTMLElement) => {
-// 	h(createElement(component), dom);
-// };
-
-export { default as Button, SegmentButton } from './Button';
-export { default as Icon, IconType, getIconType, setCurrentIconType } from './Icon';
+var index = () => { };
 // export { Button };
-//# sourceMappingURL=index.js.map
+
+export { index as default };

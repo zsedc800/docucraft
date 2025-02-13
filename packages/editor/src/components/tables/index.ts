@@ -1,19 +1,12 @@
 import { EditorState, Plugin } from 'prosemirror-state';
-import {
-	TableState,
-	cellAround,
-	isEmpty,
-	pointsAtCellSelection,
-	tableEditingKey
-} from './utils';
+import { isEmpty, tableEditingKey } from './utils';
 import {
 	CellSelection,
 	drawCellSelection,
-	normalizeSelection
+	pointsAtCellSelection
 } from './cellSelection';
-import { fixTables } from './fixtables';
 
-export { tableNodeTypes, tableNodes } from './schema';
+export { tableNodes } from './schema';
 export { TableView } from './tableView';
 import {
 	handleKeyDown,
@@ -27,6 +20,7 @@ import './style.scss';
 import { TableCellView, TableHeadCellView, TableRowView } from './view';
 import { callNodeView, fixSelection } from '../../utils';
 import { preventDispatch } from '../../utils/hooks';
+import { TableState } from './interface';
 
 export type TableEditingOptions = {
 	allowTableNodeSelection?: boolean;

@@ -9,6 +9,7 @@
 		"dev": "tsc -w",
 		"build:svg": "svgr ./node_modules/@material-symbols/svg-400/rounded -d svg",
 		"build:logo": "svgr ./assets/logo -d logo",
+		"build:custom": "svgr ./assets/custom -d svg",
 		"build": "tsc"
 	},
 	"keywords": [],
@@ -22,6 +23,7 @@
 		"@material-design-icons/svg": "^0.14.13",
 		"@material-symbols/svg-400": "^0.26.0",
 		"@svgr/cli": "^8.1.0",
+		"fontkit": "^2.0.4",
 		"react": "^18.3.1"
 	}
 }

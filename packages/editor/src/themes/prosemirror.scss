@@ -35,7 +35,9 @@
 }
 
 .ProseMirror-selectednode {
-	outline: 2px solid #8cf;
+	// outline: 2px solid #8cf;
+	background-color: #8cf;
+	border-radius: 5px;
 }
 
 /* Make sure li selections wrap around markers */

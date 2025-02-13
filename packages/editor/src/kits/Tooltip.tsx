@@ -1,7 +1,7 @@
 import Tooltip, { TooltipProps, tooltipClasses } from '@mui/material/Tooltip';
 import { styled } from '@mui/material/styles';
 
-export const RichTooltip = styled(({ className, ...props }: TooltipProps) => (
+const RTooltip = styled(({ className, ...props }: TooltipProps) => (
 	<Tooltip {...props} classes={{ popper: className }} />
 ))(({ theme }) => ({
 	[`&  .${tooltipClasses.tooltip}.richTooltip`]: {
@@ -14,14 +14,18 @@ export const RichTooltip = styled(({ className, ...props }: TooltipProps) => (
 	}
 }));
 
-export const NormalTooltip = styled(({ className, ...props }: TooltipProps) => (
+export const RichTooltip = (props: TooltipProps) => <RTooltip {...props} />;
+
+const NTooltip = styled(({ className, ...props }: TooltipProps) => (
 	<Tooltip {...props} classes={{ popper: className }} />
 ))(({ theme }) => ({
 	[`& .${tooltipClasses.tooltip}`]: {
 		backgroundColor: theme.palette.common.black,
-		fontSize: 12
+		fontSize: 14
 	},
 	'& p': {
-		fontSize: 12
+		fontSize: 14
 	}
 }));
+
+export const NormalTooltip = (props: TooltipProps) => <NTooltip {...props} />;

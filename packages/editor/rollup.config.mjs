@@ -4,6 +4,8 @@ import commonjs from '@rollup/plugin-commonjs';
 import postcss from 'rollup-plugin-postcss';
 import typescript from 'rollup-plugin-typescript2';
 import alias from '@rollup/plugin-alias';
+import replace from '@rollup/plugin-replace';
+import { visualizer } from 'rollup-plugin-visualizer';
 import path from 'path';
 
 const whitelist = ['material-ui-popup-state'];
@@ -12,16 +14,26 @@ const createBabelConfig = (targets) => ({
 	babelHelpers: 'bundled',
 	extensions: ['.js', '.jsx', '.ts', '.tsx'],
 	include: ['src/**/*'],
-	presets: [['@babel/preset-env', { targets }]],
+	presets: [
+		['@babel/preset-env', { targets }],
+		['@babel/preset-typescript', {}]
+	],
 	exclude: 'node_modules/**'
 });
 
 const common = {
 	input: 'src/index.ts',
+	onwarn(warning, warn) {
+		if (warning.code === 'CIRCULAR_DEPENDENCY') {
+			console.warn('⚠️  Circular dependency detected:', warning);
+		} else {
+			warn(warning);
+		}
+	},
 	external: (id) => {
 		return (
 			/node_modules|\@docucraft\/icons\/styles/.test(id) &&
-			!/react|material|\@mui/.test(id)
+			!/react|@babel\/runtime|material|\@mui/.test(id)
 		);
 	},
 	plugins: [
@@ -31,11 +43,24 @@ const common = {
 				{ find: 'react-dom', replacement: path.resolve('../srender') }
 			]
 		}),
-		resolve({ extensions: ['.js', '.jsx', '.ts', '.tsx'] }),
-		// typescript({
-		// 	tsconfig: './tsconfig.json'
+		// visualizer({
+		// 	filename: 'stats.html', // 生成分析报告
+		// 	// open: true, // 自动打开浏览器
+		// 	gzipSize: true, // 显示 gzip 之后的大小
+		// 	brotliSize: true // 显示 brotli 之后的大小
 		// }),
-		commonjs(),
+		replace({ 'use client': '', preventAssignment: true }),
+
+		typescript({
+			tsconfig: './tsconfig.json'
+		}),
+		resolve({
+			extensions: ['.js', '.jsx', '.ts', '.tsx']
+		}),
+		commonjs({
+			defaultIsModuleExports: false, // 避免 CJS `module.exports` 直接变成 default
+			transformMixedEsModules: true
+		}),
 		postcss({ extract: 'style.css', extensions: ['.css', '.scss', 'sass'] })
 	]
 };
@@ -48,20 +73,30 @@ const esmConfig = {
 		format: 'esm',
 		sourcemap: true
 	},
-	plugins: [...common.plugins, babel(createBabelConfig('defaults'))]
+	plugins: [
+		...common.plugins
+		// babel(createBabelConfig('defaults'))
+	]
 };
 
 const cjsConfig = {
 	...common,
 	output: {
 		file: 'dist/index.js',
-		format: 'umd',
+		format: 'cjs',
 		sourcemap: true,
-		name: 'DocucraftEditor'
+		name: 'DocucraftEditor',
+		exports: 'auto',
+		interop: 'auto'
 	},
 	plugins: [
 		...common.plugins,
-		babel(createBabelConfig({ browsers: ['last 2 versions', 'ie 11'] }))
+		resolve({
+			extensions: ['.js', '.jsx', '.ts', '.tsx'],
+			mainFields: ['main'],
+			exportConditions: ['require']
+		})
+		// babel(createBabelConfig({ browsers: ['last 2 versions', 'ie 11'] }))
 	]
 };
 

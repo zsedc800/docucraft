@@ -6,13 +6,8 @@ import {
 	useRef,
 	useState
 } from '@docucraft/srender';
-import { classnames } from '../../utils';
-import { useNodeView } from '../../utils/view';
-import { TableView } from './tableView';
-import { cellAround, cellMinWidth, drawCellSel, hasMergedCells } from './utils';
 import { EditorView } from 'prosemirror-view';
 import SvgDragIndicator from '@docucraft/icons/svg/DragIndicator';
-import Popover from '../../kits/Popover';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import ListItemIcon from '@mui/material/ListItemIcon';
@@ -28,6 +23,14 @@ import SvgArrowDown from '@docucraft/icons/svg/StatMinus1';
 import SvgMore from '@docucraft/icons/svg/More1';
 import Typography from '@mui/material/Typography';
 import Divider from '@mui/material/Divider';
+import { ResolvedPos } from 'prosemirror-model';
+import Paper from '@mui/material/Paper';
+import Switch from '@mui/material/Switch';
+import { classnames } from '../../utils';
+import { useNodeView } from '../../utils/view';
+import { TableView } from './tableView';
+import { cellAround, cellMinWidth } from './utils';
+import Popover from '../../kits/Popover';
 import Menu from '../../kits/Menu';
 import {
 	addColumnAfter,
@@ -44,19 +47,20 @@ import {
 	deleteRowAtEnd,
 	deleteTable,
 	mergeCells,
-	selectedRect,
 	setCellSelection,
 	splitCell,
 	toggleHeader
 } from './commands';
-import { ResolvedPos } from 'prosemirror-model';
-import Paper from '@mui/material/Paper';
 import Tools from '../toolBar/Tools';
-import Switch from '@mui/material/Switch';
 import { ToggleButton } from '../../kits/ToggleButton';
 import { AlignButton } from '../../kits/Button';
 import ColorButton from '../../kits/Button/ColorButton';
-import { CellSelection } from './cellSelection';
+import {
+	CellSelection,
+	drawCellSel,
+	hasMergedCells,
+	selectedRect
+} from './cellSelection';
 import { TableMap } from './tableMap';
 import {
 	Direction,

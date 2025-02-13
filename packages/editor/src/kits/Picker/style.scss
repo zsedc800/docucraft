@@ -1,0 +1,9 @@
+.icon-picker {
+	padding: 8px 8px 4px;
+	.scrollbar {
+		&::-webkit-scrollbar {
+			width: 6px;
+		}
+		padding-left: 6px;
+	}
+}

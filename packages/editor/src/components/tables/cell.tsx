@@ -1,7 +1,6 @@
 import { Align } from '../../kits/Button';
 import { classnames } from '../../utils';
 import { useNodeView } from '../../utils/view';
-import { TableMap } from './tableMap';
 import { TableRowView, TableCellView, TableHeadCellView } from './view';
 
 interface Styles {

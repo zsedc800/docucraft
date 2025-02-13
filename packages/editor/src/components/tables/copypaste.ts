@@ -1,16 +1,16 @@
 import { Fragment, Node, NodeType, Schema, Slice } from 'prosemirror-model';
 import { Transform } from 'prosemirror-transform';
-import { CellAttrs, removeColSpan } from './utils';
-import { tableNodeTypes } from './schema';
-import { ColWidths, Rect, TableMap } from './tableMap';
 import { EditorState, Transaction } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
+import { removeColSpan, tableNodeTypes } from './utils';
+import { TableMap } from './tableMap';
 import { CellSelection } from './cellSelection';
 import {
 	createNode,
 	createNodeAndFill,
 	createNodeChecked
 } from '../../commands';
+import { CellAttrs, ColWidths, Rect } from './interface';
 
 export type Area = { width: number; height: number; rows: Fragment[] };
 export const pastedCells = (slice: Slice): Area | null => {

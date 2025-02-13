@@ -11,7 +11,6 @@ import { PhotoItemRes, searchPhotos } from '../fetch/unsplash';
 import LoadingBox from '../LoadingBox';
 import SearchBox from '../SearchBox';
 import { ImageItem } from '../../interface';
-import { useRef } from '@docucraft/srender';
 
 const VisuallyHiddenInput = styled('input')({
 	clip: 'rect(0 0 0 0)',
@@ -82,6 +81,7 @@ function SearchUnsplashImageList({ onChange }: { onChange?: OnChange }) {
 		<SearchBox
 			onChange={(q) => (params.current.query = q)}
 			onSearch={execQuery}
+			placeholder="搜索Unsplash图片"
 		>
 			<LoadingBox
 				loading={loading}

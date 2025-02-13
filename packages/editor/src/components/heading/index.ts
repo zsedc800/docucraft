@@ -9,7 +9,6 @@ import './style.scss';
 const headingViewMap = new Map<string, HeadingView>();
 
 export class HeadingView extends BaseNodeView {
-	node: Node;
 	id: string;
 	outlineTree?: OutlineTree;
 	constructor(...args: Parameters<NodeViewConstructor>) {

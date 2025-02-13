@@ -1,0 +1,12 @@
+module.exports = {
+	// presets: ['@babel/preset-env', '@babel/preset-typescript'],
+	plugins: [
+		[
+			'@babel/plugin-transform-react-jsx',
+			{
+				importSource: '@docucraft/srender', // 可以更改为其他库的 JSX pragma，比如 preact 是 h
+				runtime: 'automatic'
+			}
+		]
+	]
+};

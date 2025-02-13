@@ -5,26 +5,24 @@ import {
 	Transaction
 } from 'prosemirror-state';
 import { EditorView } from 'prosemirror-view';
-import { Rect, TableMap } from './tableMap';
+import { TableMap, columnIsHeader } from './tableMap';
 import { Fragment, Node, NodeType, ResolvedPos } from 'prosemirror-model';
 import {
-	CellAttrs,
 	addColspan,
 	cellAround,
 	cellMinWidth,
 	cellWrapping,
-	columnIsHeader,
 	isInTable,
 	moveCellForward,
 	removeColSpan,
-	selectionCell,
-	splitCellOneWithType
+	splitCellOneWithType,
+	tableNodeTypes
 } from './utils';
-import { CellAttributes, TableRole, tableNodeTypes } from './schema';
-import { CellSelection } from './cellSelection';
+import { CellSelection, selectedRect, selectionCell } from './cellSelection';
 import { Direction } from './input';
 import { createNode, createNodeAndFill } from '../../commands';
 import { Align } from '../../kits/Button';
+import { CellAttrs, Rect, TableCtx, TableRect, TableRole } from './interface';
 
 export const setCellSelection =
 	(type: 'col' | 'row') =>
@@ -114,31 +112,6 @@ export function insertTable(
 			)
 	);
 	dispatch(state.tr.replaceSelectionWith(tableNode).scrollIntoView());
-}
-
-export interface TableCtx {
-	tableStart: number;
-	map: TableMap;
-	table: Node;
-}
-export type TableRect = Rect & TableCtx;
-
-export function selectedRect(state: EditorState): TableRect {
-	const sel = state.selection;
-	const $pos = selectionCell(state);
-	const table = $pos.node(-1);
-	const tableStart = $pos.start(-1);
-	const map = TableMap.get(table);
-
-	const rect =
-		sel instanceof CellSelection
-			? map.rectBetween(
-					sel.$anchorCell.pos - tableStart,
-					sel.$headCell.pos - tableStart
-				)
-			: map.findCell($pos.pos - tableStart);
-
-	return { ...rect, tableStart, map, table };
 }
 
 export function addColumn(

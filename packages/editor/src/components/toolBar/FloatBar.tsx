@@ -15,7 +15,7 @@ import { CSSProperties, ReactNode } from 'react';
 import { schema } from '../../model';
 import { Attrs, MarkType } from 'prosemirror-model';
 import Divider from '@mui/material/Divider';
-import { type TooltipProps } from '@mui/material';
+import { type TooltipProps } from '@mui/material/Tooltip';
 import ColorMark from '../../kits/ColorMark';
 import { createNode } from '../../commands';
 import { selectionContainsOnlyText } from '../../utils';
@@ -121,7 +121,8 @@ const FloatBar = (view: EditorView) => {
 						mark &= ~(mark ^ m);
 					}
 				});
-			const getMask = (mask: number) => (mark & mask ? 'primary' : void 0);
+			const getMask = (mask: number): 'primary' | undefined =>
+				mark & mask ? 'primary' : void 0;
 			const createAction =
 				(type: MarkType, mask: number, attrs?: Attrs | null) => () => {
 					const { state, dispatch } = view;

@@ -1,8 +1,8 @@
 import { MaterialIcon } from 'material-icons';
 import type { CSSProperties } from 'react';
 
-let iconType: IconType = 'filled';
 export type IconType = 'filled' | 'outlined' | 'round' | 'sharp' | 'two-tone';
+let iconType: IconType = 'filled';
 export const setCurrentIconType = (type: IconType) => (iconType = type);
 export const getIconType = () => iconType;
 

@@ -1,7 +1,7 @@
 import { createRoot } from '@docucraft/srender';
 import Snackbar from '@mui/material/Snackbar';
 import Alert from '@mui/material/Alert';
-import Slide, { SlideProps } from '@mui/material/Slide';
+import Slide from '@mui/material/Slide';
 
 interface BaseOpts {
 	duration?: number;

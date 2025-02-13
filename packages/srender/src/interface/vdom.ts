@@ -67,7 +67,7 @@ export interface Context<T = any> {
 	pop(): void;
 }
 
-export interface FunctionComponent<P = {}> {
+export interface FunctionComponent<P = any> {
 	(
 		props: P,
 		context?: any
@@ -81,7 +81,7 @@ export interface FunctionComponent<P = {}> {
 	[k: string]: any;
 }
 
-export type FC<P = {}> = FunctionComponent<P>;
+export type FC<P = any> = FunctionComponent<P>;
 
 export interface ClassComponent<P = Props, S = State, C = any> {
 	new (props: P | null, context?: C): Component<P>;

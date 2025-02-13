@@ -1,5 +1,8 @@
 import { ReactNode } from 'react';
-import { ListItemIcon, ListItemText, MenuItem, MenuList } from '@mui/material';
+import ListItemIcon from '@mui/material/ListItemIcon';
+import ListItemText from '@mui/material/ListItemText';
+import MenuItem from '@mui/material/MenuItem';
+import MenuList from '@mui/material/MenuList';
 import SvgDelete from '@docucraft/icons/svg/Delete';
 import { ToggleButton } from '../ToggleButton';
 import Typography from '@mui/material/Typography';

@@ -1,6 +1,5 @@
 import { NodeSpec } from 'prosemirror-model';
-import { createNodeSpec } from '../../model';
-import { getNodeTypesByKeys } from '../../utils';
+import { createNodeSpec, getNodeTypesByKeys } from '../../utils';
 const keys = [
 	'timeline',
 	'timelineItem',
@@ -11,7 +10,7 @@ const keys = [
 
 export type TimelineKeys = (typeof keys)[number];
 
-export default function createStepperSpec(): Record<TimelineKeys, NodeSpec> {
+export function createTimelineNodes(): Record<TimelineKeys, NodeSpec> {
 	return {
 		timeline: createNodeSpec({
 			attrs: {

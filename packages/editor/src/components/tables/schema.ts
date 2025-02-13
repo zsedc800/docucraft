@@ -1,13 +1,7 @@
-import {
-	AttributeSpec,
-	Attrs,
-	NodeSpec,
-	Node,
-	NodeType,
-	Schema
-} from 'prosemirror-model';
-import { CellAttrs, MutableAttrs, cellMinWidth } from './utils';
-import { createNodeSpec } from '../../model';
+import { AttributeSpec, Attrs, NodeSpec, Node } from 'prosemirror-model';
+import { cellMinWidth } from './utils/consts';
+import { createNodeSpec } from '../../utils';
+import { CellAttrs, MutableAttrs } from './interface';
 
 export type getFromDOM = (dom: HTMLElement) => unknown;
 export type setDOMAttr = (value: unknown, attrs: MutableAttrs) => void;
@@ -154,18 +148,3 @@ export const tableNodes = (options: TableNodesOptions): TableNodes => {
 		})
 	};
 };
-
-export type TableRole = 'table' | 'row' | 'cell' | 'headerCell';
-
-export function tableNodeTypes(schema: Schema): Record<TableRole, NodeType> {
-	let result = schema.cached.tableNodeTypes;
-	if (!result) {
-		result = schema.cached.tableNodeTypes = {};
-		for (const name in schema.nodes) {
-			const type = schema.nodes[name];
-			let role = type.spec.tableRole;
-			if (role) result[role] = type;
-		}
-	}
-	return result;
-}

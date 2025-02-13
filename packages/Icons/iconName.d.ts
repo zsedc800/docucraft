@@ -1,4 +1,3 @@
-
 type MaterialIcons = [
 	'123',
 	'360',

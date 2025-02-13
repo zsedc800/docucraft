@@ -11,19 +11,27 @@ import SvgAddTask from '@docucraft/icons/svg/AddTaskFill';
 import SvgLink from '@docucraft/icons/svg/LinkFill';
 import SvgCodeBlock from '@docucraft/icons/svg/CodeBlocks';
 import SvgImage from '@docucraft/icons/svg/ImagesmodeFill';
+import SvgVideo from '@docucraft/icons/svg/MovieFill';
+import SvgAudio from '@docucraft/icons/svg/MicFill';
 import SvgMood from '@docucraft/icons/svg/Mood';
+import SvgMath from '@docucraft/icons/svg/Functions';
 import SvgTable from '../../assets/svg/SvgTable';
 import SvgBlockQuote from '../../assets/svg/BlockQuote';
 import SvgDivider from '../../assets/svg/Divider';
 import SvgEmphsis from '../../assets/svg/Emphsis';
 import { BlockItem, ToolItem } from './interface';
-import { transformToNode } from '../../commands';
+import { createNode, transformToNode } from '../../commands';
 import { schema } from '../../model';
 import { nextTick } from '../../utils';
 import { basePop, prompt } from '../../components/popover';
 import { createTable } from '../../components/tables/commands';
 import { insertTimeline } from '../../components/timeline';
-import { EmojiPicker, EmojiPickerPop } from '../Picker';
+import {
+	EmojiPicker,
+	EmojiPickerPop,
+	IconPicker,
+	IconPickerPop
+} from '../Picker';
 import { TextSelection } from 'prosemirror-state';
 export const basicTools: ToolItem[] = [
 	{
@@ -167,6 +175,20 @@ export const blocklist: BlockItem[] = [
 		handler: transformToNode(schema.nodes.imageGallery)
 	},
 	{
+		title: '视频',
+		description: '视频链接或文件',
+		name: 'video',
+		cover: SvgVideo,
+		handler: transformToNode(schema.nodes.video)
+	},
+	{
+		title: '音频',
+		description: '音频链接或文件',
+		name: 'audio',
+		cover: SvgAudio,
+		handler: transformToNode(schema.nodes.audio)
+	},
+	{
 		title: 'emoji表情',
 		description: 'emoji',
 		name: 'emoji',
@@ -177,6 +199,45 @@ export const blocklist: BlockItem[] = [
 				tr.setSelection(TextSelection.create(tr.doc, tr.selection.from + 1))
 			);
 			EmojiPickerPop(view);
+			return false;
+		}
+	},
+	{
+		title: '图标',
+		description: '图标',
+		name: 'icon',
+		cover: SvgMood,
+		handler: ({ tr }, dispatch, view) => {
+			if (!view) return false;
+			dispatch?.(
+				tr.setSelection(TextSelection.create(tr.doc, tr.selection.from + 1))
+			);
+			IconPickerPop(view);
+			return false;
+		}
+	},
+	{
+		title: '行内公式',
+		description: '行内公式',
+		name: 'mathInline',
+		cover: SvgMath,
+		handler: transformToNode(schema.nodes.mathInline)
+	},
+	{
+		title: '公式块',
+		description: '块状公式',
+		name: 'mathBlock',
+		cover: SvgMath,
+		handler: (state, dispatch, view) => {
+			const {
+				tr,
+				selection: { $from }
+			} = state;
+			if (dispatch)
+				dispatch(
+					tr.insert($from.before() + 1, createNode(schema.nodes.mathBlock))
+				);
+
 			return false;
 		}
 	}

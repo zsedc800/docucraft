@@ -3,7 +3,6 @@ import { LinkView } from './view';
 import { BaseNodeView, useNodeView } from '../../utils/view';
 import Link from '@mui/material/Link';
 import { IconBlock, RichTooltip } from '../../kits';
-import { ToolItem } from '../toolBar/index.old';
 import SvgEdit from '@docucraft/icons/svg/Edit';
 import SvgOpenInNew from '@docucraft/icons/svg/OpenInNewFill';
 import SvgCopy from '@docucraft/icons/svg/ContentCopy';
@@ -16,6 +15,7 @@ import { schema } from '../../model';
 import Toast from '../Toast';
 import { createNode } from '../../commands';
 import { classnames, nextTick } from '../../utils';
+import { ToolItem } from '../../kits/ComponentsPanel';
 interface Props extends AnchorHTMLAttributes<HTMLAnchorElement> {
 	nodeView: LinkView;
 }

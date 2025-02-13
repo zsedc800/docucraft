@@ -1,8 +1,9 @@
-import { useContext } from '@docucraft/srender';
-import { nodeViewContext } from '../../utils/view';
+import MenuList from '@mui/material/MenuList';
+import MenuItem from '@mui/material/MenuItem';
+import ListItemText from '@mui/material/ListItemText';
 import Paper from '@mui/material/Paper';
 import Divider from '@mui/material/Divider';
-import SvgArrowsOutward from '@docucraft/icons/svg/ArrowsOutward';
+import { useContext } from '@docucraft/srender';
 import SvgMore from '@docucraft/icons/svg/More1';
 import SvgDelete from '@docucraft/icons/svg/Delete';
 import SvgCopy from '@docucraft/icons/svg/ContentCopy';
@@ -12,13 +13,8 @@ import SvgQuilt from '@docucraft/icons/svg/ViewQuilt';
 import SvgSpaceDashboard from '@docucraft/icons/svg/SpaceDashboard';
 import SvgWave from '@docucraft/icons/svg/Waves';
 import { ToggleButton, ToggleButtonGroup } from '../../kits/ToggleButton';
-
-import Box from '@mui/material/Box';
-import Button from '@mui/material/Button';
-import MenuList from '@mui/material/MenuList';
-import MenuItem from '@mui/material/MenuItem';
-import { ListItemIcon, ListItemText } from '@mui/material';
 import { ImageUploader } from '../../kits/Uploader';
+import { nodeViewContext } from '../../utils/view';
 import { ImageGalleryView } from './view';
 
 function LayouButton({

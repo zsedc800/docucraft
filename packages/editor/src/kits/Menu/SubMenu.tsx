@@ -5,7 +5,8 @@ import {
 	useImperativeHandle,
 	useState
 } from '@docucraft/srender';
-import { ClickAwayListener, Paper, PaperProps } from '@mui/material';
+import ClickAwayListener from '@mui/material/ClickAwayListener';
+import Paper, { PaperProps } from '@mui/material/Paper';
 import Popper, { PopperPlacementType } from '@mui/material/Popper';
 import { ForwardRefExoticComponent, ReactNode } from 'react';
 // import { useForkRef } from '../../utils/hooks';

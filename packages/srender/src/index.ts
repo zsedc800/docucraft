@@ -33,7 +33,7 @@ import {
 } from './hooks';
 
 import { createContext } from './context';
-// export * from './interface';
+export * from './interface';
 
 const Children = { map, forEach, toArray, only };
 

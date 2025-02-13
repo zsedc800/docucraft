@@ -15,7 +15,7 @@ import Button from '@mui/material/Button';
 import { AlignButton } from '../../kits/Button';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
-import { ListItemIcon, ListItemText } from '@mui/material';
+import ListItemText from '@mui/material/ListItemText';
 
 interface Props {
 	onCropStart?: () => void;

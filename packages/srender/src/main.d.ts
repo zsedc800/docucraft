@@ -2,16 +2,17 @@ import {
 	ReactNode,
 	forwardRef as Rff,
 	Suspense as Suspen,
-	ReactPortal
+	ReactPortal,
+	useImperativeHandle as useImp
 } from 'react';
-import {
-	ExoticComponent,
-	ForwardRefExoticComponent,
-	SuspenseProps
-} from './interface';
+// import {
+// 	ExoticComponent,
+// 	ForwardRefExoticComponent,
+// 	SuspenseProps
+// } from './interface';
 import './jsx';
 import { ReactElement } from 'react';
-export * from './interface';
+// export * from './interface';
 export * from './index';
 
 export const Suspense: typeof Suspen;
@@ -20,6 +21,7 @@ export const Suspense: typeof Suspen;
 
 export const forwardRef: typeof Rff;
 export const createPortal: (node: ReactElement, ele: HTMLElement) => ReactNode;
+export const useImperativeHandle: typeof useImp;
 // export = Srender;
 // types/index.d.ts
 export {
@@ -31,5 +33,6 @@ export {
 	ReactElement,
 	SyntheticEvent,
 	MouseEvent,
-	MouseEventHandler
+	MouseEventHandler,
+	HTMLAttributes
 } from 'react';

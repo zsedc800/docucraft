@@ -8,7 +8,7 @@ import {
 	NodeViewConstructor
 } from 'prosemirror-view';
 import createElement, { updateElement } from '../../createElement';
-import { CellAttrs, cellAround, cellMinWidth, tableEditingKey } from './utils';
+import { cellAround, cellMinWidth, tableEditingKey } from './utils';
 import { EditorState } from 'prosemirror-state';
 import { TableMap } from './tableMap';
 import {
@@ -20,6 +20,7 @@ import {
 import { getView } from '../../utils';
 import { BaseNodeView } from '../../utils/view';
 import Table from './Table';
+import { CellAttrs } from './interface';
 
 export class TableView extends BaseNodeView {
 	table: HTMLTableElement;

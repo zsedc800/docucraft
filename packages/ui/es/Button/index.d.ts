@@ -10,13 +10,13 @@ interface Props extends ElementProps {
     onClick?: (e: MouseEvent) => void;
 }
 declare const Button: {
-    ({ text, children, type, icon, style, className, disabled, onClick }: Props): import("react").JSX.Element;
-    Group: ({ children, style, className }: ElementProps) => import("react").JSX.Element;
+    ({ text, children, type, icon, style, className, disabled, onClick }: Props): import("react/jsx-runtime").JSX.Element;
+    Group: ({ children, style, className }: ElementProps) => import("react/jsx-runtime").JSX.Element;
 };
-export declare const Group: ({ children, style, className }: ElementProps) => import("react").JSX.Element;
+export declare const Group: ({ children, style, className }: ElementProps) => import("react/jsx-runtime").JSX.Element;
 export declare const SegmentButton: ({ options, value, onChange }: {
     options?: Option[];
     value?: BasicType;
     onChange?: (v?: BasicType, opt?: Option) => void;
-}) => import("react").JSX.Element;
+}) => import("react/jsx-runtime").JSX.Element;
 export default Button;
