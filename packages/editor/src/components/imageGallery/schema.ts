@@ -19,8 +19,9 @@ export const imageGalleryNodeSpec: NodeSpec = {
 			getAttrs: (dom) => {
 				const imglist = dom.querySelectorAll('img');
 				const images: ImageItem[] = [];
-				for (const img of imglist.values())
+				imglist.forEach((img) => {
 					if (img.src) images.push({ src: img.src });
+				});
 				return {
 					images
 				};

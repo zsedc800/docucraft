@@ -1,8 +1,4 @@
-import {
-	ensureRootIsScheduled,
-	scheduleUpdateOnFiber,
-	workInProgressRoot
-} from './core';
+import { ensureRootIsScheduled, scheduleUpdateOnFiber } from './core';
 import {
 	Lane,
 	Lanes,
@@ -11,7 +7,7 @@ import {
 	mergeLanes,
 	requestUpdateLane
 } from '../Lanes';
-import { Component } from '../component';
+import type { Component } from '../component';
 import {
 	ClassComponent,
 	ComponentChildren,
@@ -33,6 +29,11 @@ import {
 	getLatestFiber,
 	reconcileChildrenArray
 } from './utils';
+import {
+	getIsBatchingUpdates,
+	getWorkInProgressRoot,
+	setBatchingUpdates
+} from './shared';
 export function createUpdate<S extends State = State, P = {}>(
 	payload: UpdatePayload<S, P>,
 	eventTime: number,
@@ -181,24 +182,6 @@ export function processUpdateQueue(
 	}
 }
 
-export function markUpdateFromFiberToRoot(fiber: Fiber) {
-	let parent = fiber.parent,
-		node = fiber;
-	while (parent) {
-		parent.childLanes |= mergeLanes(node.lanes, node.childLanes);
-		node = parent;
-		parent = parent.parent;
-	}
-
-	if (node.tag !== FiberTag.HostRoot) {
-		return null;
-	}
-	const root = node.stateNode as RootFiberNode;
-
-	root.pendingLanes = mergeLanes(node.lanes, node.childLanes);
-	return root;
-}
-
 export function enqueueSetState<T extends State = any, P = {}>(
 	fiber: Fiber,
 	state: UpdatePayload<T, P>
@@ -212,19 +195,19 @@ export function enqueueSetState<T extends State = any, P = {}>(
 	scheduleUpdateOnFiber(fiber);
 }
 
-export let isBatchingUpdates = false;
-export const setBatchingUpdates = (e: boolean) => (isBatchingUpdates = e);
 export function batchedUpdates<R = any>(
 	fn: (...a: any[]) => R,
 	...a: any[]
 ): R {
-	const previousIsBatchingUpdates = isBatchingUpdates;
-	isBatchingUpdates = true;
+	const previousIsBatchingUpdates = getIsBatchingUpdates();
+	setBatchingUpdates(true);
 	try {
 		return fn(...a);
 	} finally {
-		isBatchingUpdates = previousIsBatchingUpdates;
-		if (!isBatchingUpdates) {
+		// isBatchingUpdates = previousIsBatchingUpdates;
+		setBatchingUpdates(previousIsBatchingUpdates);
+		if (!getIsBatchingUpdates()) {
+			const workInProgressRoot = getWorkInProgressRoot();
 			workInProgressRoot && ensureRootIsScheduled(workInProgressRoot);
 		}
 	}

@@ -22,16 +22,15 @@ import {
 	SyncLane,
 	getHighestPriorityLane
 } from '../Lanes';
-import {
-	isBatchingUpdates,
-	markUpdateFromFiberToRoot,
-	setBatchingUpdates
-} from './update';
 import { resetContext } from '../context';
-import { nextTick } from '../utils';
+import {
+	getIsBatchingUpdates,
+	markUpdateFromFiberToRoot,
+	setBatchingUpdates,
+	setWorkInProgressRoot
+} from './shared';
 let nextUnitOfWork: Fiber | null | undefined = null;
 export let rootFiberNode: RootFiberNode | null = null;
-export let workInProgressRoot: RootFiberNode | null = null;
 export let workInProgressRootRenderLanes: Lanes = NoLanes;
 export let currentBatchConfig: { transition: number | null } = {
 	transition: null
@@ -116,7 +115,7 @@ export function renderOnRootFiber(
 	rootFiberNode.current = root;
 	rootFiberNode.pendingLanes |= SyncLane;
 	root.lanes |= SyncLane;
-	workInProgressRoot = rootFiberNode;
+	setWorkInProgressRoot(rootFiberNode);
 	scheduleOnRoot(rootFiberNode);
 }
 
@@ -126,10 +125,10 @@ function scheduleOnRoot(root: RootFiberNode) {
 
 export function scheduleUpdateOnFiber(fiber: Fiber) {
 	const root = markUpdateFromFiberToRoot(fiber);
-	workInProgressRoot = root;
+	setWorkInProgressRoot(root);
 	if (!root) return;
 
-	if (!isBatchingUpdates) ensureRootIsScheduled(root);
+	if (!getIsBatchingUpdates()) ensureRootIsScheduled(root);
 }
 
 export function ensureRootIsScheduled(root: RootFiberNode) {

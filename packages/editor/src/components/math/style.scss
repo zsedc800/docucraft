@@ -1,14 +1,21 @@
-.tex-input-box {
-	min-width: 240px;
-	display: flex;
+.tex-input {
 	padding: 8px;
-	& > .tex-input {
-		flex-grow: 1;
-		border: none;
+	&-box {
+		min-width: 240px;
+		display: flex;
+		& > .tex-input {
+			flex-grow: 1;
+			border: none;
+		}
 	}
-	.tex-input-extra {
+	&-extra {
 		margin-left: 4px;
 		flex-shrink: 0;
+	}
+	.error {
+		width: 100%;
+		color: red;
+		font-size: 12px;
 	}
 }
 

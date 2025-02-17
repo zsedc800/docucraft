@@ -1,0 +1,66 @@
+import {
+	forwardRef,
+	useEffect,
+	useRef,
+	ForwardedRef
+} from '@docucraft/srender';
+import Button from '@mui/material/Button';
+import SvgKBReturn from '@docucraft/icons/svg/KeyboardReturn';
+import { RichTextArea, RichTextAreaRef } from '../../kits/Input';
+import { BaseProps } from '../../interface';
+
+interface InputProps {
+	onChange?: (e: string) => void;
+	onFinish?: (e: string) => void;
+	value?: string;
+	errorMsg?: string;
+}
+
+interface TexInputRef {}
+
+function TexInputBox(
+	{ onChange, onFinish, value, errorMsg, ...props }: BaseProps<InputProps>,
+	ref: ForwardedRef<TexInputRef>
+) {
+	const ctx = useRef<RichTextAreaRef>({} as RichTextAreaRef);
+	useEffect(() => {
+		if (value) ctx.current.selectAll();
+	}, []);
+	return (
+		<div className="tex-input" {...props}>
+			<div className="tex-input-box">
+				<RichTextArea
+					ref={ctx}
+					value={value}
+					className="tex-input"
+					onChange={onChange}
+					// onChange={(e) => {
+					// 	text.current = e.target.value;
+					// 	onChange && onChange(e.target.value);
+					// }}
+					// onKeyUp={(e) => e.key === 'Enter' && onFinish && onFinish(text.current)}
+				/>
+				<div className="tex-input-extra">
+					<Button
+						onClick={() => onFinish && onFinish(ctx.current.value() || '')}
+						variant="contained"
+						size="small"
+						disabled={!!errorMsg}
+					>
+						完成
+						<SvgKBReturn style={{ fontSize: '1.25em' }} />
+					</Button>
+				</div>
+			</div>
+
+			{errorMsg && (
+				<div className="error ellipsis">
+					<span style={{ fontSize: 14 }}>无效的公式：</span>
+					{errorMsg}
+				</div>
+			)}
+		</div>
+	);
+}
+
+export default forwardRef(TexInputBox);

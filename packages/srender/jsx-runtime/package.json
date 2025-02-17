@@ -1,5 +1,0 @@
-{
-	"name": "jsx-runtime",
-	"main": "./index.js",
-	"types": "./index.d.ts"
-}

@@ -162,3 +162,9 @@ body {
 		Android Emoji,
 		EmojiSymbols;
 }
+
+.ellipsis {
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}

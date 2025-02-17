@@ -34,5 +34,7 @@ export {
 	SyntheticEvent,
 	MouseEvent,
 	MouseEventHandler,
-	HTMLAttributes
+	HTMLAttributes,
+	ForwardedRef,
+	ElementType
 } from 'react';

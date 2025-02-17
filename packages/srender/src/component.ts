@@ -5,11 +5,7 @@ import {
 	Props,
 	State
 } from './interface';
-import {
-	Updater,
-	batchedUpdates,
-	isBatchingUpdates
-} from './reconciler/update';
+import { Updater } from './reconciler/update';
 
 export class Component<P = Props, S extends State = State, C = any> {
 	public props: P;

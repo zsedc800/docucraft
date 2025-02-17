@@ -1,15 +1,9 @@
 import { Component } from '../component';
-import {
-	ClassComponent,
-	Flags,
-	Fiber,
-	RootFiberNode,
-	FiberTag
-} from '../interface';
+import { ClassComponent, Flags, Fiber, FiberTag } from '../interface';
 import { ensureRootIsScheduled } from './core';
 import { getLatestFiber, getSuspenseHander, unwindWork } from './utils';
 import { Lanes } from '../Lanes';
-import { markUpdateFromFiberToRoot } from './update';
+import { markUpdateFromFiberToRoot } from './shared';
 
 function getNearestSuspense(fiber: Fiber) {
 	let node: Fiber | null = fiber;

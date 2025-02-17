@@ -47,7 +47,6 @@ export default function Menu({
 	const onClick = (e: Event) => {
 		const { onClick: toClick } = originalChildProps;
 		if (typeof toClick === 'function') toClick(e);
-		console.log('click', e, 'iii');
 
 		handleOpen(e);
 	};
@@ -114,6 +113,7 @@ export default function Menu({
 						// onMouseLeave={() =>
 						// 	childRef.current?.matches(':hover') ? void 0 : handleClose()
 						// }
+
 						ref={popperRef}
 						elevation={8}
 						{...slotProps?.paper}

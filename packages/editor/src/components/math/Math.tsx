@@ -1,62 +1,17 @@
 import katex from 'katex';
 import { useEffect, useRef, useState } from '@docucraft/srender';
-import Button from '@mui/material/Button';
-import SvgKBReturn from '@docucraft/icons/svg/KeyboardReturn';
+
 import Icon from '@docucraft/icons';
+import TexInputBox from './TexInput';
 import { BaseNodeView, useNodeView } from '../../utils/view';
 import Tools from '../toolBar/Tools';
 import Menu from '../../kits/Menu';
-import { RichTextArea, RichTextAreaRef } from '../../kits/Input';
-import { classnames, nextTick } from '../../utils';
-import { BaseProps } from '../../interface';
+import { classnames } from '../../utils';
 import './style.scss';
 
 interface Props {
 	tex: string;
 	nodeView: BaseNodeView;
-}
-
-interface InputProps {
-	onChange?: (e: string) => void;
-	onFinish?: (e: string) => void;
-	value?: string;
-}
-
-function TexInputBox({
-	onChange,
-	onFinish,
-	value,
-	...props
-}: BaseProps<InputProps>) {
-	const ctx = useRef<RichTextAreaRef>({} as RichTextAreaRef);
-	useEffect(() => {
-		if (value) ctx.current.selectAll();
-	}, []);
-	return (
-		<div className="tex-input-box" {...props}>
-			<RichTextArea
-				ref={ctx}
-				value={value}
-				className="tex-input"
-				onChange={onChange}
-				// onChange={(e) => {
-				// 	text.current = e.target.value;
-				// 	onChange && onChange(e.target.value);
-				// }}
-				// onKeyUp={(e) => e.key === 'Enter' && onFinish && onFinish(text.current)}
-			/>
-			<div className="tex-input-extra">
-				<Button
-					onClick={() => onFinish && onFinish(ctx.current.value())}
-					variant="contained"
-					size="small"
-				>
-					完成
-					<SvgKBReturn style={{ fontSize: '1.25em' }} />
-				</Button>
-			</div>
-		</div>
-	);
 }
 
 export const MathBlockNode = ({ tex, nodeView }: Props) => {
@@ -92,10 +47,20 @@ export const MathInlineNode = ({ tex, nodeView }: Props) => {
 	const { $dom } = useNodeView<HTMLSpanElement>(nodeView);
 	const $katex = useRef<HTMLSpanElement>(null);
 	const [txt, setTxt] = useState('');
-	console.log(tex, 'texxx');
+	const [errorMsg, setError] = useState('');
+	console.log(txt, 'txt');
 
 	useEffect(() => {
-		if (txt) katex.render(txt, $katex.current);
+		if (txt) {
+			try {
+				katex.render(txt, $katex.current);
+				setError('');
+			} catch (error) {
+				const { message = '' } = error || {};
+
+				setError(message.replace('KaTeX parse error: ', ''));
+			}
+		}
 	}, [txt]);
 
 	useEffect(() => {
@@ -107,7 +72,7 @@ export const MathInlineNode = ({ tex, nodeView }: Props) => {
 			ref={$dom}
 			className={classnames('math-inline-node', { empty: !tex })}
 		>
-			{!txt && (
+			{txt ? null : (
 				<>
 					<Icon name="functions" />
 					输入公式
@@ -120,18 +85,15 @@ export const MathInlineNode = ({ tex, nodeView }: Props) => {
 		<Menu
 			trigger="click"
 			placement="bottom"
-			onClose={() => {
-				console.log(tex, nodeView.node.attrs, 'attrs');
-
-				setTxt(tex);
-			}}
+			slotProps={{ paper: { style: { borderRadius: 10 } } }}
+			onClose={() => setTxt(tex)}
 			content={({ close }) => (
 				<TexInputBox
 					style={{ width: 280 }}
 					value={txt}
 					onChange={setTxt}
+					errorMsg={errorMsg}
 					onFinish={(t) => {
-						console.log(t, 'xxx');
 						nodeView.setNodeAttribute('tex', t);
 						close && close(false);
 					}}

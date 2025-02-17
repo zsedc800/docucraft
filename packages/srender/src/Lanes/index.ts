@@ -1,5 +1,5 @@
 import { currentBatchConfig } from '../reconciler/core';
-import { isBatchingUpdates } from '../reconciler/update';
+import { getIsBatchingUpdates } from '../reconciler/shared';
 import {
 	IdlePriority,
 	ImmediatePriority,
@@ -53,7 +53,7 @@ function getTransitionLane() {
 export function requestUpdateLane(): Lane {
 	if (currentBatchConfig.transition) {
 		batchTransitionLane =
-			batchTransitionLane === NoLane || !isBatchingUpdates
+			batchTransitionLane === NoLane || !getIsBatchingUpdates()
 				? getTransitionLane()
 				: batchTransitionLane;
 		return batchTransitionLane;

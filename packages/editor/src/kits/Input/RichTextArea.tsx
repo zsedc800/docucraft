@@ -1,6 +1,4 @@
 import {
-	HTMLAttributes,
-	ReactNode,
 	forwardRef,
 	useEffect,
 	useImperativeHandle,
@@ -15,19 +13,16 @@ import {
 	compositionEnd
 } from './utils';
 import { HistoryStack } from './history';
-import './style.scss';
 import { classnames } from '../../utils';
+import { BaseProps } from '../../interface';
+import Box from '../Box';
+import './style.scss';
 
-type Merge<T, U> = Omit<T, keyof U> & U;
-
-type Props = Merge<
-	HTMLAttributes<HTMLElement>,
-	{
-		value?: string;
-		onChange?: (e: string) => void;
-		component?: keyof HTMLElementTagNameMap;
-	}
->;
+type Props = BaseProps<{
+	value?: string;
+	onChange?: (e: string) => void;
+	component?: keyof HTMLElementTagNameMap;
+}>;
 
 export interface RichTextAreaRef {
 	clear(): void;
@@ -74,17 +69,17 @@ export default forwardRef<RichTextAreaRef, Props>(
 			}
 		}));
 
-		const Tag = component + '';
 		return (
-			<Tag
+			<Box
 				ref={textarea}
+				component={component}
 				data-rich-textarea
 				className={classnames('rich-textarea', className)}
 				onPaste={(e) => onPaste(e.nativeEvent)}
 				onBeforeInput={beforeInput as any}
 				onInput={(e) => {
 					onInput(e.nativeEvent as InputEvent);
-					onChange && onChange(e.currentTarget.innerText);
+					onChange && onChange(e.currentTarget.innerText.trim());
 				}}
 				onFocus={onFocus as any}
 				onCompositionEnd={onCompositionEnd as any}

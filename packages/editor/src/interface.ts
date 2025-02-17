@@ -13,3 +13,8 @@ export type BaseProps<T = {}, E extends HTMLElement = HTMLElement> = Overrides<
 	HTMLAttributes<E>,
 	T
 >;
+
+export type BaseComponentProps<T = {}> = BaseProps<
+	T & { component: keyof HTMLElementTagNameMap },
+	HTMLElement
+>;

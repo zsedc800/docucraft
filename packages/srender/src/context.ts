@@ -1,6 +1,6 @@
 import { ContextProvider } from './element';
 import { Context, RootFiberNode } from './interface';
-import { workInProgressRoot } from './reconciler/core';
+import { getWorkInProgressRoot } from './reconciler/shared';
 const resetHandlers: Array<() => void> = [];
 export function resetContext() {
 	for (const fn of resetHandlers) fn();
@@ -10,11 +10,11 @@ export const createContext = <T = any>(initialValue: T): Context<T> => {
 	const stackValue = [initialValue];
 	const map = new WeakMap<RootFiberNode, T[]>();
 	const Provider = ({ value, children }: { value: T; children: any }) => {
-		let stack = map.get(workInProgressRoot!);
+		let stack = map.get(getWorkInProgressRoot()!);
 
 		if (!stack) {
 			stack = [initialValue];
-			map.set(workInProgressRoot!, stack);
+			map.set(getWorkInProgressRoot()!, stack);
 		}
 		stack.push(value);
 		return children;
@@ -24,11 +24,11 @@ export const createContext = <T = any>(initialValue: T): Context<T> => {
 
 	const context: Context<T> = {
 		get currentValue() {
-			const stack = map.get(workInProgressRoot!);
+			const stack = map.get(getWorkInProgressRoot()!);
 			return stack ? stack[stack.length - 1] : initialValue;
 		},
 		pop() {
-			let stack = map.get(workInProgressRoot!);
+			let stack = map.get(getWorkInProgressRoot()!);
 			stack?.pop();
 			// stackValue.pop();
 		},

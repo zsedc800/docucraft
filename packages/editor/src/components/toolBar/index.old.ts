@@ -10,7 +10,7 @@ import { EditorView } from 'prosemirror-view';
 import { createCodeBlockCmd } from '../codeBlock';
 import { createTaskList } from '../taskList';
 import { createTable, mergeCells } from '../tables/commands';
-import { insertMath } from '../math';
+// import { insertMath } from '../math';
 import {
 	applyBold,
 	applyColor,
@@ -112,7 +112,7 @@ export const buildToolbar = () => {
 									const formula = prompt('输入一条 LaTex 公式: ');
 									// console.log(escapeLatex(formula));
 
-									if (formula) insertMath(view, formula);
+									// if (formula) insertMath(view, formula);
 								}
 							}
 						]

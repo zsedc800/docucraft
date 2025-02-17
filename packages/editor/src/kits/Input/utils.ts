@@ -44,6 +44,7 @@ export const onBeforeInput = (history: HistoryStack) => (event: InputEvent) => {
 			dispatchInnerInputEvent(event, inputType);
 			break;
 	}
+	console.log(inputType, 'inputType');
 };
 
 export const onInput = (history: HistoryStack) => (event: InputEvent) => {
