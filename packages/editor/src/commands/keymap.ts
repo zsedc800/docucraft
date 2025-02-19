@@ -7,7 +7,7 @@ import {
 	baseKeymap,
 	deleteSelection,
 	selectNodeBackward
-} from 'prosemirror-commands';
+} from './prosemirror-commands';
 import { Attrs, Fragment, Node, NodeType, Slice } from 'prosemirror-model';
 import { canSplit } from 'prosemirror-transform';
 import {
@@ -17,11 +17,11 @@ import {
 	Selection,
 	TextSelection
 } from 'prosemirror-state';
-import { schema } from '../model';
 import { redo, undo } from 'prosemirror-history';
-import { DecorationSet, EditorView } from 'prosemirror-view';
+import { EditorView } from 'prosemirror-view';
+import { schema } from '../model';
 import { createTaskList } from '../components/taskList';
-import { createNode, createNodeAndFill } from './commands';
+import { createNode } from './commands';
 import { closeFloatBar, showFloatBar } from '../components/toolBar/FloatBar';
 import { splitTimeline } from '../components/timeline';
 import { joinBackward } from './utils';

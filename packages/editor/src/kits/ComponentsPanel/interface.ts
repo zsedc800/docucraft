@@ -15,4 +15,5 @@ export interface BlockItem {
 	cover: string | ((props: any) => ReactNode);
 	description: string;
 	handler: Command;
+	type?: 'block' | 'inline' | 'pop';
 }

@@ -9,9 +9,10 @@ export class MathInlineNodeView extends BaseNodeView {
 
 		this.component = MathInlineNode;
 		this.render();
+		console.log('math inline');
 	}
 	update(node: Node): boolean {
-		console.log(node, this.node, 'nn update');
+		console.log('nn update');
 
 		return super.update(node);
 	}

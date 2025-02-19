@@ -10,7 +10,8 @@
 
 		"declaration": true,
 		"esModuleInterop": true,
-		"skipLibCheck": true
+		"skipLibCheck": true,
+		"sourceMap": true
 	},
 	"include": ["./src/**/*"]
 }

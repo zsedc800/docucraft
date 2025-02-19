@@ -1,5 +1,6 @@
 import { NodeSpec } from 'prosemirror-model';
-import { createNodeSpec, getNodeTypesByKeys } from '../../utils';
+import { getNodeTypesByKeys } from '../../utils/basic';
+import { createNodeSpec } from '../../utils/basic';
 const keys = [
 	'timeline',
 	'timelineItem',

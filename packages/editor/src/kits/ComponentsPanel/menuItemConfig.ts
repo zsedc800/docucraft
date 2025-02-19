@@ -23,15 +23,10 @@ import { BlockItem, ToolItem } from './interface';
 import { createNode, transformToNode } from '../../commands';
 import { schema } from '../../model';
 import { nextTick } from '../../utils';
-import { basePop, prompt } from '../../components/popover';
+import { prompt } from '../../components/popover';
 import { createTable } from '../../components/tables/commands';
 import { insertTimeline } from '../../components/timeline';
-import {
-	EmojiPicker,
-	EmojiPickerPop,
-	IconPicker,
-	IconPickerPop
-} from '../Picker';
+import { EmojiPickerPop, IconPickerPop } from '../Picker';
 import { TextSelection } from 'prosemirror-state';
 export const basicTools: ToolItem[] = [
 	{
@@ -221,24 +216,24 @@ export const blocklist: BlockItem[] = [
 		description: '行内公式',
 		name: 'mathInline',
 		cover: SvgMath,
-		handler: transformToNode(schema.nodes.mathInline)
+		type: 'inline',
+		handler: (state, dispatch, view) => {
+			const {
+				tr,
+				selection: { from }
+			} = state;
+			const pos = tr.mapping.map(from);
+
+			if (dispatch)
+				dispatch(tr.insert(pos, createNode(schema.nodes.mathInline)));
+			return true;
+		}
 	},
 	{
 		title: '公式块',
 		description: '块状公式',
 		name: 'mathBlock',
 		cover: SvgMath,
-		handler: (state, dispatch, view) => {
-			const {
-				tr,
-				selection: { $from }
-			} = state;
-			if (dispatch)
-				dispatch(
-					tr.insert($from.before() + 1, createNode(schema.nodes.mathBlock))
-				);
-
-			return false;
-		}
+		handler: transformToNode(schema.nodes.mathBlock)
 	}
 ];

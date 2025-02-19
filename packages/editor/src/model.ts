@@ -1,5 +1,5 @@
 // model.ts 文件命名暂时还是以 mvc 模式命名，方便理解，实际中 命名为 schema.ts 更好
-import { MarkSpec, Node, NodeSpec, Schema } from 'prosemirror-model';
+import { MarkSpec, Node, NodeSpec, NodeType, Schema } from 'prosemirror-model';
 import { codeBlock } from './components/codeBlock/schema';
 import { taskItem, taskList } from './components/taskList/schema';
 import { tableNodes } from './components/tables/schema';
@@ -17,7 +17,7 @@ import {
 	mathBlockNodeSpec,
 	mathInlineNodeSpec
 } from './components/math/schema';
-import { createNodeSpec } from './utils';
+import { createNodeSpec } from './utils/basic';
 
 const nodes = {
 	// 整个文档
@@ -170,6 +170,17 @@ const nodes = {
 	})
 };
 export type NodesKey = keyof typeof nodes;
+
+export function getSchemaNodes(schema: Schema) {
+	return Object.keys(nodes).reduce(
+		(pre, key) => {
+			pre[key] = schema.nodes[key];
+			return pre;
+		},
+		{} as Record<NodesKey, NodeType>
+	);
+}
+
 export type MarksKey =
 	| 'bold'
 	| 'italic'

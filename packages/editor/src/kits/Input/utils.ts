@@ -27,7 +27,6 @@ export const onBeforeInput = (history: HistoryStack) => (event: InputEvent) => {
 	}
 
 	switch (inputType) {
-		case 'insertFromPaste':
 		case 'insertParagraph':
 		case 'insertLineBreak':
 			event.preventDefault();

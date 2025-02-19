@@ -7,19 +7,6 @@ import replace from '@rollup/plugin-replace';
 import { visualizer } from 'rollup-plugin-visualizer';
 import path from 'path';
 
-const whitelist = ['material-ui-popup-state'];
-
-const createBabelConfig = (targets) => ({
-	babelHelpers: 'bundled',
-	extensions: ['.js', '.jsx', '.ts', '.tsx'],
-	include: ['src/**/*'],
-	presets: [
-		['@babel/preset-env', { targets }],
-		['@babel/preset-typescript', {}]
-	],
-	exclude: 'node_modules/**'
-});
-
 const common = {
 	input: 'src/index.ts',
 	onwarn(warning, warn) {
@@ -30,6 +17,7 @@ const common = {
 		}
 	},
 	external: (id) => {
+		// return /\@docucraft\/icons|\@codemirror/.test(id);
 		return (
 			/node_modules|\@docucraft\/icons\/styles/.test(id) &&
 			!/react|@babel\/runtime|material|\@mui/.test(id)

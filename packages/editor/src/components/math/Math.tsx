@@ -48,7 +48,6 @@ export const MathInlineNode = ({ tex, nodeView }: Props) => {
 	const $katex = useRef<HTMLSpanElement>(null);
 	const [txt, setTxt] = useState('');
 	const [errorMsg, setError] = useState('');
-	console.log(txt, 'txt');
 
 	useEffect(() => {
 		if (txt) {
@@ -57,7 +56,6 @@ export const MathInlineNode = ({ tex, nodeView }: Props) => {
 				setError('');
 			} catch (error) {
 				const { message = '' } = error || {};
-
 				setError(message.replace('KaTeX parse error: ', ''));
 			}
 		}
@@ -66,6 +64,13 @@ export const MathInlineNode = ({ tex, nodeView }: Props) => {
 	useEffect(() => {
 		setTxt(tex);
 	}, [tex]);
+
+	useEffect(() => {
+		console.log(11123);
+
+		if (!txt)
+			$dom.current.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+	}, []);
 
 	const body = (
 		<span
@@ -85,13 +90,14 @@ export const MathInlineNode = ({ tex, nodeView }: Props) => {
 		<Menu
 			trigger="click"
 			placement="bottom"
-			slotProps={{ paper: { style: { borderRadius: 10 } } }}
+			slotProps={{ paper: { style: { borderRadius: 10, marginTop: 4 } } }}
 			onClose={() => setTxt(tex)}
 			content={({ close }) => (
 				<TexInputBox
 					style={{ width: 280 }}
 					value={txt}
 					onChange={setTxt}
+					placeholder='输入公式，如："E=m^2"'
 					errorMsg={errorMsg}
 					onFinish={(t) => {
 						nodeView.setNodeAttribute('tex', t);

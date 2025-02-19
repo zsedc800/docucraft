@@ -158,14 +158,12 @@ export class BaseNodeView implements NodeView {
 	) {
 		const { type, attrs } = node;
 		const { attrs: props, type: t } = this.node;
-		if (type !== t) return false;
+		if (type !== t || this.blockId !== attrs.blockId) return false;
 		// @ts-ignore
 		if (!node.attrs.blockId) node.attrs.blockId = this.blockId;
 		this.node = node;
 
 		if (this.component) {
-			console.log(props, attrs, 'iii2');
-
 			if (!shallowEqual(props, attrs)) {
 				this.render();
 			}

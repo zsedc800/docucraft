@@ -14,12 +14,20 @@ interface InputProps {
 	onFinish?: (e: string) => void;
 	value?: string;
 	errorMsg?: string;
+	placeholder?: string;
 }
 
 interface TexInputRef {}
 
 function TexInputBox(
-	{ onChange, onFinish, value, errorMsg, ...props }: BaseProps<InputProps>,
+	{
+		onChange,
+		onFinish,
+		value,
+		errorMsg,
+		placeholder,
+		...props
+	}: BaseProps<InputProps>,
 	ref: ForwardedRef<TexInputRef>
 ) {
 	const ctx = useRef<RichTextAreaRef>({} as RichTextAreaRef);
@@ -32,13 +40,15 @@ function TexInputBox(
 				<RichTextArea
 					ref={ctx}
 					value={value}
-					className="tex-input"
+					className="input"
 					onChange={onChange}
-					// onChange={(e) => {
-					// 	text.current = e.target.value;
-					// 	onChange && onChange(e.target.value);
-					// }}
-					// onKeyUp={(e) => e.key === 'Enter' && onFinish && onFinish(text.current)}
+					placeholder={placeholder}
+					onKeyDown={(e) => {
+						if (e.key === 'Enter') {
+							e.preventDefault();
+							onFinish && onFinish(ctx.current.value());
+						}
+					}}
 				/>
 				<div className="tex-input-extra">
 					<Button

@@ -3,7 +3,7 @@ import { Picker } from 'emoji-mart';
 import { EmojiPickerConfig } from './inteface';
 import { basePop } from '../../components/popover';
 import { EditorView } from 'prosemirror-view';
-import { getNodeTypesByKeys } from '../../utils';
+import { getNodeTypesByKeys } from '../../utils/basic';
 import { createNode } from '../../commands';
 
 interface Props {

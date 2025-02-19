@@ -1,5 +1,6 @@
 import { EditorView } from 'prosemirror-view';
 import { EditorState } from 'prosemirror-state';
+import './hack';
 import { schema } from './model';
 import { keymap } from 'prosemirror-keymap';
 import { history } from 'prosemirror-history';
@@ -13,10 +14,7 @@ import { TaskItemViewConstructor } from './components/taskList';
 import { tableEditing } from './components/tables';
 import { HeadingViewConstructor } from './components/heading';
 import { outlineTreePlugin } from './components/outline';
-import {
-	ParagraphViewConstructor,
-	textblockPlugin
-} from './components/paragraph';
+import { ParagraphViewConstructor } from './components/paragraph';
 import { BlockTileViewConstructor } from './components/blockTile';
 import { ListItemViewConstructor } from './components/listItem';
 import { LinkViewConstructor } from './components/link';
@@ -51,7 +49,6 @@ export const setupEditor = (el: HTMLElement | null) => {
 			history(),
 			tableEditing({}),
 			outlineTreePlugin,
-			textblockPlugin,
 			buildToolbar(),
 			handleImagePaste()
 		]
@@ -62,6 +59,7 @@ export const setupEditor = (el: HTMLElement | null) => {
 		state: editorState,
 		dispatchTransaction(tr) {
 			if (!onDispatch(tr)) return;
+
 			const newState = editorView.state.apply(tr);
 			editorView.updateState(newState);
 			// toolbar.update(editorView, editorView.state);

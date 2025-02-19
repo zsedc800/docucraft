@@ -88,43 +88,52 @@ export default ({ close }: { close?: () => void }) => {
 						}
 					})}
 				>
-					{blocklist.map(({ cover: Cover, title, description, handler }) => (
-						<ListItem
-							onClick={() => {
-								const { view } = nodeView;
-								const { state, dispatch } = view;
-								const {
-									selection: { $from },
-									tr,
-									doc
-								} = state;
-								const start = $from.before();
+					{blocklist.map(
+						({ cover: Cover, title, description, handler, type = 'block' }) => (
+							<ListItem
+								onClick={() => {
+									const { view } = nodeView;
+									const { state, dispatch } = view;
+									const {
+										selection: { $from },
+										tr,
+										doc
+									} = state;
+									const start = $from.before();
+									let transaction = tr;
+									if (type === 'block') {
+										transaction = tr.setSelection(
+											NodeSelection.create(doc, start)
+										);
+									}
 
-								let transction = tr.setSelection(
-									NodeSelection.create(doc, start)
-								);
-								const node = $from.parent;
-								if (node.type === schema.nodes.paragraph)
-									transction = transction.delete(
-										start + 1,
-										start + node.nodeSize - 1
+									const node = $from.parent;
+									if (node.type === schema.nodes.paragraph)
+										transaction = transaction.delete(
+											start + 1,
+											start + node.nodeSize - 1
+										);
+
+									handler(
+										overrides(state, { tr: transaction }),
+										dispatch,
+										view
 									);
-
-								handler(overrides(state, { tr: transction }), dispatch, view);
-								view.focus();
-								close && close();
-							}}
-						>
-							<ListItemButton>
-								<ListItemAvatar>
-									<Avatar className="avatar" variant="rounded">
-										<Cover />
-									</Avatar>
-								</ListItemAvatar>
-								<ListItemText primary={title} secondary={description} />
-							</ListItemButton>
-						</ListItem>
-					))}
+									if (type === 'block') view.focus();
+									close && close();
+								}}
+							>
+								<ListItemButton>
+									<ListItemAvatar>
+										<Avatar className="avatar" variant="rounded">
+											<Cover />
+										</Avatar>
+									</ListItemAvatar>
+									<ListItemText primary={title} secondary={description} />
+								</ListItemButton>
+							</ListItem>
+						)
+					)}
 				</List>
 			</Box>
 		</Paper>

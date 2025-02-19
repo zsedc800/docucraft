@@ -3,7 +3,7 @@
 	&-box {
 		min-width: 240px;
 		display: flex;
-		& > .tex-input {
+		& > .input {
 			flex-grow: 1;
 			border: none;
 		}
@@ -21,6 +21,8 @@
 
 .math-inline-node {
 	border-radius: 4px;
+	padding: 2px 4px;
+
 	&.empty {
 		background-color: #e3e4e5;
 	}

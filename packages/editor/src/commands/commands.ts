@@ -8,7 +8,7 @@ import {
 } from 'prosemirror-model';
 import { Command, NodeSelection, TextSelection } from 'prosemirror-state';
 import { canJoin, findWrapping } from 'prosemirror-transform';
-import { generateUniqueId } from '../utils';
+import { generateUniqueId } from '../utils/base';
 
 export const insertCodeBlock: Command = (state, dispatch, view) => {
 	const lastLanguage = state.schema.cached.lastLanguage || 'plaintext';
@@ -54,7 +54,7 @@ export function createNodeChecked(
 	content?: Node | Fragment | readonly Node[] | null,
 	marks?: Mark[]
 ) {
-	return type.createChecked(attrs, content, marks);
+	return type.createChecked(addBlockId(attrs), content, marks);
 }
 
 export const insert =
@@ -91,7 +91,6 @@ export const transformToNode =
 	(state, dispatch) => {
 		let { tr } = state;
 		const { selection } = tr;
-		console.log(nodeType, 'nodetype');
 
 		if (selection instanceof NodeSelection && dispatch) {
 			const { from, to, $from, $to } = selection;

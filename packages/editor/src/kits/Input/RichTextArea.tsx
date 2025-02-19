@@ -1,7 +1,7 @@
 import {
 	forwardRef,
-	useEffect,
 	useImperativeHandle,
+	useLayoutEffect,
 	useMemo,
 	useRef
 } from '@docucraft/srender';
@@ -22,6 +22,7 @@ type Props = BaseProps<{
 	value?: string;
 	onChange?: (e: string) => void;
 	component?: keyof HTMLElementTagNameMap;
+	placeholder?: string;
 }>;
 
 export interface RichTextAreaRef {
@@ -31,24 +32,20 @@ export interface RichTextAreaRef {
 }
 
 export default forwardRef<RichTextAreaRef, Props>(
-	({ value, onChange, component = 'div', className, ...attrs }, ref) => {
+	(
+		{ value, onChange, component = 'div', className, placeholder, ...attrs },
+		ref
+	) => {
 		const history = useRef(new HistoryStack());
 		const textarea = useRef<HTMLElement>(null);
+		const text = useRef('');
 		const beforeInput = useMemo(() => onBeforeInput(history.current), []);
 		const onInput = useMemo(() => toInput(history.current), []);
 		const onFocus = useMemo(() => toFocus(history.current), []);
 		const onCompositionEnd = useMemo(() => compositionEnd(history.current), []);
-		const updateValue = (val) => {
-			textarea.current.innerText = val;
-			textarea.current.dispatchEvent(
-				new InputEvent('input', {
-					inputType: 'insertText',
-					data: val
-				})
-			);
-		};
-		useEffect(() => {
-			if (value !== textarea.current.innerText) updateValue(value || '');
+		const updateValue = (val) => (textarea.current.innerText = val);
+		useLayoutEffect(() => {
+			if (value !== text.current) updateValue(value || '');
 		}, [value]);
 
 		useImperativeHandle(ref, () => ({
@@ -57,7 +54,7 @@ export default forwardRef<RichTextAreaRef, Props>(
 			},
 			value(v) {
 				if (typeof v !== 'undefined') updateValue(v);
-				return textarea.current.innerText;
+				return text.current;
 			},
 			selectAll() {
 				const range = document.createRange();
@@ -74,12 +71,15 @@ export default forwardRef<RichTextAreaRef, Props>(
 				ref={textarea}
 				component={component}
 				data-rich-textarea
+				data-placeholder={placeholder}
 				className={classnames('rich-textarea', className)}
 				onPaste={(e) => onPaste(e.nativeEvent)}
 				onBeforeInput={beforeInput as any}
 				onInput={(e) => {
 					onInput(e.nativeEvent as InputEvent);
-					onChange && onChange(e.currentTarget.innerText.trim());
+					const txt = e.currentTarget.innerText.trim();
+					text.current = txt;
+					onChange && onChange(txt);
 				}}
 				onFocus={onFocus as any}
 				onCompositionEnd={onCompositionEnd as any}

@@ -11,7 +11,6 @@ import { BaseNodeView, getNodeView } from './view';
 let view: { current?: EditorView } = {};
 export const addView = (v: EditorView) => (view.current = v);
 export const getView = () => view.current;
-export default () => '';
 
 export * from './base';
 
@@ -115,7 +114,7 @@ export function fixSelection(view: EditorView, from: number, to: number) {
 	}
 }
 
-const types = ['table', 'timelineSeparator'];
+const types = ['table', 'timelineSeparator', 'paragraph'];
 export const selectInTypes = ({ state: { schema } }: EditorView) =>
 	types.map((key) => schema.nodes[key]);
 
@@ -148,50 +147,4 @@ export function setSelectIn(view: EditorView, selectIn: boolean = false) {
 	const node = findParentNode(selection, selectInTypes(view));
 	if (node) getNodeView(node.attrs.blockId)?.setProps({ selectIn });
 	return node;
-}
-
-export const getNodeTypesByKeys =
-	<K extends string>(keys: readonly K[]) =>
-	(nodes: Schema['nodes']): Record<K, NodeType> => {
-		return keys.reduce(
-			(pre, key) => {
-				pre[key] = nodes[key];
-				return pre;
-			},
-			{} as Record<K, Schema['nodes'][K]>
-		);
-	};
-
-export const isMac =
-	typeof navigator != 'undefined'
-		? /Mac|iP(hone|[oa]d)/.test(navigator.platform)
-		: // @ts-ignore
-			typeof os != 'undefined' && os.platform
-			? //@ts-ignore
-				os.platform() == 'darwin'
-			: false;
-
-export function createNodeSpec(config: NodeSpec): NodeSpec {
-	config.attrs = {
-		...config.attrs,
-		hidden: { default: false },
-		blockId: { default: null },
-		focused: { default: false }
-	};
-	const toDOM = config.toDOM;
-	if (toDOM)
-		config.toDOM = (node: Node) => {
-			const res = toDOM(node);
-			if (Array.isArray(res)) {
-				let [tag, attrs, content] = res;
-				if (attrs === 0) content = 0;
-				const hidden = node.attrs.hidden ? 'hidden' : '';
-				attrs = {
-					...attrs,
-					class: attrs.class ? attrs.class + ' ' + hidden : hidden
-				};
-				return [tag, attrs, content];
-			} else return res;
-		};
-	return config;
 }

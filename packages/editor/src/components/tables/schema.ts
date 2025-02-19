@@ -1,7 +1,7 @@
 import { AttributeSpec, Attrs, NodeSpec, Node } from 'prosemirror-model';
 import { cellMinWidth } from './utils/consts';
-import { createNodeSpec } from '../../utils';
 import { CellAttrs, MutableAttrs } from './interface';
+import { createNodeSpec } from '../../utils/basic';
 
 export type getFromDOM = (dom: HTMLElement) => unknown;
 export type setDOMAttr = (value: unknown, attrs: MutableAttrs) => void;

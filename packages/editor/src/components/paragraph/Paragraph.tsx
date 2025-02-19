@@ -12,6 +12,7 @@ interface Props extends BaseNodeViewProps {
 	placeholder: string;
 	text?: string;
 	initialPop?: boolean;
+	blockId?: string;
 }
 
 export default ({
@@ -19,7 +20,8 @@ export default ({
 	placeholder,
 	initialPop,
 	hidden,
-	text = ''
+	text = '',
+	blockId
 }: Props) => {
 	const { $dom, $contentDOM } = useNodeView<HTMLDivElement>(nodeView);
 
@@ -51,6 +53,7 @@ export default ({
 				initialPop
 			})}
 			data-placeholder={placeholder}
+			data-block-id={blockId}
 		>
 			<Typography className={classnames('paragraph')} ref={$contentDOM} />
 		</div>

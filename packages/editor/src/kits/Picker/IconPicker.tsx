@@ -12,7 +12,7 @@ import SearchBox from '../SearchBox';
 import { basePop } from '../../components/popover';
 import { BaseColorMark } from '../ColorMark';
 import useRecents from '../hooks/useRecents';
-import { getNodeTypesByKeys } from '../../utils';
+import { getNodeTypesByKeys } from '../../utils/basic';
 import { createNode } from '../../commands';
 
 const iconSet = Object.keys(iconNameMap).map((key) => ({
