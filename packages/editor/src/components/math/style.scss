@@ -27,3 +27,21 @@
 		background-color: #e3e4e5;
 	}
 }
+
+.math-block {
+	&-content {
+		padding: 12px;
+		border-radius: 4px;
+		text-align: cente;
+		cursor: pointer;
+		&.empty {
+			background-color: #f3f4f5;
+		}
+		&:hover {
+			background-color: #e3e4e5;
+		}
+		&:active {
+			background-color: #cdcdcd;
+		}
+	}
+}

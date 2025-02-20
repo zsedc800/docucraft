@@ -7,7 +7,7 @@ import {
 	NodeType
 } from 'prosemirror-model';
 import { Command, NodeSelection, TextSelection } from 'prosemirror-state';
-import { canJoin, findWrapping } from 'prosemirror-transform';
+import { findWrapping } from 'prosemirror-transform';
 import { generateUniqueId } from '../utils/base';
 
 export const insertCodeBlock: Command = (state, dispatch, view) => {

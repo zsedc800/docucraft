@@ -1,11 +1,12 @@
 import Typography from '@mui/material/Typography';
 import { useEffect } from '@docucraft/srender';
 import { BaseNodeViewProps, useNodeView } from '../../utils/view';
-import { ParagraphView } from '.';
+import { ParagraphView } from './view';
 import Tools from '../toolBar/Tools';
 import { classnames } from '../../utils';
 import { usePopover } from '../popover';
 import { ComponentsPanel } from '../../kits/ComponentsPanel';
+import './style.scss';
 
 interface Props extends BaseNodeViewProps {
 	nodeView: ParagraphView;

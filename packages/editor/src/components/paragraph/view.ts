@@ -32,8 +32,9 @@ export class ParagraphView extends BaseNodeView {
 	update(node: Node) {
 		const { type, attrs, textContent: txt } = node;
 		const { attrs: props, type: t, textContent: text } = this.node;
-		if (!super.update(node)) return false;
-		if (shallowEqual(attrs, props) && txt !== text) this.render({ text: txt });
+		if (type !== t || attrs.blockId !== props.blockId) return false;
+		this.node = node;
+		if (!shallowEqual(attrs, props) || txt !== text) this.render({ text: txt });
 		return true;
 	}
 
@@ -42,16 +43,12 @@ export class ParagraphView extends BaseNodeView {
 		return mutation.type === 'attributes';
 	}
 	onFocusIn(): void {
-		console.log('focusIn');
-
 		const parent = this.getResolvedPos()?.parent;
 		if (!parent) return;
 		const placeholder = getTextByNodeType(parent.type, this.view.state.schema);
 		this.setNodeAttribute('placeholder', placeholder);
 	}
 	onFocusOut(e: { reason: 'change' | 'blur'; event?: Event }): void {
-		console.log('focusOut');
-
 		this.setNodeAttribute('placeholder', '');
 	}
 }

@@ -1,5 +1,6 @@
 import {
 	forwardRef,
+	useEffect,
 	useImperativeHandle,
 	useLayoutEffect,
 	useMemo,
@@ -10,7 +11,8 @@ import {
 	onBeforeInput,
 	onInput as toInput,
 	onFocus as toFocus,
-	compositionEnd
+	compositionEnd,
+	onKeyDown
 } from './utils';
 import { HistoryStack } from './history';
 import { classnames } from '../../utils';
@@ -48,6 +50,10 @@ export default forwardRef<RichTextAreaRef, Props>(
 			if (value !== text.current) updateValue(value || '');
 		}, [value]);
 
+		useEffect(() => {
+			textarea.current.addEventListener('keydown', onKeyDown);
+		}, []);
+
 		useImperativeHandle(ref, () => ({
 			clear() {
 				updateValue('');
@@ -79,6 +85,7 @@ export default forwardRef<RichTextAreaRef, Props>(
 					onInput(e.nativeEvent as InputEvent);
 					const txt = e.currentTarget.innerText.trim();
 					text.current = txt;
+					if (!txt) e.currentTarget.innerHTML = '';
 					onChange && onChange(txt);
 				}}
 				onFocus={onFocus as any}

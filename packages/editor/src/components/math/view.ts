@@ -1,20 +1,12 @@
 import { NodeViewConstructor } from 'prosemirror-view';
 import { BaseNodeView } from '../../utils/view';
 import { MathBlockNode, MathInlineNode } from './Math';
-import { Node } from 'prosemirror-model';
 
 export class MathInlineNodeView extends BaseNodeView {
 	constructor(...[node, view, getPos]: Parameters<NodeViewConstructor>) {
 		super(node, view, getPos);
-
 		this.component = MathInlineNode;
 		this.render();
-		console.log('math inline');
-	}
-	update(node: Node): boolean {
-		console.log('nn update');
-
-		return super.update(node);
 	}
 }
 

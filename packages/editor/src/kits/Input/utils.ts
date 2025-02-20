@@ -42,6 +42,11 @@ export const onBeforeInput = (history: HistoryStack) => (event: InputEvent) => {
 			redoHistory(history, currentTarget as HTMLElement);
 			dispatchInnerInputEvent(event, inputType);
 			break;
+		case 'insertFromPaste':
+			event.preventDefault();
+			insertContent(event.data);
+			dispatchInnerInputEvent(event, inputType, event.data);
+			break;
 	}
 	console.log(inputType, 'inputType');
 };

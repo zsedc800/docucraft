@@ -18,6 +18,8 @@ import {
 	mathInlineNodeSpec
 } from './components/math/schema';
 import { createNodeSpec } from './utils/basic';
+import { blockQuote } from './components/blockQuote/schema';
+import { emphasisSpec } from './components/emphasis/schema';
 
 const nodes = {
 	// 整个文档
@@ -54,23 +56,6 @@ const nodes = {
 			}
 		]
 	}),
-	blockTile: createNodeSpec(blockTileSpec),
-	mathInline: createNodeSpec(mathInlineNodeSpec),
-	mathBlock: createNodeSpec(mathBlockNodeSpec),
-	codeBlock: createNodeSpec(codeBlock),
-	blockQuote: createNodeSpec({
-		content: 'paragraph block*',
-		group: 'block',
-		toDOM() {
-			return ['blockquote', 0];
-		},
-		parseDOM: [
-			{
-				tag: 'blockquote'
-			}
-		]
-	}),
-
 	// 1-6 级标题
 	heading: createNodeSpec({
 		// attrs 与 vue/react 组件中 props 的概念类似，代表定义当前节点有哪些属性，这里定义了 level 属性，默认值 1
@@ -108,7 +93,12 @@ const nodes = {
 			{ tag: 'h6', attrs: { level: 6 } }
 		]
 	}),
-
+	blockTile: createNodeSpec(blockTileSpec),
+	mathInline: createNodeSpec(mathInlineNodeSpec),
+	mathBlock: createNodeSpec(mathBlockNodeSpec),
+	codeBlock: createNodeSpec(codeBlock),
+	blockQuote: createNodeSpec(blockQuote),
+	emphasis: createNodeSpec(emphasisSpec),
 	ordered_list: createNodeSpec({
 		content: 'list_item+',
 		group: 'block',

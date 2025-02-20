@@ -216,7 +216,6 @@ export const usePopover = (view: EditorView) => {
 	const plainChildren = useRef(<></>);
 	const closePlain = () => {
 		setPlainVisible(false);
-		console.log($onClose, 'onclose');
 
 		$onClose.current && $onClose.current();
 	};

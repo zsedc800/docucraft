@@ -25,8 +25,8 @@ export default ({ close }: { close?: () => void }) => {
 		<Paper
 			className="scrollbar"
 			sx={(t) => ({
-				padding: '0 15px',
 				width: 300,
+				maxHeight: '480px',
 				boxSizing: 'border-box',
 				'& .subTitle': {
 					fontSize: '12px',
@@ -34,7 +34,11 @@ export default ({ close }: { close?: () => void }) => {
 					color: t.palette.text.secondary
 				},
 				'& .group': {
-					padding: '8px 0'
+					padding: '8px 16px',
+					'&.basic': {
+						padding: '8px 0',
+						'.subTitle': { padding: '0 16px' }
+					}
 				}
 			})}
 		>
@@ -68,7 +72,7 @@ export default ({ close }: { close?: () => void }) => {
 					))}
 				</Box>
 			</Box>
-			<Box className="group">
+			<Box className="group basic">
 				<Typography className="subTitle">基础块</Typography>
 				<List
 					sx={(t) => ({

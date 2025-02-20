@@ -29,22 +29,15 @@ export default () => {
 					const { from, to } = sel;
 
 					if (!selection.eq(sel)) {
-						console.log(selection, sel, 'sel');
-
 						let node = findParentNode(selection, types);
-						console.log(node, 'node');
 
 						const blockId = node?.attrs.blockId;
 						if (node) getNodeView(blockId)?.onFocusIn();
 
 						node = findParentNode(sel, types);
-						console.log(node, 'node');
 
-						if (node && node.attrs.blockId !== blockId) {
-							console.log(node, 'node', getNodeView(node.attrs.blockId));
-
+						if (node && node.attrs.blockId !== blockId)
 							getNodeView(node.attrs.blockId)?.onFocusOut({ reason: 'change' });
-						}
 					}
 					if (selection.from !== from || selection.to !== to) {
 						closeFloatBar();

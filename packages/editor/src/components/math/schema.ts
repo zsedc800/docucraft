@@ -21,7 +21,6 @@ export const mathInlineNodeSpec: NodeSpec = {
 
 export const mathBlockNodeSpec: NodeSpec = {
 	group: 'block',
-	atom: true,
 	toDOM(node) {
 		return ['div', { class: 'math-block-node' }, node.attrs.tex];
 	},

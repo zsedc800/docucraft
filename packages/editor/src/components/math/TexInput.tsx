@@ -2,7 +2,8 @@ import {
 	forwardRef,
 	useEffect,
 	useRef,
-	ForwardedRef
+	ForwardedRef,
+	CSSProperties
 } from '@docucraft/srender';
 import Button from '@mui/material/Button';
 import SvgKBReturn from '@docucraft/icons/svg/KeyboardReturn';
@@ -15,6 +16,7 @@ interface InputProps {
 	value?: string;
 	errorMsg?: string;
 	placeholder?: string;
+	inputStyle?: CSSProperties;
 }
 
 interface TexInputRef {}
@@ -26,6 +28,7 @@ function TexInputBox(
 		value,
 		errorMsg,
 		placeholder,
+		inputStyle,
 		...props
 	}: BaseProps<InputProps>,
 	ref: ForwardedRef<TexInputRef>
@@ -43,12 +46,13 @@ function TexInputBox(
 					className="input"
 					onChange={onChange}
 					placeholder={placeholder}
-					onKeyDown={(e) => {
-						if (e.key === 'Enter') {
-							e.preventDefault();
-							onFinish && onFinish(ctx.current.value());
-						}
-					}}
+					style={inputStyle}
+					// onKeyDown={(e) => {
+					// 	if (e.key === 'Enter') {
+					// 		e.preventDefault();
+					// 		onFinish && onFinish(ctx.current.value());
+					// 	}
+					// }}
 				/>
 				<div className="tex-input-extra">
 					<Button

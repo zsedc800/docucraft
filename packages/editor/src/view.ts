@@ -25,6 +25,8 @@ import { ImageGalleryViewConstructor } from './components/imageGallery';
 import { VideoNodeViewConstructor } from './components/video';
 import { AudioNodeViewConstructor } from './components/audio';
 import { createMathNodeView } from './components/math';
+import { BlockQuoteViewConstructor } from './components/blockQuote';
+import { EmphasisViewConstructor } from './components/emphasis';
 import './themes/default.scss';
 
 export class Editor {
@@ -59,6 +61,7 @@ export const setupEditor = (el: HTMLElement | null) => {
 		state: editorState,
 		dispatchTransaction(tr) {
 			if (!onDispatch(tr)) return;
+			console.log(12);
 
 			const newState = editorView.state.apply(tr);
 			editorView.updateState(newState);
@@ -77,6 +80,8 @@ export const setupEditor = (el: HTMLElement | null) => {
 			imageGallery: ImageGalleryViewConstructor,
 			video: VideoNodeViewConstructor,
 			audio: AudioNodeViewConstructor,
+			blockQuote: BlockQuoteViewConstructor,
+			emphasis: EmphasisViewConstructor,
 			...createMathNodeView(),
 			...createTimelineViews()
 		},
