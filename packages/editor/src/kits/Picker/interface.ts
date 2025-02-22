@@ -1,3 +1,14 @@
+import { IconName } from '@docucraft/icons';
+
+export interface IconItem {
+	name: IconName;
+	code: number;
+}
+
+export interface IconInfo extends IconItem {
+	color: string;
+}
+
 export type Locale =
 	| 'en'
 	| 'ar'
@@ -65,4 +76,12 @@ export interface EmojiPickerConfig {
 	skinTonePosition?: 'preview' | 'search' | 'none'; // Position of the skin tone selector
 	theme?: 'auto' | 'light' | 'dark'; // Color theme of the picker
 	getSpritesheetURL?: (set: string, emojiVersion: number) => string | null; // Function to return spritesheet URL
+}
+
+export type SelectedType = 'emoji' | 'icon' | 'image';
+export interface PickerValue {
+	type: SelectedType;
+	value: string;
+	color?: string;
+	detail?: IconInfo | EmojiItem;
 }

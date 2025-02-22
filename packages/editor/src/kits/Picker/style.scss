@@ -1,5 +1,7 @@
-.icon-picker {
+.icon-picker-panel {
 	padding: 8px 8px 4px;
+	overflow: hidden;
+	position: relative;
 	.scrollbar {
 		&::-webkit-scrollbar {
 			width: 6px;

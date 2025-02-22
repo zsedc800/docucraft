@@ -1,6 +1,6 @@
 import { useEffect, useRef } from '@docucraft/srender';
 import { Picker } from 'emoji-mart';
-import { EmojiPickerConfig } from './inteface';
+import { EmojiPickerConfig } from './interface';
 import { basePop } from '../../components/popover';
 import { EditorView } from 'prosemirror-view';
 import { getNodeTypesByKeys } from '../../utils/basic';
@@ -10,7 +10,7 @@ interface Props {
 	pickerOptions?: EmojiPickerConfig;
 }
 
-export function EmojiPicker({ pickerOptions }: Props) {
+export function EmojiPickerPanel({ pickerOptions }: Props) {
 	const box = useRef<HTMLDivElement>(null);
 	useEffect(() => {
 		const picker = new Picker({
@@ -35,7 +35,7 @@ export function EmojiPickerPop(view: EditorView) {
 		view,
 		render: ({ open }) => {
 			return (
-				<EmojiPicker
+				<EmojiPickerPanel
 					pickerOptions={{
 						onEmojiSelect({ native }) {
 							const { state, dispatch } = view;
@@ -61,5 +61,3 @@ export function EmojiPickerPop(view: EditorView) {
 		}
 	});
 }
-
-export default EmojiPicker;

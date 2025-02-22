@@ -3,7 +3,7 @@ import ListSubheader from '@mui/material/ListSubheader';
 import List from '@mui/material/List';
 import Popper from '@mui/material/Popper';
 import Paper from '@mui/material/Paper';
-import ClickAwayListener from '@mui/material/ClickAwayListener';
+import Popover from '@mui/material/Popover';
 import Divider from '@mui/material/Divider';
 import Button from '@mui/material/Button';
 import { useState } from '@docucraft/srender';
@@ -14,21 +14,19 @@ import { BaseColorMark } from '../ColorMark';
 import useRecents from '../hooks/useRecents';
 import { getNodeTypesByKeys } from '../../utils/basic';
 import { createNode } from '../../commands';
+import { IconInfo, IconItem } from './interface';
+import './style.scss';
 
 const iconSet = Object.keys(iconNameMap).map((key) => ({
 	name: key as IconName,
 	code: iconNameMap[key as IconName]
 }));
 
-interface IconItem {
-	name: IconName;
-	code: number;
-}
-interface IconInfo extends IconItem {
-	color: string;
-}
-
-function IconPicker({ onChange }: { onChange?: (e: IconInfo) => void }) {
+export function IconPickerPanel({
+	onChange
+}: {
+	onChange?: (e: IconInfo) => void;
+}) {
 	const { entries, put } = useRecents<string, IconItem>(
 		'icon-picker-recent',
 		15
@@ -59,7 +57,7 @@ function IconPicker({ onChange }: { onChange?: (e: IconInfo) => void }) {
 	};
 
 	return (
-		<SearchBox onChange={setQuery} className="icon-picker">
+		<SearchBox onChange={setQuery} className="icon-picker-panel">
 			<List
 				className="scrollbar"
 				sx={{
@@ -71,7 +69,7 @@ function IconPicker({ onChange }: { onChange?: (e: IconInfo) => void }) {
 					'& ul': { padding: 0 },
 					'& .icon-list': {
 						display: 'grid',
-						gridTemplateColumns: 'repeat(10, 1fr)'
+						gridTemplateColumns: 'repeat(9, 1fr)'
 					},
 					'& .icon-item': {
 						display: 'inline-flex',
@@ -127,7 +125,13 @@ function IconPicker({ onChange }: { onChange?: (e: IconInfo) => void }) {
 					)
 				)}
 			</List>
-			<Popper open={!!tooltip} anchorEl={tooltip?.anchor} placement="top">
+			<Popper
+				open={!!tooltip}
+				anchorEl={tooltip?.anchor}
+				placement="top"
+				disablePortal
+				sx={{ zIndex: 999 }}
+			>
 				<span
 					className="tips"
 					style={{
@@ -141,33 +145,30 @@ function IconPicker({ onChange }: { onChange?: (e: IconInfo) => void }) {
 					{tooltip?.title}
 				</span>
 			</Popper>
-			<Popper open={!!panel} anchorEl={panel?.anchor} placement="bottom">
-				<ClickAwayListener
-					onClickAway={(e) => {
-						const mark = (e.target as HTMLElement)?.getAttribute(
-							'data-icon-mark'
-						);
-						if (mark) return;
-						setPanel(null);
-					}}
-				>
-					<Paper>
-						<BaseColorMark title="图标颜色" onChange={onColorSelect}>
-							<Divider style={{ margin: '4px 0' }} />
-							<div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-								<Button
-									variant="contained"
-									size="small"
-									color="secondary"
-									onClick={() => onColorSelect('inherit')}
-								>
-									默认颜色
-								</Button>
-							</div>
-						</BaseColorMark>
-					</Paper>
-				</ClickAwayListener>
-			</Popper>
+			<Popover
+				open={!!panel}
+				anchorEl={panel?.anchor}
+				anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+				transformOrigin={{ vertical: 'top', horizontal: 'center' }}
+				onClose={() => setPanel(null)}
+				style={{ zIndex: 10000 }}
+			>
+				<Paper>
+					<BaseColorMark title="图标颜色" onChange={onColorSelect}>
+						<Divider style={{ margin: '4px 0' }} />
+						<div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+							<Button
+								variant="contained"
+								size="small"
+								color="secondary"
+								onClick={() => onColorSelect('inherit')}
+							>
+								默认颜色
+							</Button>
+						</div>
+					</BaseColorMark>
+				</Paper>
+			</Popover>
 		</SearchBox>
 	);
 }
@@ -178,7 +179,7 @@ export function IconPickerPop(view: EditorView) {
 		view,
 		render({ close }) {
 			return (
-				<IconPicker
+				<IconPickerPanel
 					onChange={({ code, color }) => {
 						const { state, dispatch } = view;
 						const {
@@ -202,5 +203,3 @@ export function IconPickerPop(view: EditorView) {
 		}
 	});
 }
-
-export default IconPicker;

@@ -61,7 +61,6 @@ export const setupEditor = (el: HTMLElement | null) => {
 		state: editorState,
 		dispatchTransaction(tr) {
 			if (!onDispatch(tr)) return;
-			console.log(12);
 
 			const newState = editorView.state.apply(tr);
 			editorView.updateState(newState);

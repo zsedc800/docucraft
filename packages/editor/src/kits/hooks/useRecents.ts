@@ -1,4 +1,5 @@
 import { useEffect, useRef } from '@docucraft/srender';
+import forceUpdate from './forceUpdate';
 
 class LinkNode<K = any, T = any> {
 	value: T;
@@ -101,7 +102,13 @@ function createCache<K, T>(persistanceKey: string, capacity = 10) {
 			localStorage.setItem(persistanceKey, JSON.stringify(cache.entries()));
 		},
 		get: (key: K) => cache.get(key),
-		entries: () => cache.entries()
+		entries: () => cache.entries(),
+		init: (entries: [K, T][]) => {
+			for (let i = entries.length - 1; i >= 0; i--) {
+				const [key, val] = entries[i];
+				cache.put(key, val);
+			}
+		}
 	};
 }
 
@@ -110,16 +117,14 @@ export default <K = number, T = number>(
 	capacity = 10
 ) => {
 	const recents = useRef(createCache<K, T>(persistanceKey, capacity));
+	const { update } = forceUpdate();
 	useEffect(() => {
-		const { put } = recents.current;
 		try {
 			const entries = JSON.parse(
 				localStorage.getItem(persistanceKey) || '[]'
 			) as [K, T][];
-			for (let i = entries.length - 1; i >= 0; i--) {
-				const [key, val] = entries[i];
-				put(key, val);
-			}
+			recents.current.init(entries);
+			update();
 		} catch (e) {
 			console.error(e);
 		}

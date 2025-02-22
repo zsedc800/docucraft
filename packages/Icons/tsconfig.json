@@ -17,6 +17,6 @@
 		"skipLibCheck": true /* Skip type checking all .d.ts files. */,
 		"types": []
 	},
-	"include": ["styles", "xxxx.tsx", "logo", "svg", "global.d.ts"],
+	"include": ["styles", "src/**/*", "logo", "svg"],
 	"exclude": ["node_modules"]
 }

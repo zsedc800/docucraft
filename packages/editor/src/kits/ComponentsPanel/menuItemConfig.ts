@@ -134,6 +134,7 @@ export const blocklist: BlockItem[] = [
 		name: 'blockquote',
 		handler: transformToNode(schema.nodes.blockQuote)
 	},
+
 	{
 		title: '分隔线',
 		description: '创建元素分割线',
@@ -146,7 +147,7 @@ export const blocklist: BlockItem[] = [
 		description: '强调块',
 		cover: SvgEmphsis,
 		name: 'emphsis',
-		handler: transformToNode(schema.nodes.divider)
+		handler: transformToNode(schema.nodes.emphasis)
 	},
 	{
 		title: '时间轴',

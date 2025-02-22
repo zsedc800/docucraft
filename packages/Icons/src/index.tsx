@@ -10,7 +10,7 @@ export type IconName = IconNames;
 export { iconNameMap } from './iconConf';
 
 export default forwardRef<HTMLElement, Props>(
-	({ name, className, ...attrs }, ref) => {
+	({ name, className, color, style, children, ...attrs }, ref) => {
 		// type = type || getIconType();
 		// const [isFontLoaded, setState] = useState(false);
 		// useEffect(() => {
@@ -20,11 +20,21 @@ export default forwardRef<HTMLElement, Props>(
 			<i
 				ref={ref}
 				className={classnames(className, 'dUI-icons')}
-				{...attrs}
-				dangerouslySetInnerHTML={{
-					__html: `&#${iconNameMap[name]};`
+				style={{
+					...style,
+					color
 				}}
-			/>
+				{...attrs}
+				dangerouslySetInnerHTML={
+					children
+						? void 0
+						: {
+								__html: `&#${iconNameMap[name]};`
+							}
+				}
+			>
+				{children}
+			</i>
 		);
 	}
 );

@@ -30,7 +30,6 @@ export default ({ children, close }: Props) => {
 				<MenuList>
 					<MenuItem
 						onClick={() => {
-							console.log(close, 'xxx');
 							close?.();
 							nodeView.deleteNode();
 						}}
