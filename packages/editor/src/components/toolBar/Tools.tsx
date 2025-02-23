@@ -1,4 +1,4 @@
-import { tooltipClasses } from '@mui/material/Tooltip';
+import { TooltipProps, tooltipClasses } from '@mui/material/Tooltip';
 import Box from '@mui/material/Box';
 import SvgAdd from '@docucraft/icons/svg/Add';
 import SvgDragIndicator from '@docucraft/icons/svg/DragIndicatorFill';
@@ -83,6 +83,7 @@ interface Props {
 	toolsAfter?: ReactNode;
 	visible?: boolean;
 	style?: CSSProperties;
+	placement?: TooltipProps['placement'];
 }
 
 export default ({
@@ -90,7 +91,8 @@ export default ({
 	toolsAfter,
 	toolsBefore,
 	visible,
-	style
+	style,
+	placement = 'left-start'
 }: Props) => {
 	const anchorEl = useRef<HTMLElement>(null);
 	const [height, setHeight] = useState<number | undefined>(undefined);
@@ -103,7 +105,9 @@ export default ({
 	const { ref } = children;
 	children.ref = (node: HTMLElement) => {
 		anchorEl.current = node;
-		typeof ref === 'function' ? ref(node) : (ref.current = node);
+		if (typeof ref === 'function') {
+			ref(node);
+		} else if (ref) ref.current = node;
 	};
 	const [open, setOpen] = useState(false);
 	const handleOpen = () => setOpen(true);
@@ -121,7 +125,7 @@ export default ({
 					close={handleClose}
 				/>
 			}
-			placement="left-start"
+			placement={placement}
 			slotProps={{
 				tooltip: {
 					className: 'richTooltip'

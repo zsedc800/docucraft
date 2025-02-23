@@ -28,18 +28,18 @@ import { createMathNodeView } from './components/math';
 import { BlockQuoteViewConstructor } from './components/blockQuote';
 import { EmphasisViewConstructor } from './components/emphasis';
 import './themes/default.scss';
-
 export class Editor {
 	constructor(container?: HTMLElement) {
 		if (container) this.setup(container);
 	}
 
-	setup(container: HTMLElement) {}
+	setup(container: HTMLElement) {
+		setupEditor(container);
+	}
 }
 
 export const setupEditor = (el: HTMLElement | null) => {
 	if (!el) return;
-
 	// const toolbar = buildToolbar();
 
 	// 根据 schema 定义，创建 editorState 数据实例
@@ -55,6 +55,7 @@ export const setupEditor = (el: HTMLElement | null) => {
 			handleImagePaste()
 		]
 	});
+	console.log(12345);
 
 	// 创建编辑器视图实例，并挂在到 el 上
 	const editorView = new EditorView(el, {
@@ -109,7 +110,24 @@ export const setupEditor = (el: HTMLElement | null) => {
 		// 	}
 		// }
 	});
-	addView(editorView);
+
+	const parent = editorView.dom.parentNode;
+	if (parent) {
+		let before = parent.previousSibling as HTMLElement;
+		let after = parent.nextSibling as HTMLElement;
+		if (!before) {
+			before = document.createElement('div');
+			before.classList.add('editor-before');
+			parent.parentNode?.insertBefore(before, parent);
+		}
+		if (!after) {
+			after = document.createElement('div');
+			after.classList.add('editor-after');
+			parent.parentNode?.appendChild(after);
+		}
+	}
+
+	// addView(editorView);
 	return () => {
 		editorView.destroy();
 		// toolbar.destroy();

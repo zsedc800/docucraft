@@ -10,6 +10,7 @@ import Tab, { TabProps } from '@mui/material/Tab';
 import Tabs from '@mui/material/Tabs';
 import { SyntheticEvent } from 'react';
 import { classnames } from '../../utils';
+import { BaseProps } from '../../interface';
 
 export function TabChild({
 	children
@@ -25,7 +26,7 @@ interface Props {
 	className?: string;
 	dense?: boolean;
 	align?: 'left' | 'center' | 'right';
-	slotProps?: { tabs: TabProps };
+	slotProps?: Partial<{ tabs: TabProps; tabContent: BaseProps }>;
 }
 
 function a11yProps(index: number) {
@@ -42,7 +43,7 @@ export default ({
 	className,
 	dense,
 	align,
-	slotProps
+	slotProps = {}
 }: Props) => {
 	const [value, setValue] = useState<any>(defaultValue);
 	const handleChange = (event: SyntheticEvent, newValue: any) => {
@@ -74,7 +75,7 @@ export default ({
 					})}
 				</Tabs>
 			</Box>
-			<Box>
+			<Box {...slotProps?.tabContent}>
 				{Children.map(children, (child: any, index) => {
 					const { children, ...props } = child.props || {};
 					return <div {...props}>{props.value === value && children}</div>;

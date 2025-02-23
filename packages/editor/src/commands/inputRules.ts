@@ -31,7 +31,6 @@ function wrappingInputRule(
 ) {
 	return new InputRule(regexp, (state, match, start, end) => {
 		// let attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
-		console.log(111);
 
 		let attrs = getAttributes(getAttrs);
 		let tr = state.tr.delete(start, end);

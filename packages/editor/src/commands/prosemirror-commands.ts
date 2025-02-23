@@ -452,7 +452,6 @@ export const exitCode: Command = (state, dispatch) => {
 /// If a block node is selected, create an empty paragraph before (if
 /// it is its parent's first child) or after it.
 export const createParagraphNear: Command = (state, dispatch) => {
-	console.log('xxjj');
 	let sel = state.selection,
 		{ $from, $to } = sel;
 	if (

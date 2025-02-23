@@ -176,3 +176,44 @@ body {
 	text-overflow: ellipsis;
 	white-space: nowrap;
 }
+
+.mr-1 {
+	margin-right: 4px;
+}
+.mr-2 {
+	margin-right: 8px;
+}
+.ml-1 {
+	margin-left: 4px;
+}
+
+.ProseMirror {
+	min-width: 200px;
+	max-width: 760px;
+	margin: 0 auto;
+}
+
+.banner {
+	height: 30vh;
+	max-height: 280px;
+	overflow: hidden;
+	background: {
+		size: cover;
+		repeat: no-repeat;
+		position: center center;
+	}
+
+	&-settings {
+		position: absolute;
+		display: flex;
+		align-items: center;
+		right: 36px;
+		bottom: 36px;
+		[role='button'] {
+			padding: 2px 6px;
+			border-radius: 4px;
+			cursor: pointer;
+			background-color: #f3f4f5;
+		}
+	}
+}

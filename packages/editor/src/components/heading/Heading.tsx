@@ -2,21 +2,25 @@ import {
 	Children,
 	VNode,
 	cloneElement,
+	createPortal,
 	useEffect,
 	useState
 } from '@docucraft/srender';
 import ArrowRight from '@docucraft/icons/svg/ArrowRightFill';
 import ArrowDown from '@docucraft/icons/svg/ArrowDropDownFill';
+import Icon from '@docucraft/icons';
 import { HeadingView } from '.';
 import Popover from '@mui/material/Popover';
-import ToggleButton from '@mui/material/ToggleButton';
-import ToggleButtonGroup from '@mui/material/ToggleButtonGroup';
-import { OrderType, OutlineTree } from '../outline';
+import { OutlineTree } from '../outline';
 import { useNodeView } from '../../utils/view';
 import Tools from '../toolBar/Tools';
 import Toast from '../Toast';
 import { NormalTooltip } from '../../kits';
 import { classnames } from '../../utils';
+import { SymbolControlBtn } from './SymbolCtrl';
+import { ToggleButton } from '../../kits/ToggleButton';
+import { IconPicker, PickerValue } from '../../kits/Picker';
+import { ImageUploader } from '../../kits/Uploader';
 export type Level = 1 | 2 | 3 | 4 | 5 | 6;
 export interface Props {
 	view: HeadingView;
@@ -24,66 +28,14 @@ export interface Props {
 	fold: boolean;
 	hidden: boolean;
 	id: string;
+	banner: string;
+	icon: PickerValue;
 }
 
-const OrderTypeItem = ({ data = [] }: { data: string[] }) => {
-	const [l1, l2, l3] = data;
-	return (
-		<ul className="order-type-item">
-			<li>
-				<span className="order-symbol">{l1}</span>{' '}
-				<div style={{ height: '9px' }} className="shape"></div>
-			</li>
-			<li>
-				<div className="shape"></div>
-			</li>
-			<li>
-				<div className="shape"></div>
-			</li>
-			<li>
-				<span className="order-symbol">{l2}</span>
-				<div style={{ height: '7px' }} className="shape"></div>
-			</li>
-			<li>
-				<div className="shape"></div>
-			</li>
-			<li>
-				<span className="order-symbol">{l3}</span>
-				<div style={{ height: '5px' }} className="shape"></div>
-			</li>
-		</ul>
-	);
-};
-
-const SymbolControlBtn = ({
-	close,
-	onChange
-}: {
-	close?: () => void;
-	onChange?: (val: OrderType) => void;
-}) => {
-	const [value, setValue] = useState<OrderType>(0);
-	const handleChange = (e: any, val: OrderType) => {
-		setValue(val);
-		if (close) close();
-		if (onChange) onChange(val);
-	};
-	return (
-		<ToggleButtonGroup exclusive value={value} onChange={handleChange}>
-			<ToggleButton value={1}>
-				<OrderTypeItem data={['1.', '1.1.', '1.1.1.']} />
-			</ToggleButton>
-
-			<ToggleButton value={2}>
-				<OrderTypeItem data={['一、', '(一)', '1.']} />
-			</ToggleButton>
-
-			<ToggleButton value={3}>
-				<OrderTypeItem data={['1.', 'a.', 'i.']} />
-			</ToggleButton>
-		</ToggleButtonGroup>
-	);
-};
+interface BannerProps {
+	src?: string;
+	nodeView: HeadingView;
+}
 
 function BasicPopover({
 	children,
@@ -134,11 +86,65 @@ function BasicPopover({
 	);
 }
 
-export default ({ view, level, fold, hidden, id }: Props) => {
+function Banner({ src, nodeView }: BannerProps) {
+	return (
+		<div className="banner relative" style={{ backgroundImage: `url(${src})` }}>
+			<div className="banner-settings">
+				<ToggleButton
+					IconComponent={() => null}
+					className="mr-2"
+					subPanel={({ close }) => (
+						<ImageUploader
+							onChange={(image) => {
+								nodeView.setNodeAttribute('banner', image.src);
+								close();
+							}}
+						/>
+					)}
+				>
+					<Icon name="image" /> 修改封面
+				</ToggleButton>
+				<ToggleButton onClick={() => nodeView.setNodeAttribute('banner', '')}>
+					<Icon name="delete" />
+				</ToggleButton>
+			</div>
+		</div>
+	);
+}
+
+export default ({ view, level, fold, hidden, id, icon, banner }: Props) => {
 	const outlineTree = view.outlineTree;
 	const { $dom, $contentDOM } = useNodeView(view);
 	const Tag = `h${level}`;
-	const isToplevel = view.depth === 0;
+	const isToplevel = view.depth === 0 || level === 1;
+
+	const container = (
+		<div className="heading-container">
+			{outlineTree && outlineTree.orderType ? (
+				<BasicPopover outlineTree={outlineTree}>
+					<span
+						className="list-symbol"
+						data-type={outlineTree.orderType}
+						data-level={outlineTree.dataLevel(view.id)}
+						contentEditable="false"
+					>
+						{outlineTree.calculateOrderNumber(view.id)}
+					</span>
+				</BasicPopover>
+			) : (
+				<></>
+			)}
+
+			<Tag
+				ref={$contentDOM}
+				data-placeholder={`标题${level}`}
+				className={classnames('heading-content', {
+					empty: !view.node.textContent
+				})}
+			/>
+		</div>
+	);
+
 	const toolsAfter = (
 		<>
 			<NormalTooltip disableInteractive title="点击复制标题">
@@ -180,32 +186,64 @@ export default ({ view, level, fold, hidden, id }: Props) => {
 		</>
 	);
 	const body = (
-		<Tag
+		<div
 			ref={$dom}
 			id={id}
 			className={classnames('heading relative', {
-				hidden,
-				empty: !view.node.textContent
+				hidden
 			})}
-			data-placeholder={`标题${level}`}
 		>
-			<div className="heading-tools tools" contentEditable="false"></div>
-			{outlineTree && outlineTree.orderType ? (
-				<BasicPopover outlineTree={outlineTree}>
-					<span
-						className="list-symbol"
-						data-type={outlineTree.orderType}
-						data-level={outlineTree.dataLevel(view.id)}
-						contentEditable="false"
+			<div className="heading-icon" contentEditable={false}>
+				{icon && (
+					<IconPicker
+						className="heading-icon-picker"
+						onChange={(i) => view.setNodeAttribute('icon', i)}
 					>
-						{outlineTree.calculateOrderNumber(view.id)}
-					</span>
-				</BasicPopover>
+						{icon.type === 'emoji' ? (
+							icon.value
+						) : (
+							<Icon name={icon.value as any} color={icon.color} />
+						)}
+					</IconPicker>
+				)}
+			</div>
+			<div className="heading-tools" contentEditable={false}>
+				{!banner && (
+					<ToggleButton
+						IconComponent={() => null}
+						className="mr-1"
+						subPanel={({ close }) => (
+							<ImageUploader
+								onChange={(image) => {
+									view.setNodeAttribute('banner', image.src);
+									close();
+								}}
+							/>
+						)}
+					>
+						<Icon name="image" /> 添加封面
+					</ToggleButton>
+				)}
+				{!icon && (
+					<IconPicker onChange={(ico) => view.setNodeAttribute('icon', ico)}>
+						<Icon name="mood" /> 添加图标
+					</IconPicker>
+				)}
+			</div>
+			{isToplevel ? (
+				<Tools placement="left" visible toolsAfter={toolsAfter}>
+					{container}
+				</Tools>
 			) : (
-				<></>
+				container
 			)}
-			<div ref={$contentDOM} className="heading-content" />
-		</Tag>
+			{typeof window !== 'undefined' &&
+				banner &&
+				createPortal(
+					<Banner src={banner} nodeView={view} />,
+					view.view.dom.parentNode.previousSibling as HTMLElement
+				)}
+		</div>
 	);
-	return isToplevel ? <Tools toolsAfter={toolsAfter}>{body}</Tools> : body;
+	return body;
 };

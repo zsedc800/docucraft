@@ -25,7 +25,7 @@ const nodes = {
 	// 整个文档
 	doc: {
 		// 文档内容规定必须是 block 类型的节点（block 与 HTML 中的 block 概念差不多） `+` 号代表可以有一个或多个（规则类似正则）
-		content: 'block+'
+		content: 'heading block*'
 	},
 	// 段落中的文本
 	text: {
@@ -68,6 +68,12 @@ const nodes = {
 			},
 			fold: {
 				default: false
+			},
+			banner: {
+				default: ''
+			},
+			icon: {
+				default: null
 			}
 		},
 		// 当前节点内容可以是 0 个或多个 inline 节点

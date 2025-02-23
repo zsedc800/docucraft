@@ -98,12 +98,14 @@ export default ({
 	onChange,
 	color,
 	bgColor,
-	onReset
+	onReset,
+	footer
 }: {
 	onChange?: OnChange;
 	onReset?: () => void;
 	color?: string;
 	bgColor?: string;
+	footer?: ReactNode;
 }) => {
 	const [state, setState] = useState({ color, bgColor });
 	const handleChange = (value: typeof state, opts?: ColorOpts) => {
@@ -184,17 +186,23 @@ export default ({
 					))}
 				</div>
 			</div>
-			<Divider />
-			<div className="footer">
-				<Button
-					onClick={() => {
-						// setState({color});
-						onReset && onReset();
-					}}
-				>
-					取消设置
-				</Button>
-			</div>
+			{footer ? (
+				footer
+			) : (
+				<>
+					<Divider />
+					<div className="footer">
+						<Button
+							onClick={() => {
+								// setState({color});
+								onReset && onReset();
+							}}
+						>
+							取消设置
+						</Button>
+					</div>
+				</>
+			)}
 		</Box>
 	);
 };

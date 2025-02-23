@@ -1,13 +1,13 @@
 import Button from '@mui/material/Button';
 import { styled } from '@mui/material/styles';
-import SvgUpload from '@docucraft/icons/svg/Upload';
-import BasicTabs, { TabChild } from './BasicTabs';
-import { BaseForm } from '../../components/Form';
 import ImageList from '@mui/material/ImageList';
 import ImageListItem from '@mui/material/ImageListItem';
 import ImageListItemBar from '@mui/material/ImageListItemBar';
+import SvgUpload from '@docucraft/icons/svg/Upload';
+import BasicTabs, { TabChild } from '../Tabs';
+import { BaseForm } from '../../components/Form';
 import useQuery from '../hooks/useQuery';
-import { PhotoItemRes, searchPhotos } from '../fetch/unsplash';
+import { searchPhotos } from '../fetch/unsplash';
 import LoadingBox from '../LoadingBox';
 import SearchBox from '../SearchBox';
 import { ImageItem } from '../../interface';
@@ -28,7 +28,13 @@ type OnChange = (img: ImageItem, extra?: any) => void;
 
 export default ({ onChange }: { onChange?: OnChange }) => {
 	return (
-		<BasicTabs style={{ minWidth: 500 }} defaultValue={1} dense align="center">
+		<BasicTabs
+			style={{ minWidth: 500 }}
+			defaultValue={1}
+			dense
+			align="center"
+			slotProps={{ tabContent: { style: { padding: '8px' } } }}
+		>
 			<TabChild label="嵌入链接" value={1}>
 				<BaseForm
 					fields={[{ name: 'link', label: '链接' }]}
