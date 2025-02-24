@@ -100,7 +100,8 @@ function SearchUnsplashImageList({ onChange }: { onChange?: OnChange }) {
 							<ImageListItem
 								style={{ overflow: 'hidden' }}
 								onClick={() =>
-									onChange && onChange({ src: item.urls.regular }, item)
+									onChange &&
+									onChange({ urls: item.urls, src: item.urls.regular }, item)
 								}
 							>
 								<img

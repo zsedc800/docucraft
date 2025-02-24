@@ -9,6 +9,7 @@ import {
 import { Command, NodeSelection, TextSelection } from 'prosemirror-state';
 import { findWrapping } from 'prosemirror-transform';
 import { generateUniqueId } from '../utils/base';
+import { schema } from '../model';
 
 export const insertCodeBlock: Command = (state, dispatch, view) => {
 	const lastLanguage = state.schema.cached.lastLanguage || 'plaintext';
@@ -91,6 +92,8 @@ export const transformToNode =
 	(state, dispatch) => {
 		let { tr } = state;
 		const { selection } = tr;
+
+		if (nodeType.name === 'heading' && attrs?.level === 1) attrs.level = 2;
 
 		if (selection instanceof NodeSelection && dispatch) {
 			const { from, to, $from, $to } = selection;

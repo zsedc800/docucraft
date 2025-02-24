@@ -64,7 +64,7 @@ export class OutlineTree {
 			if (cursor.type.name !== 'heading' || cursor.attrs.level > lastLevel)
 				continue;
 
-			const olNode = this.findNodeById(cursor.attrs.id);
+			const olNode = this.findNodeById(cursor.attrs.blockId);
 
 			if (!olNode) throw new Error('can not found node');
 			const l = olNode.level;
@@ -76,7 +76,6 @@ export class OutlineTree {
 
 			const index = p.parent!.children.indexOf(p);
 			const cc = p.parent!.children;
-			console.log(cc, p, index, 'i');
 
 			if (p.level > level) {
 				outlineNode.children.push(p);
@@ -125,7 +124,7 @@ export class OutlineTree {
 			cursor = parent.child(i);
 			if (cursor.type.name !== 'heading') continue;
 
-			const olNode = this.findNodeById(cursor.attrs.id);
+			const olNode = this.findNodeById(cursor.attrs.blockId);
 			if (!olNode) throw new Error('can not found node');
 
 			if (olNode.level < level) {
@@ -276,7 +275,7 @@ export const outlineTreePlugin = new Plugin({
 					if (Math.max(from, to) >= oldState.doc.nodeSize) return;
 					oldState.doc.nodesBetween(from, to, (node, pos) => {
 						if (node.type.name === 'heading' && pos >= from) {
-							value.removeById(node.attrs.id);
+							value.removeById(node.attrs.blockId);
 						}
 					});
 				}

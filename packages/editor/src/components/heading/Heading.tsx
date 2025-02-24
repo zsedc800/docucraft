@@ -9,7 +9,7 @@ import {
 import ArrowRight from '@docucraft/icons/svg/ArrowRightFill';
 import ArrowDown from '@docucraft/icons/svg/ArrowDropDownFill';
 import Icon from '@docucraft/icons';
-import { HeadingView } from '.';
+import { HeadingView } from './view';
 import Popover from '@mui/material/Popover';
 import { OutlineTree } from '../outline';
 import { useNodeView } from '../../utils/view';
@@ -21,9 +21,12 @@ import { SymbolControlBtn } from './SymbolCtrl';
 import { ToggleButton } from '../../kits/ToggleButton';
 import { IconPicker, PickerValue } from '../../kits/Picker';
 import { ImageUploader } from '../../kits/Uploader';
+import './style.scss';
+
 export type Level = 1 | 2 | 3 | 4 | 5 | 6;
 export interface Props {
 	view: HeadingView;
+	nodeView: HeadingView;
 	level: Level;
 	fold: boolean;
 	hidden: boolean;
@@ -96,7 +99,10 @@ function Banner({ src, nodeView }: BannerProps) {
 					subPanel={({ close }) => (
 						<ImageUploader
 							onChange={(image) => {
-								nodeView.setNodeAttribute('banner', image.src);
+								nodeView.setNodeAttribute(
+									'banner',
+									image.urls?.raw || image.src
+								);
 								close();
 							}}
 						/>
@@ -112,11 +118,19 @@ function Banner({ src, nodeView }: BannerProps) {
 	);
 }
 
-export default ({ view, level, fold, hidden, id, icon, banner }: Props) => {
+export default ({
+	nodeView: view,
+	level,
+	fold,
+	hidden,
+	id,
+	icon,
+	banner
+}: Props) => {
 	const outlineTree = view.outlineTree;
 	const { $dom, $contentDOM } = useNodeView(view);
 	const Tag = `h${level}`;
-	const isToplevel = view.depth === 0 || level === 1;
+	const hasTools = view.depth === 0 && level > 1;
 
 	const container = (
 		<div className="heading-container">
@@ -137,7 +151,7 @@ export default ({ view, level, fold, hidden, id, icon, banner }: Props) => {
 
 			<Tag
 				ref={$contentDOM}
-				data-placeholder={`标题${level}`}
+				data-placeholder={level === 1 ? '未命名标题' : `标题${level}`}
 				className={classnames('heading-content', {
 					empty: !view.node.textContent
 				})}
@@ -189,49 +203,58 @@ export default ({ view, level, fold, hidden, id, icon, banner }: Props) => {
 		<div
 			ref={$dom}
 			id={id}
-			className={classnames('heading relative', {
+			className={classnames('heading relative', `h${level}`, {
 				hidden
 			})}
 		>
-			<div className="heading-icon" contentEditable={false}>
-				{icon && (
-					<IconPicker
-						className="heading-icon-picker"
-						onChange={(i) => view.setNodeAttribute('icon', i)}
-					>
-						{icon.type === 'emoji' ? (
-							icon.value
-						) : (
-							<Icon name={icon.value as any} color={icon.color} />
+			{level === 1 ? (
+				<>
+					<div className="heading-icon" contentEditable={false}>
+						{icon && (
+							<IconPicker
+								className="heading-icon-picker"
+								onChange={(i) => view.setNodeAttribute('icon', i)}
+							>
+								{icon.type === 'emoji' ? (
+									icon.value
+								) : (
+									<Icon name={icon.value as any} color={icon.color} />
+								)}
+							</IconPicker>
 						)}
-					</IconPicker>
-				)}
-			</div>
-			<div className="heading-tools" contentEditable={false}>
-				{!banner && (
-					<ToggleButton
-						IconComponent={() => null}
-						className="mr-1"
-						subPanel={({ close }) => (
-							<ImageUploader
-								onChange={(image) => {
-									view.setNodeAttribute('banner', image.src);
-									close();
-								}}
-							/>
+					</div>
+					<div className="heading-tools" contentEditable={false}>
+						{!banner && (
+							<ToggleButton
+								IconComponent={() => null}
+								className="mr-1"
+								subPanel={({ close }) => (
+									<ImageUploader
+										onChange={(image, extra) => {
+											view.setNodeAttribute(
+												'banner',
+												image.urls?.raw || image.src
+											);
+											close();
+										}}
+									/>
+								)}
+							>
+								<Icon name="image" /> 添加封面
+							</ToggleButton>
 						)}
-					>
-						<Icon name="image" /> 添加封面
-					</ToggleButton>
-				)}
-				{!icon && (
-					<IconPicker onChange={(ico) => view.setNodeAttribute('icon', ico)}>
-						<Icon name="mood" /> 添加图标
-					</IconPicker>
-				)}
-			</div>
-			{isToplevel ? (
-				<Tools placement="left" visible toolsAfter={toolsAfter}>
+						{!icon && (
+							<IconPicker
+								onChange={(ico) => view.setNodeAttribute('icon', ico)}
+							>
+								<Icon name="mood" /> 添加图标
+							</IconPicker>
+						)}
+					</div>
+				</>
+			) : null}
+			{hasTools ? (
+				<Tools placement="left" toolsAfter={toolsAfter}>
 					{container}
 				</Tools>
 			) : (

@@ -5,9 +5,46 @@
 		}
 	}
 
+	h1,
+	h2,
+	h3,
+	h4,
+	h5,
+	h6 {
+		margin: 0;
+		font-size: inherit;
+		line-height: inherit;
+	}
+
+	&.h1 > .heading-container {
+		font-size: 2.75rem;
+		margin: 0.5em 0;
+	}
+	&.h2 > .heading-container {
+		font-size: 1.75rem;
+		border-bottom: 1px solid #ddd;
+	}
+	&.h3 > .heading-container {
+		font-size: 1.4rem;
+	}
+	&.h4 > .heading-container {
+		font-size: 1.2rem;
+	}
+	&.h5 > .heading-container {
+		font-size: 1rem;
+	}
+	&.h6 > .heading-container {
+		font-size: 1rem;
+		color: #777;
+	}
+
 	&-container {
 		display: flex;
 		align-items: center;
+		position: relative;
+		margin: 1rem 0;
+		line-height: 1.4;
+		font-weight: bold;
 	}
 
 	&-icon {

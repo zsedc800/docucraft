@@ -6,7 +6,8 @@ import {
 	liftEmptyBlock,
 	baseKeymap,
 	deleteSelection,
-	selectNodeBackward
+	selectNodeBackward,
+	splitBlockAs
 } from './prosemirror-commands';
 import { Attrs, Fragment, Node, NodeType, Slice } from 'prosemirror-model';
 import { canSplit } from 'prosemirror-transform';
@@ -177,7 +178,11 @@ export const getMyKeyMap = () => {
 			newlineInCode,
 			createParagraphNear,
 			liftEmptyBlock,
-			splitBlock
+			splitBlockAs((node, atEnd, $from) =>
+				node.type === schema.nodes.heading
+					? { type: schema.nodes.paragraph }
+					: null
+			)
 		),
 		'Mod-z': undo,
 		'Mod-y': redo,

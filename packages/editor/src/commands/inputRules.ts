@@ -61,6 +61,9 @@ function textblockTypeInputRule(
 		let $start = state.doc.resolve(start);
 		// let attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
 		let attrs = getAttributes(getAttrs);
+		const parent = $start.parent;
+		if (parent.type === schema.nodes.heading && parent.attrs.level === 1)
+			return null;
 
 		if (
 			!$start

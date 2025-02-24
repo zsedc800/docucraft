@@ -5,6 +5,14 @@ export interface ImageItem {
 	title?: string;
 	subTitle?: string;
 	description?: string;
+	urls?: Partial<{
+		raw: string;
+		full: string;
+		regular: string;
+		small: string;
+		thumb: string;
+		small_s3: string;
+	}>;
 }
 
 export type Overrides<T, U> = Omit<T, keyof U> & U;
