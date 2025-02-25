@@ -1,9 +1,10 @@
-import { NodeViewConstructor, ViewMutationRecord } from 'prosemirror-view';
+import { ViewMutationRecord } from 'prosemirror-view';
 import { Node, NodeType, Schema } from 'prosemirror-model';
 import { BaseNodeView } from '../../utils/view';
 import { shallowEqual } from '../../utils/base';
 import Paragraph from './Paragraph';
 import { getSchemaNodes } from '../../model';
+import { NodeViewConstructor, NodeViewParameters } from '../../interface';
 
 function getTextByNodeType(type: NodeType, schema: Schema) {
 	const nodeTypes = getSchemaNodes(schema);
@@ -22,7 +23,7 @@ function getTextByNodeType(type: NodeType, schema: Schema) {
 
 export class ParagraphView extends BaseNodeView {
 	placeholder: string = ' ';
-	constructor(...args: Parameters<NodeViewConstructor>) {
+	constructor(...args: NodeViewParameters) {
 		const [node, view, getPos] = args;
 		super(node, view, getPos);
 		this.component = Paragraph;

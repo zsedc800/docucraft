@@ -14,27 +14,34 @@
 		margin: 0;
 		font-size: inherit;
 		line-height: inherit;
+		font-weight: inherit;
 	}
 
 	&.h1 > .heading-container {
-		font-size: 2.75rem;
+		font-size: 40px;
+		font-weight: 700;
 		margin: 0.5em 0;
 	}
 	&.h2 > .heading-container {
-		font-size: 1.75rem;
+		font-size: 30px;
+		font-weight: 600;
 		border-bottom: 1px solid #ddd;
 	}
 	&.h3 > .heading-container {
-		font-size: 1.4rem;
+		font-size: 24px;
+		font-weight: 600;
 	}
 	&.h4 > .heading-container {
-		font-size: 1.2rem;
+		font-size: 18px;
+		font-weight: 600;
 	}
 	&.h5 > .heading-container {
-		font-size: 1rem;
+		font-size: 16px;
+		font-weight: 600;
 	}
 	&.h6 > .heading-container {
-		font-size: 1rem;
+		font-size: 16px;
+		font-weight: 600;
 		color: #777;
 	}
 
@@ -61,7 +68,6 @@
 
 	.list-symbol {
 		display: inline-block;
-		padding: 0 4px;
 		padding-right: 6px;
 		border-radius: 4px;
 		flex-shrink: 0;

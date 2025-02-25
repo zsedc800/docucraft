@@ -1,4 +1,7 @@
+import { Decoration, DecorationSource, NodeView } from 'prosemirror-view';
 import { HTMLAttributes } from 'react';
+import EditorView from './EditorView';
+import { Node } from 'prosemirror-model';
 
 export interface ImageItem {
 	src: string;
@@ -26,3 +29,15 @@ export type BaseComponentProps<T = {}> = BaseProps<
 	T & { component: keyof HTMLElementTagNameMap },
 	HTMLElement
 >;
+
+export type DOMNode = InstanceType<typeof window.Node>;
+
+export type NodeViewParameters = readonly [
+	node: Node,
+	view: EditorView,
+	getPos: () => number | undefined,
+	decorations: readonly Decoration[],
+	innerDecorations: DecorationSource
+];
+
+export type NodeViewConstructor = (...args: NodeViewParameters) => NodeView;

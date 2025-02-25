@@ -21,6 +21,7 @@ import { TableCellView, TableHeadCellView, TableRowView } from './view';
 import { callNodeView, fixSelection } from '../../utils';
 import { preventDispatch } from '../../utils/hooks';
 import { TableState } from './interface';
+import { NodeViewParameters } from '../../interface';
 
 export type TableEditingOptions = {
 	allowTableNodeSelection?: boolean;
@@ -72,9 +73,10 @@ export function tableEditing({
 		props: {
 			nodeViews: {
 				table: TableViewConstructor,
-				tableRow: (...args) => new TableRowView(...args),
-				tableCell: (...args) => new TableCellView(...args),
-				tableHeader: (...args) => new TableHeadCellView(...args)
+				tableRow: (...args: NodeViewParameters) => new TableRowView(...args),
+				tableCell: (...args: NodeViewParameters) => new TableCellView(...args),
+				tableHeader: (...args: NodeViewParameters) =>
+					new TableHeadCellView(...args)
 			},
 			decorations(state) {
 				return this.getState(state)?.decorations;
@@ -106,22 +108,23 @@ export function tableEditing({
 		},
 		view(view) {
 			let timeout: any;
-			const onSelectionChange = () => {
-				timeout = setTimeout(() => {
-					const selection = document.getSelection();
-					const { state } = view;
-					const { from, to, anchor } = state.selection;
+			// const onSelectionChange = () => {
+			// 	timeout = setTimeout(() => {
+			// 		const selection = document.getSelection();
+			// 		const { state } = view;
+			// 		const { from, to, anchor, $anchor } = state.selection;
 
-					if (selection && selection.anchorNode) {
-						const { anchorNode, anchorOffset } = selection;
-						const pos = view.posAtDOM(anchorNode, anchorOffset);
-						if (pos < 0) return;
+			// 		if (selection && selection.anchorNode) {
+			// 			const { anchorNode, anchorOffset } = selection;
+			// 			const pos = view.posAtDOM(anchorNode, anchorOffset);
+			// 			if (pos < 0) return;
+			// 			console.log($anchor, pos, anchor, 'anchor');
 
-						if (pos !== anchor) fixSelection(view, from, to);
-					}
-				}, 0);
-			};
-			document.addEventListener('selectionchange', onSelectionChange);
+			// 			if (pos !== anchor) fixSelection(view, from, to);
+			// 		}
+			// 	}, 0);
+			// };
+			// document.addEventListener('selectionchange', onSelectionChange);
 			return {
 				update({ state: { selection }, dom }, { selection: sel }) {
 					if (timeout) clearTimeout(timeout);
@@ -134,7 +137,7 @@ export function tableEditing({
 					}
 				},
 				destroy() {
-					document.removeEventListener('selectionchange', onSelectionChange);
+					// document.removeEventListener('selectionchange', onSelectionChange);
 				}
 			};
 		}

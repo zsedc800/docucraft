@@ -1,9 +1,9 @@
-import { NodeViewConstructor } from 'prosemirror-view';
 import { BaseNodeView } from '../../utils/view';
 import { MathBlockNode, MathInlineNode } from './Math';
+import { NodeViewConstructor, NodeViewParameters } from '../../interface';
 
 export class MathInlineNodeView extends BaseNodeView {
-	constructor(...[node, view, getPos]: Parameters<NodeViewConstructor>) {
+	constructor(...[node, view, getPos]: NodeViewParameters) {
 		super(node, view, getPos);
 		this.component = MathInlineNode;
 		this.render();
@@ -11,7 +11,7 @@ export class MathInlineNodeView extends BaseNodeView {
 }
 
 export class MathBlockNodeView extends BaseNodeView {
-	constructor(...[node, view, getPos]: Parameters<NodeViewConstructor>) {
+	constructor(...[node, view, getPos]: NodeViewParameters) {
 		super(node, view, getPos);
 		this.component = MathBlockNode;
 		this.render();

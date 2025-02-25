@@ -152,7 +152,7 @@ export default ({
 			<Tag
 				ref={$contentDOM}
 				data-placeholder={level === 1 ? '未命名标题' : `标题${level}`}
-				className={classnames('heading-content', {
+				className={classnames('heading-content relative', {
 					empty: !view.node.textContent
 				})}
 			/>
@@ -264,7 +264,7 @@ export default ({
 				banner &&
 				createPortal(
 					<Banner src={banner} nodeView={view} />,
-					view.view.dom.parentNode.previousSibling as HTMLElement
+					view.view.domBefore
 				)}
 		</div>
 	);

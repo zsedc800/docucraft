@@ -1,4 +1,4 @@
-import { NodeViewConstructor } from 'prosemirror-view';
+import { NodeViewConstructor } from '../../interface';
 import DividerView from './view';
 
 export { default as DividerView } from './view';

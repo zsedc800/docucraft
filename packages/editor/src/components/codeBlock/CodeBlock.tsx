@@ -1,4 +1,4 @@
-import { useMemo, useState } from '@docucraft/srender';
+import { useState } from '@docucraft/srender';
 import { CodeBlockView } from './codeBlockView';
 import { classnames } from '../../utils';
 import Switch from '@mui/material/Switch';
@@ -6,11 +6,9 @@ import Icon from '@docucraft/icons';
 import { ThemeProvider, createTheme } from '@mui/material/styles';
 import { toggleLineNumber } from './extensions';
 import { setLanguage } from './extensions/loadLanguage';
-// import { languages } from '@codemirror/language-data';
 import LangPicker from './LangPicker';
 import { useNodeView } from '../../utils/view';
 import './style.scss';
-import { usePopover } from '../popover';
 interface Props {
 	nodeView: CodeBlockView;
 	language: string;
@@ -49,7 +47,7 @@ export default ({
 	showLineNumber,
 	hidden = false
 }: Props) => {
-	const { $dom, $contentDOM } = useNodeView<HTMLPreElement>(nodeView);
+	const { $dom } = useNodeView<HTMLPreElement>(nodeView);
 	return (
 		<pre
 			ref={$dom}
@@ -110,7 +108,7 @@ export default ({
 				</div>
 			</ThemeProvider>
 			<code
-				ref={$contentDOM}
+				ref={(dom) => (nodeView.codeContainer = dom)}
 				className="scrollbar dc-block"
 				data-node-type="codeBlock"
 				data-language={language}

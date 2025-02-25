@@ -1,4 +1,4 @@
-import { NodeViewConstructor, ViewMutationRecord } from 'prosemirror-view';
+import { ViewMutationRecord } from 'prosemirror-view';
 import { BaseNodeView } from '../../utils/view';
 import {
 	RCTimeline,
@@ -9,9 +9,10 @@ import {
 } from './Timeline';
 import { TimelineKeys } from './schema';
 import { TextSelection } from 'prosemirror-state';
+import { NodeViewConstructor, NodeViewParameters } from '../../interface';
 
 export class TimelineNodeView extends BaseNodeView {
-	constructor(...[node, view, getPos]: Parameters<NodeViewConstructor>) {
+	constructor(...[node, view, getPos]: NodeViewParameters) {
 		super(node, view, getPos);
 		this.component = RCTimeline;
 		this.render();
@@ -24,7 +25,7 @@ export class TimelineNodeView extends BaseNodeView {
 }
 
 export class TimelineItemView extends BaseNodeView {
-	constructor(...[node, view, getPos]: Parameters<NodeViewConstructor>) {
+	constructor(...[node, view, getPos]: NodeViewParameters) {
 		super(node, view, getPos);
 		this.component = RCTimelineItem;
 		this.render();
@@ -37,7 +38,7 @@ export class TimelineItemView extends BaseNodeView {
 }
 
 export class TimelineOppositeView extends BaseNodeView {
-	constructor(...[node, view, getPos]: Parameters<NodeViewConstructor>) {
+	constructor(...[node, view, getPos]: NodeViewParameters) {
 		super(node, view, getPos);
 		this.component = RCTimelineOpposite;
 		this.render();
@@ -50,7 +51,7 @@ export class TimelineOppositeView extends BaseNodeView {
 }
 
 export class TimelineSeparatorView extends BaseNodeView {
-	constructor(...[node, view, getPos]: Parameters<NodeViewConstructor>) {
+	constructor(...[node, view, getPos]: NodeViewParameters) {
 		super(node, view, getPos);
 		this.component = RCTimelineSeparator;
 		this.render();
@@ -65,7 +66,7 @@ export class TimelineSeparatorView extends BaseNodeView {
 	}
 }
 export class TimelineContentView extends BaseNodeView {
-	constructor(...[node, view, getPos]: Parameters<NodeViewConstructor>) {
+	constructor(...[node, view, getPos]: NodeViewParameters) {
 		super(node, view, getPos);
 		this.component = RCTimelineContent;
 		this.render();

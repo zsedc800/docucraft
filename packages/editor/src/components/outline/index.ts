@@ -14,6 +14,7 @@ import {
 	convertToRoman,
 	generateUniqueId
 } from '../../utils';
+import { addChild, findOffsetInParent, nodesBetween } from './utils';
 
 export class OutlineNode {
 	children: OutlineNode[];
@@ -34,7 +35,7 @@ export class OutlineTree {
 	root: OutlineNode;
 	private map: Map<string, OutlineNode>;
 	orderType: OrderType;
-	constructor(public decorations: DecorationSource) {
+	constructor() {
 		this.root = new OutlineNode('root', null, 0);
 		this.map = new Map();
 		this.orderType = 0;
@@ -43,6 +44,7 @@ export class OutlineTree {
 		this.orderType = type;
 		this.updateHeading();
 	}
+
 	insertOrUpdate(heading: HeadingView, $pos: ResolvedPos) {
 		const { node, id } = heading;
 		const level = node.attrs.level;
@@ -56,117 +58,68 @@ export class OutlineTree {
 		outlineNode = new OutlineNode(id, heading, level);
 		this.map.set(id, outlineNode);
 		let index = $pos.index($pos.depth);
-		let cursor,
-			count = 0,
+		let count = 0,
 			lastLevel = Infinity;
-		for (let i = index + 1; i < parent.childCount; i++) {
-			cursor = parent.child(i);
-			if (cursor.type.name !== 'heading' || cursor.attrs.level > lastLevel)
-				continue;
 
-			const olNode = this.findNodeById(cursor.attrs.blockId);
-
-			if (!olNode) throw new Error('can not found node');
-			const l = olNode.level;
-			if (l <= level) break;
-
-			if (l < lastLevel) lastLevel = l;
-			let p = olNode;
-			while (p.parent && !p.parent.node && p.level > level) p = p.parent;
-
-			const index = p.parent!.children.indexOf(p);
-			const cc = p.parent!.children;
-
-			if (p.level > level) {
-				outlineNode.children.push(p);
-				cc.splice(index, 1);
-			} else if (p.level === level) {
-				outlineNode.children = p.children;
-				cc[index] = outlineNode;
-				outlineNode.parent = p.parent;
-			} else {
-				const [child] = p.children;
-				if (child && child.node) {
-					outlineNode.children.push(child);
-					p.children[0] = outlineNode;
-					outlineNode.parent = p;
-				} else if (child && !child.node) {
-					p.children[0] = outlineNode;
-					outlineNode.parent = p;
-					outlineNode.children = child.children;
-				}
-			}
-		}
-
-		for (const child of outlineNode.children) child.parent = outlineNode;
+		nodesBetween(parent, index + 1, parent.childCount - 1, ({ attrs }) => {
+			if (attrs.level <= level) return false;
+			const childNode = this.findNodeById(attrs.blockId);
+			if (childNode) addChild(outlineNode, childNode);
+			else console.warn('can not found node');
+		});
 
 		lastLevel = Infinity;
 		count = -1;
 
-		const findOffset = (start: number, end: number) => {
-			const cursor = parent.child(start);
-			let level = cursor.attrs.level,
-				count = 1;
-			for (let i = start + 1; i <= end; i++) {
-				const ele = parent.child(i);
-				if (ele.type.name !== 'heading') continue;
-				const l = ele.attrs.level;
-				if (l > level) continue;
-				else if (l === level) count++;
-				else {
-					level = l;
-					count++;
+		nodesBetween(
+			parent,
+			index - 1,
+			0,
+			({ attrs }, i) => {
+				const childNode = this.findNodeById(attrs.blockId);
+				if (!childNode) {
+					console.warn('can not found node');
+					return;
 				}
-			}
-			return count;
-		};
-		for (let i = index - 1; i >= 0; i--) {
-			cursor = parent.child(i);
-			if (cursor.type.name !== 'heading') continue;
-
-			const olNode = this.findNodeById(cursor.attrs.blockId);
-			if (!olNode) throw new Error('can not found node');
-
-			if (olNode.level < level) {
-				const offset = findOffset(i + 1, index - 1);
-				olNode.children.splice(offset, 0, outlineNode);
-				outlineNode.parent = olNode;
-				break;
-			} else if (olNode.level === level) {
-				const index = olNode.parent!.children.indexOf(olNode);
-				if (index !== -1)
-					olNode.parent?.children.splice(index + 1, 0, outlineNode);
-				outlineNode.parent = olNode.parent;
-				break;
-			}
-		}
-
-		if (!outlineNode.parent) {
-			this.root.children.splice(findOffset(0, index - 1), 0, outlineNode);
-			outlineNode.parent = this.root;
-		}
-		//
-		index = outlineNode.parent!.children.indexOf(outlineNode);
-		const children = outlineNode.parent!.children;
-
-		for (let i = index - 1; i >= 0; i--) {
-			const node = children[i];
-			if (node.level > outlineNode.level) {
-				let l = node.level;
-				let newNode = node;
-				while (l > level) {
-					l--;
-					const t = new OutlineNode(generateUniqueId(), null, l);
-					t.children.push(newNode);
-					newNode.parent = t;
-					newNode = t;
+				if (childNode.level < level) {
+					addChild(
+						childNode,
+						outlineNode,
+						findOffsetInParent(parent, i + 1, index - 1)
+					);
+				} else if (childNode.level === level) {
+					const parentNode = childNode.parent!;
+					const index = parentNode.children.indexOf(childNode);
+					if (index > -1) addChild(parentNode, outlineNode, index + 1);
 				}
-				children[i] = newNode;
-				newNode.parent = outlineNode.parent;
-			}
-		}
+				return false;
+			},
+			false
+		);
 
-		console.log(outlineNode, 'nn');
+		if (!outlineNode.parent)
+			addChild(
+				this.root,
+				outlineNode,
+				findOffsetInParent(parent, 0, index - 1)
+			);
+
+		// const children = outlineNode.parent!.children;
+		// index = children.indexOf(outlineNode);
+		// // 调整同级节点中实际小于该级别的节点，
+		// for (let i = index - 1; i >= 0; i--) {
+		// 	const node = children[i];
+		// 	let l = node.level,
+		// 		newNode = node;
+		// 	while (l > level) {
+		// 		l--;
+		// 		const t = new OutlineNode(generateUniqueId(), null, l);
+		// 		addChild(t, newNode);
+		// 		newNode = t;
+		// 	}
+		// 	children[i] = newNode;
+		// 	newNode.parent = outlineNode.parent;
+		// }
 
 		return outlineNode;
 	}
@@ -190,9 +143,11 @@ export class OutlineTree {
 		this.updateHeading();
 		return !!outlineNode;
 	}
+
 	updateHeading() {
 		for (const [key, outlineNode] of this.map) outlineNode.node?.updateSymbol();
 	}
+
 	dataLevel(id: string) {
 		let current = this.findNodeById(id),
 			offset = -2;
@@ -202,6 +157,7 @@ export class OutlineTree {
 		}
 		return offset;
 	}
+
 	private renderOrder1(id: string) {
 		const nums = [];
 		let current = this.findNodeById(id);
@@ -265,7 +221,7 @@ export const outlineTreePlugin = new Plugin({
 	key: outlineTreeKey,
 	state: {
 		init(_, { doc }) {
-			const outlineTree = new OutlineTree(DecorationSet.create(doc, []));
+			const outlineTree = new OutlineTree();
 			return outlineTree;
 		},
 		apply(tr, value, oldState) {

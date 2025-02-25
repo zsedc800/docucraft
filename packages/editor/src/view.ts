@@ -1,10 +1,8 @@
-import { EditorView } from 'prosemirror-view';
 import { EditorState } from 'prosemirror-state';
 import './hack';
 import { schema } from './model';
 import { keymap } from 'prosemirror-keymap';
 import { history } from 'prosemirror-history';
-import { addView } from './utils';
 import { onDispatch } from './utils/hooks';
 import { CodeBlockViewConstructor } from './components/codeBlock/codeBlockView';
 import { buildInputRules } from './commands/inputRules';
@@ -27,7 +25,9 @@ import { AudioNodeViewConstructor } from './components/audio';
 import { createMathNodeView } from './components/math';
 import { BlockQuoteViewConstructor } from './components/blockQuote';
 import { EmphasisViewConstructor } from './components/emphasis';
+import EditorView from './EditorView';
 import './themes/default.scss';
+
 export class Editor {
 	constructor(container?: HTMLElement) {
 		if (container) this.setup(container);
@@ -55,7 +55,6 @@ export const setupEditor = (el: HTMLElement | null) => {
 			handleImagePaste()
 		]
 	});
-	console.log(12345);
 
 	// 创建编辑器视图实例，并挂在到 el 上
 	const editorView = new EditorView(el, {
@@ -111,21 +110,21 @@ export const setupEditor = (el: HTMLElement | null) => {
 		// }
 	});
 
-	const parent = editorView.dom.parentNode;
-	if (parent) {
-		let before = parent.previousSibling as HTMLElement;
-		let after = parent.nextSibling as HTMLElement;
-		if (!before) {
-			before = document.createElement('div');
-			before.classList.add('editor-before');
-			parent.parentNode?.insertBefore(before, parent);
-		}
-		if (!after) {
-			after = document.createElement('div');
-			after.classList.add('editor-after');
-			parent.parentNode?.appendChild(after);
-		}
-	}
+	// const parent = editorView.dom.parentNode;
+	// if (parent) {
+	// 	let before = parent.previousSibling as HTMLElement;
+	// 	let after = parent.nextSibling as HTMLElement;
+	// 	if (!before) {
+	// 		before = document.createElement('div');
+	// 		before.classList.add('editor-before');
+	// 		parent.parentNode?.insertBefore(before, parent);
+	// 	}
+	// 	if (!after) {
+	// 		after = document.createElement('div');
+	// 		after.classList.add('editor-after');
+	// 		parent.parentNode?.appendChild(after);
+	// 	}
+	// }
 
 	// addView(editorView);
 	return () => {

@@ -1,26 +1,23 @@
 import { Fragment, Node } from 'prosemirror-model';
-import { NodeViewConstructor } from 'prosemirror-view';
 import { BaseNodeView } from '../../utils/view';
 import CodeBlock from './CodeBlock';
-import { shallowEqual } from '../../utils';
 import { EditorView } from 'codemirror';
 import { EditorState } from '@codemirror/state';
 import { ViewUpdate, lineNumbers } from '@codemirror/view';
 import extensions, { lineNumberCompartment } from './extensions';
 import { detectLanguageFromCode, setLanguage } from './extensions/loadLanguage';
 import { isEditorEmpty, isFullSelection } from './utils';
+import { NodeViewParameters } from '../../interface';
 export class CodeBlockView extends BaseNodeView {
 	name = 'blockCode';
 	unmount?: () => void;
 	cmv: EditorView;
 	codeContainer?: HTMLElement;
-	constructor(...args: Parameters<NodeViewConstructor>) {
+	constructor(...args: NodeViewParameters) {
 		const [node, view, getPos] = args;
 		super(node, view, getPos);
 		this.component = CodeBlock;
 		this.render();
-		this.codeContainer = this.contentDOM;
-		this.contentDOM = void 0;
 		const state = EditorState.create({
 			extensions: extensions.concat([
 				lineNumberCompartment.of(
@@ -88,5 +85,5 @@ export class CodeBlockView extends BaseNodeView {
 	}
 }
 
-export const CodeBlockViewConstructor: NodeViewConstructor = (...args) =>
+export const CodeBlockViewConstructor = (...args: NodeViewParameters) =>
 	new CodeBlockView(...args);

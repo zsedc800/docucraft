@@ -1,12 +1,12 @@
-import { NodeViewConstructor } from 'prosemirror-view';
 import { BaseNodeView } from '../../utils/view';
 import ListItem from './ListItem';
 import { schema } from '../../model';
 import { Node } from 'prosemirror-model';
+import { NodeViewParameters } from '../../interface';
 
 export class ListItemView extends BaseNodeView {
 	inlist?: boolean;
-	constructor(...[node, view, getPos]: Parameters<NodeViewConstructor>) {
+	constructor(...[node, view, getPos]: NodeViewParameters) {
 		super(node, view, getPos);
 		this.component = ListItem;
 		const pos = getPos();
@@ -32,5 +32,5 @@ export class ListItemView extends BaseNodeView {
 	}
 }
 
-export const ListItemViewConstructor: NodeViewConstructor = (...args) =>
+export const ListItemViewConstructor = (...args: NodeViewParameters) =>
 	new ListItemView(...args);

@@ -2,7 +2,6 @@ import { Node } from 'prosemirror-model';
 import {
 	Decoration,
 	DecorationSource,
-	EditorView,
 	NodeView,
 	ViewMutationRecord
 } from 'prosemirror-view';
@@ -17,6 +16,7 @@ import {
 	createContext
 } from '@docucraft/srender';
 import { generateUniqueId, shallowEqual } from './base';
+import EditorView from '../EditorView';
 
 export function useNodeView<
 	T extends HTMLElement = HTMLDivElement,

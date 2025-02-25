@@ -1,26 +1,12 @@
 import { Node, ResolvedPos } from 'prosemirror-model';
-import {
-	Decoration,
-	DecorationSet,
-	DecorationSource,
-	EditorView,
-	NodeView,
-	NodeViewConstructor
-} from 'prosemirror-view';
-import createElement, { updateElement } from '../../createElement';
-import { cellAround, cellMinWidth, tableEditingKey } from './utils';
-import { EditorState } from 'prosemirror-state';
+import createElement from '../../createElement';
+import { cellAround, cellMinWidth } from './utils';
 import { TableMap } from './tableMap';
-import {
-	addColumnAtEnd,
-	addRowAtEnd,
-	removeColumn,
-	removeRow
-} from './commands';
-import { getView } from '../../utils';
 import { BaseNodeView } from '../../utils/view';
 import Table from './Table';
 import { CellAttrs } from './interface';
+import EditorView from '../../EditorView';
+import { NodeViewConstructor } from '../../interface';
 
 export class TableView extends BaseNodeView {
 	table: HTMLTableElement;

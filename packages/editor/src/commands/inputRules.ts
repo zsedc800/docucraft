@@ -14,7 +14,7 @@ import { createNode } from './commands';
 
 function getAttributes(
 	getAttrs?: Attrs | null | ((matches: RegExpMatchArray) => Attrs | null)
-) {
+): Record<string, any> {
 	return typeof getAttrs === 'function'
 		? (matches: RegExpMatchArray) => ({
 				...getAttrs(matches),
@@ -62,8 +62,11 @@ function textblockTypeInputRule(
 		// let attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
 		let attrs = getAttributes(getAttrs);
 		const parent = $start.parent;
+
 		if (parent.type === schema.nodes.heading && parent.attrs.level === 1)
 			return null;
+
+		if (nodeType.name === 'heading' && attrs.level === 1) attrs.level = 2;
 
 		if (
 			!$start

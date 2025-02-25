@@ -1,9 +1,9 @@
-import { NodeViewConstructor } from 'prosemirror-view';
 import { BaseNodeView } from '../../utils/view';
 import Video from './Video';
+import { NodeViewConstructor, NodeViewParameters } from '../../interface';
 
 export class VideoNodeView extends BaseNodeView {
-	constructor(...[node, view, getPos]: Parameters<NodeViewConstructor>) {
+	constructor(...[node, view, getPos]: NodeViewParameters) {
 		super(node, view, getPos);
 		this.component = Video;
 		this.render();

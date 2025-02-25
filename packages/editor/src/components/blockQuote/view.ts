@@ -6,9 +6,10 @@ import {
 import { BaseNodeView } from '../../utils/view';
 import BlockQuote from './BlockQuote';
 import { Node } from 'prosemirror-model';
+import { NodeViewParameters } from '../../interface';
 
 export class BlockQuoteView extends BaseNodeView {
-	constructor(...[node, view, getPos]: Parameters<NodeViewConstructor>) {
+	constructor(...[node, view, getPos]: NodeViewParameters) {
 		super(node, view, getPos);
 		this.component = BlockQuote;
 		this.render();
@@ -16,5 +17,5 @@ export class BlockQuoteView extends BaseNodeView {
 	}
 }
 
-export const BlockQuoteViewConstructor: NodeViewConstructor = (...args) =>
+export const BlockQuoteViewConstructor = (...args: NodeViewParameters) =>
 	new BlockQuoteView(...args);

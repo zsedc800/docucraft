@@ -1,10 +1,9 @@
-import { NodeViewConstructor } from 'prosemirror-view';
 import { BaseNodeView } from '../../utils/view';
 import ImageGallery from './ImageGallery';
-import { ImageItem } from '../../interface';
+import { ImageItem, NodeViewParameters } from '../../interface';
 
 export class ImageGalleryView extends BaseNodeView {
-	constructor(...[node, view, getPos]: Parameters<NodeViewConstructor>) {
+	constructor(...[node, view, getPos]: NodeViewParameters) {
 		super(node, view, getPos);
 		this.component = ImageGallery;
 		this.render();
@@ -21,5 +20,5 @@ export class ImageGalleryView extends BaseNodeView {
 	};
 }
 
-export const ImageGalleryViewConstructor: NodeViewConstructor = (...args) =>
+export const ImageGalleryViewConstructor = (...args: NodeViewParameters) =>
 	new ImageGalleryView(...args);
