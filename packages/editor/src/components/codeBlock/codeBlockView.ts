@@ -32,7 +32,7 @@ export class CodeBlockView extends BaseNodeView {
 							detectLanguageFromCode(pastedText).then((lang) => {
 								setLanguage(lang, view);
 								this.updateAttrs('language', lang);
-							}); // 自动检测语言
+							});
 						}
 					}
 				})

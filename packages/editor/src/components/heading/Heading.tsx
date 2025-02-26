@@ -30,7 +30,7 @@ export interface Props {
 	level: Level;
 	fold: boolean;
 	hidden: boolean;
-	id: string;
+	blockId: string;
 	banner: string;
 	icon: PickerValue;
 }
@@ -108,7 +108,7 @@ function Banner({ src, nodeView }: BannerProps) {
 						/>
 					)}
 				>
-					<Icon name="image" /> 修改封面
+					修改封面
 				</ToggleButton>
 				<ToggleButton onClick={() => nodeView.setNodeAttribute('banner', '')}>
 					<Icon name="delete" />
@@ -123,7 +123,7 @@ export default ({
 	level,
 	fold,
 	hidden,
-	id,
+	blockId: id,
 	icon,
 	banner
 }: Props) => {

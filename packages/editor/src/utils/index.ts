@@ -114,7 +114,13 @@ export function fixSelection(view: EditorView, from: number, to: number) {
 	}
 }
 
-const types = ['table', 'timelineSeparator', 'paragraph'];
+const types = [
+	'table',
+	'tableCell',
+	'tableHeader',
+	'timelineSeparator',
+	'paragraph'
+];
 export const selectInTypes = ({ state: { schema } }: EditorView) =>
 	types.map((key) => schema.nodes[key]);
 

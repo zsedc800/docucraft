@@ -149,7 +149,8 @@ export class BaseNodeView implements NodeView {
 
 	ignoreMutation(mutation: ViewMutationRecord) {
 		return (
-			mutation.target !== this.contentDOM || mutation.type === 'attributes'
+			mutation.type !== 'selection' &&
+			(mutation.target !== this.contentDOM || mutation.type === 'attributes')
 		);
 	}
 

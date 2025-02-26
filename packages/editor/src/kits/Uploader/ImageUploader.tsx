@@ -89,12 +89,18 @@ function SearchUnsplashImageList({ onChange }: { onChange?: OnChange }) {
 			onSearch={execQuery}
 			placeholder="搜索Unsplash图片"
 		>
-			<LoadingBox
-				loading={loading}
-				className="scrollbar"
-				style={{ height: 380, width: 500, margin: '10px 0' }}
-			>
-				<ImageList cols={3} rowHeight={138}>
+			<LoadingBox loading={loading}>
+				<ImageList
+					className="scrollbar"
+					style={{
+						height: 380,
+						width: 500,
+						margin: '10px 0',
+						overflow: 'auto'
+					}}
+					cols={3}
+					rowHeight={138}
+				>
 					{photos.map((item) => {
 						return (
 							<ImageListItem

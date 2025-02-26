@@ -9,10 +9,6 @@ export class ImageNodeView extends BaseNodeView {
 		this.component = Image;
 		this.render();
 	}
-	ignoreMutation(mutation: ViewMutationRecord): boolean {
-		if (super.ignoreMutation(mutation)) return true;
-		return true;
-	}
 }
 
 export const ImageNodeViewConstructor = (...args: NodeViewParameters) =>

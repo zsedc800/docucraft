@@ -12,15 +12,8 @@ import { Attrs, NodeType, Node } from 'prosemirror-model';
 import { canJoin, findWrapping } from 'prosemirror-transform';
 import { createNode } from './commands';
 
-function getAttributes(
-	getAttrs?: Attrs | null | ((matches: RegExpMatchArray) => Attrs | null)
-): Record<string, any> {
-	return typeof getAttrs === 'function'
-		? (matches: RegExpMatchArray) => ({
-				...getAttrs(matches),
-				blockId: generateUniqueId()
-			})
-		: { ...getAttrs, blockId: generateUniqueId() };
+function getAttributes(getAttrs?: Attrs | null): Record<string, any> {
+	return { ...getAttrs, blockId: generateUniqueId() };
 }
 
 function wrappingInputRule(
@@ -32,7 +25,10 @@ function wrappingInputRule(
 	return new InputRule(regexp, (state, match, start, end) => {
 		// let attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
 
-		let attrs = getAttributes(getAttrs);
+		let attrs = getAttributes(
+			typeof getAttrs === 'function' ? getAttrs(match) : getAttrs
+		);
+
 		let tr = state.tr.delete(start, end);
 		let $start = tr.doc.resolve(start),
 			range = $start.blockRange(),
@@ -60,7 +56,10 @@ function textblockTypeInputRule(
 	return new InputRule(regexp, (state, match, start, end) => {
 		let $start = state.doc.resolve(start);
 		// let attrs = getAttrs instanceof Function ? getAttrs(match) : getAttrs;
-		let attrs = getAttributes(getAttrs);
+		let attrs = getAttributes(
+			typeof getAttrs === 'function' ? getAttrs(match) : getAttrs
+		);
+
 		const parent = $start.parent;
 
 		if (parent.type === schema.nodes.heading && parent.attrs.level === 1)

@@ -1,39 +1,45 @@
-import { ViewMutationRecord } from 'prosemirror-view';
-import { BaseNodeView } from '../../utils/view';
+import { BaseNodeView, getNodeView } from '../../utils/view';
 import { TableCell, TableHeadCell, TableRow } from './cell';
 import { NodeViewParameters } from '../../interface';
 
 export class TableRowView extends BaseNodeView {
 	constructor(...[node, view, getPos]: NodeViewParameters) {
 		super(node, view, getPos);
-		console.log('table row create');
-		// this.dom = document.createElement('tr');
 		this.component = TableRow;
 		this.render();
 		this.contentDOM = this.dom;
 	}
 
-	ignoreMutation(mutation: ViewMutationRecord): boolean {
-		return super.ignoreMutation(mutation) || mutation.type === 'attributes';
+	onFocusIn(): void {
+		// console.log('focus in');
+		const parent = this.getResolvedPos()?.parent;
+		if (parent) getNodeView(parent.attrs.blockId).onFocusIn();
 	}
 }
 
 export class TableCellView extends BaseNodeView {
 	constructor(...[node, view, getPos]: NodeViewParameters) {
 		super(node, view, getPos);
-		console.log('table cell create');
 		this.component = TableCell;
 		this.render();
 		this.contentDOM = this.dom;
+	}
+
+	onFocusIn(): void {
+		const parent = this.getResolvedPos()?.parent;
+		if (parent) getNodeView(parent.attrs.blockId).onFocusIn();
 	}
 }
 
 export class TableHeadCellView extends BaseNodeView {
 	constructor(...[node, view, getPos]: NodeViewParameters) {
 		super(node, view, getPos);
-		console.log('table head cell create');
 		this.component = TableHeadCell;
 		this.render();
 		this.contentDOM = this.dom;
+	}
+	onFocusIn(): void {
+		const parent = this.getResolvedPos()?.parent;
+		if (parent) getNodeView(parent.attrs.blockId).onFocusIn();
 	}
 }

@@ -1,6 +1,6 @@
 import { ViewMutationRecord } from 'prosemirror-view';
 import { Node, NodeType, Schema } from 'prosemirror-model';
-import { BaseNodeView } from '../../utils/view';
+import { BaseNodeView, getNodeView } from '../../utils/view';
 import { shallowEqual } from '../../utils/base';
 import Paragraph from './Paragraph';
 import { getSchemaNodes } from '../../model';
@@ -39,15 +39,12 @@ export class ParagraphView extends BaseNodeView {
 		return true;
 	}
 
-	ignoreMutation(mutation: ViewMutationRecord): boolean {
-		if (super.ignoreMutation(mutation)) return true;
-		return mutation.type === 'attributes';
-	}
 	onFocusIn(): void {
 		const parent = this.getResolvedPos()?.parent;
 		if (!parent) return;
 		const placeholder = getTextByNodeType(parent.type, this.view.state.schema);
 		this.setNodeAttribute('placeholder', placeholder);
+		getNodeView(parent.attrs.blockId)?.onFocusIn();
 	}
 	onFocusOut(e: { reason: 'change' | 'blur'; event?: Event }): void {
 		this.setNodeAttribute('placeholder', '');

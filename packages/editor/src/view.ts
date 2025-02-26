@@ -3,10 +3,10 @@ import './hack';
 import { schema } from './model';
 import { keymap } from 'prosemirror-keymap';
 import { history } from 'prosemirror-history';
-import { onDispatch } from './utils/hooks';
-import { CodeBlockViewConstructor } from './components/codeBlock/codeBlockView';
 import { buildInputRules } from './commands/inputRules';
 import { getMyKeyMap } from './commands/keymap';
+import { onDispatch } from './utils/hooks';
+import { CodeBlockViewConstructor } from './components/codeBlock/codeBlockView';
 import buildToolbar from './components/toolBar';
 import { TaskItemViewConstructor } from './components/taskList';
 import { tableEditing } from './components/tables';
@@ -99,36 +99,8 @@ export const setupEditor = (el: HTMLElement | null) => {
 			}
 			return false;
 		}
-		// handleDOMEvents: {
-		// 	mousedown(view, event) {
-		// 		if ((event.target as Element)?.tagName === 'INPUT') {
-		// 			event.stopPropagation();
-		// 			return true; // 阻止 ProseMirror 默认处理这个事件
-		// 		}
-		// 		return false;
-		// 	}
-		// }
 	});
-
-	// const parent = editorView.dom.parentNode;
-	// if (parent) {
-	// 	let before = parent.previousSibling as HTMLElement;
-	// 	let after = parent.nextSibling as HTMLElement;
-	// 	if (!before) {
-	// 		before = document.createElement('div');
-	// 		before.classList.add('editor-before');
-	// 		parent.parentNode?.insertBefore(before, parent);
-	// 	}
-	// 	if (!after) {
-	// 		after = document.createElement('div');
-	// 		after.classList.add('editor-after');
-	// 		parent.parentNode?.appendChild(after);
-	// 	}
-	// }
-
-	// addView(editorView);
 	return () => {
 		editorView.destroy();
-		// toolbar.destroy();
 	};
 };

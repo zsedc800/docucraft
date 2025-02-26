@@ -1,4 +1,4 @@
-import { useState } from '@docucraft/srender';
+import { useEffect, useState } from '@docucraft/srender';
 import { CodeBlockView } from './codeBlockView';
 import { classnames } from '../../utils';
 import Switch from '@mui/material/Switch';
@@ -8,6 +8,7 @@ import { toggleLineNumber } from './extensions';
 import { setLanguage } from './extensions/loadLanguage';
 import LangPicker from './LangPicker';
 import { useNodeView } from '../../utils/view';
+import Tools from '../toolBar/Tools';
 import './style.scss';
 interface Props {
 	nodeView: CodeBlockView;
@@ -48,7 +49,12 @@ export default ({
 	hidden = false
 }: Props) => {
 	const { $dom } = useNodeView<HTMLPreElement>(nodeView);
-	return (
+
+	useEffect(() => {
+		setLanguage(language, nodeView.cmv);
+	}, []);
+
+	const body = (
 		<pre
 			ref={$dom}
 			contentEditable={false}
@@ -67,17 +73,9 @@ export default ({
 								onChange={(val) => {
 									const { state, dispatch } = nodeView.view;
 									const language = val?.name.toLowerCase() || 'plaintext';
-									const pos = nodeView.getPos() as number;
 									state.schema.cached.lastLanguage = language;
-									if (pos || pos == 0) {
-										const tr = state.tr.setNodeAttribute(
-											pos,
-											'language',
-											language
-										);
-										dispatch(tr);
-										setLanguage(language, nodeView.cmv);
-									}
+
+									nodeView.setNodeAttribute('language', language);
 								}}
 							/>
 						</div>
@@ -86,20 +84,9 @@ export default ({
 								size="small"
 								color="default"
 								checked={showLineNumber}
-								onChange={(e) => {
-									const { state, dispatch } = nodeView.view;
-
-									const pos = nodeView.getPos();
-									if (pos || pos == 0) {
-										const tr = state.tr.setNodeAttribute(
-											pos,
-											'showLineNumber',
-											!showLineNumber
-										);
-										dispatch(tr);
-										toggleLineNumber(nodeView.cmv, !showLineNumber);
-										// setTimeout(() => nodeView.view.focus(), 16);
-									}
+								onChange={(_, val) => {
+									nodeView.setNodeAttribute('showLineNumber', val);
+									toggleLineNumber(nodeView.cmv, val);
 								}}
 							/>
 							<CopyBtn nodeView={nodeView} />
@@ -117,4 +104,5 @@ export default ({
 			/>
 		</pre>
 	);
+	return <Tools>{body}</Tools>;
 };

@@ -18,10 +18,6 @@ export class TimelineNodeView extends BaseNodeView {
 		this.render();
 		this.contentDOM = this.dom;
 	}
-	ignoreMutation(mutation: ViewMutationRecord): boolean {
-		if (super.ignoreMutation(mutation)) return true;
-		return mutation.type === 'attributes';
-	}
 }
 
 export class TimelineItemView extends BaseNodeView {
@@ -31,10 +27,6 @@ export class TimelineItemView extends BaseNodeView {
 		this.render();
 		this.contentDOM = this.dom;
 	}
-	ignoreMutation(mutation: ViewMutationRecord): boolean {
-		if (super.ignoreMutation(mutation)) return true;
-		return mutation.type === 'attributes';
-	}
 }
 
 export class TimelineOppositeView extends BaseNodeView {
@@ -43,10 +35,6 @@ export class TimelineOppositeView extends BaseNodeView {
 		this.component = RCTimelineOpposite;
 		this.render();
 		this.contentDOM = this.dom;
-	}
-	ignoreMutation(mutation: ViewMutationRecord): boolean {
-		if (super.ignoreMutation(mutation)) return true;
-		return mutation.type === 'attributes';
 	}
 }
 

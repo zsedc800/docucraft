@@ -20,7 +20,6 @@ export class TableView extends BaseNodeView {
 		getPos: () => number | undefined,
 		public cellMinWidth: number
 	) {
-		console.log('table create');
 		super(node, view, getPos);
 		this.table = document.createElement('table');
 		this.colgroup = document.createElement('colgroup');
@@ -72,31 +71,20 @@ export class TableView extends BaseNodeView {
 		super.destroy();
 	}
 
-	onFocusIn(): void {
-		this.setProps({ selectIn: true });
-	}
-
-	onFocusOut({
-		reason,
-		event
-	}: {
-		reason: 'change' | 'blur';
-		event?: FocusEvent | undefined;
-	}): void {
-		if (reason === 'blur' && event?.relatedTarget) return;
-		this.setProps({ selectIn: false });
-	}
-
-	// ignoreMutation(record: MutationRecord): boolean {
-	// 	return (
-	// 		record.target !== this.table ||
-	// 		(record.type == 'attributes' &&
-	// 			(record.target == this.table || this.colgroup.contains(record.target)))
-	// 	);
+	// onFocusIn(): void {
+	// 	if (!this.props.selectIn) this.setProps({ selectIn: true });
 	// }
-	selectNode() {
-		console.log('select', this);
-	}
+
+	// onFocusOut({
+	// 	reason,
+	// 	event
+	// }: {
+	// 	reason: 'change' | 'blur';
+	// 	event?: FocusEvent | undefined;
+	// }): void {
+	// 	if (reason === 'blur' && event?.relatedTarget) return;
+	// 	this.setProps({ selectIn: false });
+	// }
 }
 
 export function updateColumnsOnResize(
