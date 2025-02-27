@@ -71,20 +71,14 @@ export class TableView extends BaseNodeView {
 		super.destroy();
 	}
 
-	// onFocusIn(): void {
-	// 	if (!this.props.selectIn) this.setProps({ selectIn: true });
-	// }
+	onFocusIn(): void {
+		if (!this.props.selectIn) this.setProps({ selectIn: true });
+	}
 
-	// onFocusOut({
-	// 	reason,
-	// 	event
-	// }: {
-	// 	reason: 'change' | 'blur';
-	// 	event?: FocusEvent | undefined;
-	// }): void {
-	// 	if (reason === 'blur' && event?.relatedTarget) return;
-	// 	this.setProps({ selectIn: false });
-	// }
+	onFocusOut(): void {
+		// if (reason === 'blur' && event?.relatedTarget) return;
+		this.setProps({ selectIn: false });
+	}
 }
 
 export function updateColumnsOnResize(

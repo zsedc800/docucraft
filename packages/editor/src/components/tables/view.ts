@@ -9,12 +9,6 @@ export class TableRowView extends BaseNodeView {
 		this.render();
 		this.contentDOM = this.dom;
 	}
-
-	onFocusIn(): void {
-		// console.log('focus in');
-		const parent = this.getResolvedPos()?.parent;
-		if (parent) getNodeView(parent.attrs.blockId).onFocusIn();
-	}
 }
 
 export class TableCellView extends BaseNodeView {
@@ -24,11 +18,6 @@ export class TableCellView extends BaseNodeView {
 		this.render();
 		this.contentDOM = this.dom;
 	}
-
-	onFocusIn(): void {
-		const parent = this.getResolvedPos()?.parent;
-		if (parent) getNodeView(parent.attrs.blockId).onFocusIn();
-	}
 }
 
 export class TableHeadCellView extends BaseNodeView {
@@ -37,9 +26,5 @@ export class TableHeadCellView extends BaseNodeView {
 		this.component = TableHeadCell;
 		this.render();
 		this.contentDOM = this.dom;
-	}
-	onFocusIn(): void {
-		const parent = this.getResolvedPos()?.parent;
-		if (parent) getNodeView(parent.attrs.blockId).onFocusIn();
 	}
 }

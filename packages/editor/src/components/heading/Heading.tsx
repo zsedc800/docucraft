@@ -22,6 +22,7 @@ import { ToggleButton } from '../../kits/ToggleButton';
 import { IconPicker, PickerValue } from '../../kits/Picker';
 import { ImageUploader } from '../../kits/Uploader';
 import './style.scss';
+import { Helmet } from '../../kits/helmet';
 
 export type Level = 1 | 2 | 3 | 4 | 5 | 6;
 export interface Props {
@@ -258,7 +259,12 @@ export default ({
 					{container}
 				</Tools>
 			) : (
-				container
+				<>
+					{container}
+					<Helmet>
+						<title>{view.node.textContent || '未命名标题'}</title>
+					</Helmet>
+				</>
 			)}
 			{typeof window !== 'undefined' &&
 				banner &&

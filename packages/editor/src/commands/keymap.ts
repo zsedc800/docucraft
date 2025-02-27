@@ -23,9 +23,10 @@ import { EditorView } from 'prosemirror-view';
 import { schema } from '../model';
 import { createTaskList } from '../components/taskList';
 import { createNode } from './commands';
-import { closeFloatBar, showFloatBar } from '../components/toolBar/FloatBar';
+import { closeFloatBar, showFloatBar } from '../components/floatBar';
 import { splitTimeline } from '../components/timeline';
 import { joinBackward } from './utils';
+import { CellSelection } from '../components/tables/cellSelection';
 
 const splitListItem = (itemTypes: NodeType[], itemAttrs?: Attrs): Command => {
 	return (state, dispatch) => {
@@ -144,7 +145,7 @@ const openFloatBar: Command = (state, dispatch, view) => {
 		} = view;
 		if (selection.empty) {
 			closeFloatBar();
-		} else {
+		} else if (!(selection instanceof CellSelection)) {
 			showFloatBar(view);
 		}
 	}, 500);

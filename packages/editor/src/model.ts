@@ -177,6 +177,10 @@ export function getSchemaNodes(schema: Schema) {
 	);
 }
 
+export function getSchemaNode(schema: Schema, key: NodesKey) {
+	return schema.nodes[key];
+}
+
 export type MarksKey =
 	| 'bold'
 	| 'italic'

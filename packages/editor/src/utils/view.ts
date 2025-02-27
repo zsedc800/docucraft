@@ -74,9 +74,10 @@ export class BaseNodeView implements NodeView {
 		this.blockId = node.attrs.blockId;
 		nodeViewContainer.set(this.blockId, this);
 		this.props = {};
-		Promise.resolve().then(() =>
-			this.rootRender.updateContainer(this.dom.parentElement!)
-		);
+		Promise.resolve().then(() => {
+			this.rootRender.updateContainer(this.dom.parentElement!);
+			this.dom.dataset.blockId = this.blockId;
+		});
 
 		this.setNodeAttribute = this.setNodeAttribute.bind(this);
 		this.setNodeAttributes = this.setNodeAttributes.bind(this);
@@ -131,7 +132,7 @@ export class BaseNodeView implements NodeView {
 		const props = { nodeView: this, ...this.node.attrs, ...this.props, ...p };
 		let element = h(this.component, props);
 		element = h(
-			nodeViewContext.Provider,
+			nodeViewContext.Provider as any,
 			{ value: { nodeView: this } },
 			element
 		);

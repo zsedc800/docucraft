@@ -20,6 +20,7 @@ import { clipCells, fitSlice, insertCells, pastedCells } from './copypaste';
 import { TableMap, nextCell } from './tableMap';
 import { createNodeAndFill } from '../../commands';
 import { getResizingPos, isResizing } from './resizing';
+import { getSchemaNode, schema } from '../../model';
 
 type Axis = 'horiz' | 'vert';
 
@@ -119,6 +120,7 @@ function shiftArrow(axis: Axis, dir: Direction): Command {
 		}
 		const $head = nextCell(cellSel.$headCell, axis, dir);
 		if (!$head) return false;
+
 		return maybeSetSelection(
 			state,
 			dispatch,
@@ -215,38 +217,51 @@ export function handleMouseDown(
 		}
 	}
 	const { clientX: x1, clientY: y1 } = startEvent;
+
 	function stop(e?: Event): void {
+		const {
+			state: { tr: tra, schema, doc },
+			dispatch,
+			focus,
+			root
+		} = view;
+		let tr = tra;
+
+		root.removeEventListener('mouseup', stop);
+		root.removeEventListener('dragstart', stop);
+		root.removeEventListener('mousemove', move);
+		if (!isEmpty(tableEditingKey.getState(view.state)?.set))
+			tr = tr.setMeta(tableEditingKey, { set: -1 });
 		if (e?.type == 'mouseup') {
-			const _event: MouseEvent = e as MouseEvent;
-			const { clientX: x2, clientY: y2 } = _event;
+			const { clientX: x2, clientY: y2 } = e as MouseEvent;
+			console.log(e, $cell, 'e');
+
 			if (Math.abs(x1 - x2) < 4 && Math.abs(y1 - y2) < 4) {
 				const pos = view.posAtCoords({
 					left: x2,
 					top: y2
 				});
-				if (pos) {
-					const newSelection = TextSelection.create(
-						view.state.doc,
-						pos.pos,
-						pos.pos
-					);
-					const tr = view.state.tr.setSelection(newSelection);
-					view.dispatch(tr);
-					view.focus();
+				if (pos && $cell) {
+					let p = pos.pos;
+					const $pos = doc.resolve(pos.pos);
+					if ($pos.parent.type === getSchemaNode(schema, 'tableCell'))
+						p = $cell.pos + 2;
+
+					console.log(p, $cell, 111);
+
+					const newSelection = TextSelection.create(doc, p);
+					tr = tr.setSelection(newSelection);
 				}
 			} else {
-				const tableDOM = view.nodeDOM($cell!.start(-2));
-				(tableDOM?.firstChild as HTMLDivElement)?.focus();
-
+				// const tableDOM = view.nodeDOM($cell!.start(-2));
+				// console.log(tableDOM, 'tableDOM');
+				// (tableDOM?.firstChild as HTMLDivElement)?.focus();
 				// document.querySelector<HTMLElement>('.hiddenfocus')?.focus();
 			}
 		}
 
-		view.root.removeEventListener('mouseup', stop);
-		view.root.removeEventListener('dragstart', stop);
-		view.root.removeEventListener('mousemove', move);
-		if (!isEmpty(tableEditingKey.getState(view.state)?.set))
-			view.dispatch(view.state.tr.setMeta(tableEditingKey, { set: -1 }));
+		dispatch(tr);
+		view.focus();
 	}
 
 	let startPos = view.posAtCoords({ left: x1, top: y1 });
@@ -262,17 +277,18 @@ export function handleMouseDown(
 			$anchor = cellUnderMouse(view, startEvent);
 			if (!$anchor) return stop();
 			view.dom.blur();
-		} else {
-			const head = view.posAtCoords({
-				left: event.clientX,
-				top: event.clientY
-			});
-			view.dispatch(
-				view.state.tr.setSelection(
-					TextSelection.create(view.state.doc, startPos!.pos, head!.pos)
-				)
-			);
 		}
+		// else {
+		// 	const head = view.posAtCoords({
+		// 		left: event.clientX,
+		// 		top: event.clientY
+		// 	});
+		// 	view.dispatch(
+		// 		view.state.tr.setSelection(
+		// 			TextSelection.create(view.state.doc, startPos!.pos, head!.pos)
+		// 		)
+		// 	);
+		// }
 		if ($anchor) setCellSelection($anchor, event);
 	}
 

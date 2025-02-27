@@ -106,11 +106,7 @@ export default function Menu({
 				placement={placement}
 				sx={{ zIndex: 9999 }}
 			>
-				<ClickAwayListener
-					onClickAway={() => {
-						if (!childRef.current.matches(':hover')) handleClose();
-					}}
-				>
+				<ClickAwayListener onClickAway={() => handleClose()}>
 					<Paper
 						// onMouseLeave={() =>
 						// 	childRef.current?.matches(':hover') ? void 0 : handleClose()

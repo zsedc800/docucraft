@@ -3,7 +3,9 @@ import {
 	forwardRef as Rff,
 	Suspense as Suspen,
 	ReactPortal,
-	useImperativeHandle as useImp
+	useImperativeHandle as useImp,
+	createContext as CCtx,
+	useContext as UseCtx
 } from 'react';
 // import {
 // 	ExoticComponent,
@@ -16,6 +18,8 @@ import { ReactElement } from 'react';
 export * from './index';
 
 export const Suspense: typeof Suspen;
+export const createContext: typeof CCtx;
+export const useContext: typeof UseCtx;
 
 // export const forwardRef: <R, P>(r: R) => ForwardRefExoticComponent<R & P>;
 
