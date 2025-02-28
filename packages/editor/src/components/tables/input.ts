@@ -222,7 +222,6 @@ export function handleMouseDown(
 		const {
 			state: { tr: tra, schema, doc },
 			dispatch,
-			focus,
 			root
 		} = view;
 		let tr = tra;
@@ -234,50 +233,54 @@ export function handleMouseDown(
 			tr = tr.setMeta(tableEditingKey, { set: -1 });
 		if (e?.type == 'mouseup') {
 			const { clientX: x2, clientY: y2 } = e as MouseEvent;
-			console.log(e, $cell, 'e');
 
 			if (Math.abs(x1 - x2) < 4 && Math.abs(y1 - y2) < 4) {
 				const pos = view.posAtCoords({
 					left: x2,
 					top: y2
 				});
+
 				if (pos && $cell) {
 					let p = pos.pos;
 					const $pos = doc.resolve(pos.pos);
-					if ($pos.parent.type === getSchemaNode(schema, 'tableCell'))
-						p = $cell.pos + 2;
-
-					console.log(p, $cell, 111);
+					const nodes = [
+						getSchemaNode(schema, 'tableCell'),
+						getSchemaNode(schema, 'tableHeader')
+					];
+					if (nodes.includes($pos.parent.type))
+						p = $cell.pos < p ? p - 1 : $cell.pos + 2;
 
 					const newSelection = TextSelection.create(doc, p);
 					tr = tr.setSelection(newSelection);
 				}
-			} else {
-				// const tableDOM = view.nodeDOM($cell!.start(-2));
-				// console.log(tableDOM, 'tableDOM');
-				// (tableDOM?.firstChild as HTMLDivElement)?.focus();
-				// document.querySelector<HTMLElement>('.hiddenfocus')?.focus();
 			}
+			// else {
+			// const tableDOM = view.nodeDOM($cell!.start(-2));
+			// console.log(tableDOM, 'tableDOM');
+			// (tableDOM?.firstChild as HTMLDivElement)?.focus();
+			// document.querySelector<HTMLElement>('.hiddenfocus')?.focus();
+			// }
 		}
 
 		dispatch(tr);
 		view.focus();
 	}
 
-	let startPos = view.posAtCoords({ left: x1, top: y1 });
+	// let startPos = view.posAtCoords({ left: x1, top: y1 });
 
 	function move(_event: Event): void {
 		const event = _event as MouseEvent;
 
 		const anchor = tableEditingKey.getState(view.state)?.set;
+
 		let $anchor;
 		if (anchor || anchor == 0) {
 			$anchor = view.state.doc.resolve(anchor);
 		} else if (domInCell(view, event.target as Node) != startDOMCell) {
 			$anchor = cellUnderMouse(view, startEvent);
 			if (!$anchor) return stop();
-			view.dom.blur();
 		}
+
 		// else {
 		// 	const head = view.posAtCoords({
 		// 		left: event.clientX,
@@ -289,6 +292,7 @@ export function handleMouseDown(
 		// 		)
 		// 	);
 		// }
+
 		if ($anchor) setCellSelection($anchor, event);
 	}
 

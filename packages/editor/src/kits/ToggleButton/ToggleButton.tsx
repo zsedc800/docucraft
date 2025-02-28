@@ -26,6 +26,7 @@ export type Trigger = 'click' | 'hover' | 'contextmenu';
 interface Props {
 	children: ReactNode;
 	onClick?: (e: MouseEvent<HTMLDivElement>) => void;
+	onClose?: () => void;
 	title?: string | ReactNode;
 	subPanel?: ((attrs: PanelProps) => ReactNode) | ReactNode;
 	trigger?: Trigger;
@@ -66,6 +67,7 @@ export default forwardRef<{ close(): void }, BaseProps<Props>>(
 			actived,
 			placement = 'bottom',
 			maskProps,
+			onClose,
 			...attrs
 		},
 		ref
@@ -75,7 +77,10 @@ export default forwardRef<{ close(): void }, BaseProps<Props>>(
 		>(null);
 		const popperRef = useRef<HTMLDivElement>(null);
 
-		const handleClose = () => setAnchorEl(null);
+		const handleClose = () => {
+			setAnchorEl(null);
+			onClose && onClose();
+		};
 		const handleClick = (e: MouseEvent<HTMLDivElement>) => {
 			if (typeof onClick === 'function') onClick(e);
 			setAnchorEl(e.currentTarget);

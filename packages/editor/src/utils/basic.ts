@@ -14,6 +14,8 @@ export const getNodeTypesByKeys =
 
 export function createNodeSpec(config: NodeSpec): NodeSpec {
 	config.attrs = {
+		color: { default: undefined },
+		bgColor: { default: undefined },
 		...config.attrs,
 		hidden: { default: false },
 		blockId: { default: null },

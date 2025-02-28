@@ -1,4 +1,5 @@
 import { Plugin } from 'prosemirror-state';
+import { CellSelection } from '../components/tables/cellSelection/cellSelection';
 import { closeFloatBar, showFloatBar } from '../components/floatBar';
 import { BaseNodeView, getNodeView } from '../utils/view';
 import EditorView from '../EditorView';
@@ -17,7 +18,12 @@ export default () => {
 						state: { selection }
 					} = view;
 
-					if (!selection.empty && updated && view.hasFocus())
+					if (
+						!selection.empty &&
+						!(selection instanceof CellSelection) &&
+						updated &&
+						view.hasFocus()
+					)
 						showFloatBar(view);
 				}
 			}
@@ -27,27 +33,25 @@ export default () => {
 			const lastNodes = new Map<string, BaseNodeView>();
 			const onSelectionChange = () => {
 				const sel = root.getSelection();
-				console.trace(sel, 'sel');
 
 				if (!sel || sel.type === 'None') return;
 				const { anchorNode } = sel;
-				for (const [id, nodeView] of lastNodes)
-					if (!nodeView.dom.contains(anchorNode)) {
+				for (const [id, nodeView] of lastNodes) {
+					if (!nodeView.dom.contains(anchorNode))
 						nextTick(() => {
 							nodeView.onFocusOut({ reason: 'change' });
 							lastNodes.delete(id);
 						});
-					}
+				}
 
 				for (let scan = anchorNode; scan; scan = scan.parentNode) {
 					const blockId = (scan as HTMLElement).dataset?.blockId;
 					const nodeView = getNodeView(blockId);
-					if (nodeView) {
+					if (nodeView)
 						nextTick(() => {
 							nodeView.onFocusIn();
 							lastNodes.set(blockId, nodeView);
 						});
-					}
 				}
 			};
 			root.addEventListener('selectionchange', onSelectionChange);

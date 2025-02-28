@@ -27,6 +27,7 @@ interface Props {
 	hidden: boolean;
 	cols: { width: number }[];
 	selectIn?: boolean;
+	selected?: boolean;
 }
 
 export default ({
@@ -34,7 +35,8 @@ export default ({
 	nodeView,
 	hidden,
 	cols,
-	selectIn = false
+	selectIn = false,
+	selected
 }: Props) => {
 	const { $contentDOM, $dom } = useNodeView<
 		HTMLDivElement,
@@ -73,7 +75,8 @@ export default ({
 			className={classnames('tableWrapper', className, {
 				hidden,
 				'shadow-left': shadow.left,
-				'shadow-right': shadow.right
+				'shadow-right': shadow.right,
+				selected
 			})}
 			ref={$dom}
 			data-selectin={selectIn}

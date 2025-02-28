@@ -103,7 +103,7 @@ export const buildInputRules = () => {
 		wrappingInputRule(/^(\d+)\.\s$/, schema.nodes.ordered_list, (match) => ({
 			order: +match[1]
 		})),
-		wrappingInputRule(/^\-\[\]\s$/, schema.nodes.taskList)
+		wrappingInputRule(/^\[\]\s$/, schema.nodes.taskList)
 	];
 
 	const rules = [

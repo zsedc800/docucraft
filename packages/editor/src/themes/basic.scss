@@ -223,3 +223,12 @@ body {
 		}
 	}
 }
+
+.ProseMirror {
+	[data-block-id] {
+		border-radius: 4px;
+	}
+	.selected {
+		background-color: #d9eafc;
+	}
+}

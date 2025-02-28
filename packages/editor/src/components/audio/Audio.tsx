@@ -4,6 +4,7 @@ import { AudioNodeView } from './view';
 import { useNodeView } from '../../utils/view';
 import './style.scss';
 import Tools from '../toolBar/Tools';
+import { classnames } from '../../utils';
 
 interface Props {
 	src: string;
@@ -14,7 +15,7 @@ export default ({ src, nodeView }: Props) => {
 	useEffect(() => {}, []);
 	const { $dom } = useNodeView(nodeView);
 	const body = (
-		<div ref={$dom} className="audio-container">
+		<div ref={$dom} className={classnames('audio-container')}>
 			{src ? (
 				<audio src={src} preload="auto" controls></audio>
 			) : (

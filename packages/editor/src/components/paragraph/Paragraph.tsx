@@ -7,6 +7,7 @@ import { classnames } from '../../utils';
 import { usePopover } from '../popover';
 import { ComponentsPanel } from '../../kits/ComponentsPanel';
 import './style.scss';
+import { ColorPalette } from '../../kits/Button/OPMenus';
 
 interface Props extends BaseNodeViewProps {
 	nodeView: ParagraphView;
@@ -22,7 +23,10 @@ export default ({
 	initialPop,
 	hidden,
 	text = '',
-	blockId
+	blockId,
+	selected,
+	color,
+	bgColor
 }: Props) => {
 	const { $dom, $contentDOM } = useNodeView<HTMLDivElement>(nodeView);
 
@@ -48,10 +52,12 @@ export default ({
 	const body = (
 		<div
 			ref={$dom}
+			style={{ color, backgroundColor: bgColor }}
 			className={classnames('block text-block', {
 				hidden,
 				empty: !text,
-				initialPop
+				initialPop,
+				selected
 			})}
 			data-placeholder={placeholder}
 			data-block-id={blockId}
@@ -62,7 +68,7 @@ export default ({
 	return (
 		<>
 			{childrenHolder}
-			{isToplevel ? <Tools>{body}</Tools> : body}
+			{isToplevel ? <Tools extraMenu={ColorPalette}>{body}</Tools> : body}
 		</>
 	);
 };

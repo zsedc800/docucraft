@@ -2,6 +2,8 @@ import { Decoration, DecorationSource, NodeView } from 'prosemirror-view';
 import { HTMLAttributes } from 'react';
 import EditorView from './EditorView';
 import { Node } from 'prosemirror-model';
+import { ReactNode } from '@docucraft/srender';
+import { BaseNodeView } from './utils/view';
 
 export interface ImageItem {
 	src: string;
@@ -39,5 +41,12 @@ export type NodeViewParameters = readonly [
 	decorations: readonly Decoration[],
 	innerDecorations: DecorationSource
 ];
+
+export interface MenuItemConfig {
+	Icon?: (props: any) => ReactNode;
+	handler: (nodeView: BaseNodeView) => void;
+	title: ReactNode;
+	suffix?: ReactNode;
+}
 
 export type NodeViewConstructor = (...args: NodeViewParameters) => NodeView;

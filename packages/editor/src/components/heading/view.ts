@@ -10,7 +10,6 @@ export class HeadingView extends BaseNodeView {
 	constructor(...args: NodeViewParameters) {
 		const [node, view, getPos] = args;
 		super(node, view, getPos);
-		console.log(args, 'heading');
 
 		this.node = node;
 		this.id = this.blockId;

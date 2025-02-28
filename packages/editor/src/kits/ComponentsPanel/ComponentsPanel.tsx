@@ -5,7 +5,6 @@ import ListItem from '@mui/material/ListItem';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemText from '@mui/material/ListItemText';
 import Paper from '@mui/material/Paper';
-import { schema } from '../../model';
 import { NodeSelection } from 'prosemirror-state';
 import { basicTools, blocklist } from './menuItemConfig';
 import Typography from '@mui/material/Typography';
@@ -15,33 +14,63 @@ import ListItemButton, {
 import Stack from '@mui/material/Stack';
 import Chip from '@mui/material/Chip';
 import { useContext } from '@docucraft/srender';
+import { schema } from '../../model';
 import { IconBlock } from '../IconBlock';
 import { nodeViewContext } from '../../utils/view';
 import { overrides } from '../../utils';
+import { BlockItem } from './interface';
 
-export default ({ close }: { close?: () => void }) => {
+export default ({ close, text }: { close?: () => void; text?: string }) => {
 	const { nodeView } = useContext(nodeViewContext);
-	return (
-		<Paper
-			className="scrollbar"
-			sx={(t) => ({
-				width: 300,
-				maxHeight: '480px',
-				boxSizing: 'border-box',
-				'& .subTitle': {
-					fontSize: '12px',
-					paddingBottom: '4px',
-					color: t.palette.text.secondary
-				},
-				'& .group': {
-					padding: '8px 16px',
-					'&.basic': {
-						padding: '8px 0',
-						'.subTitle': { padding: '0 16px' }
-					}
+	const keyword = text.slice(1);
+
+	const renderBlockItem = ({
+		cover: Cover,
+		title,
+		description,
+		handler,
+		type = 'block'
+	}: BlockItem) => (
+		<ListItem
+			onClick={() => {
+				const { view } = nodeView;
+				const { state, dispatch } = view;
+				const {
+					selection: { $from },
+					tr,
+					doc
+				} = state;
+				const start = $from.before();
+				let transaction = tr;
+				if (type === 'block') {
+					transaction = tr.setSelection(NodeSelection.create(doc, start));
 				}
-			})}
+
+				const node = $from.parent;
+				if (node.type === schema.nodes.paragraph)
+					transaction = transaction.delete(
+						start + 1,
+						start + node.nodeSize - 1
+					);
+
+				handler(overrides(state, { tr: transaction }) as any, dispatch, view);
+				if (type === 'block') view.focus();
+				close && close();
+			}}
 		>
+			<ListItemButton>
+				<ListItemAvatar>
+					<Avatar className="avatar" variant="rounded">
+						<Cover />
+					</Avatar>
+				</ListItemAvatar>
+				<ListItemText primary={title} secondary={description} />
+			</ListItemButton>
+		</ListItem>
+	);
+
+	const baselist = (
+		<>
 			<Box
 				className="group"
 				sx={(t) => ({
@@ -61,14 +90,14 @@ export default ({ close }: { close?: () => void }) => {
 					sx={(t) => ({
 						display: 'grid',
 						gridTemplateColumns: 'repeat(6, 1fr)',
+						gap: '4px',
 						'& .iconButton': {
-							fontSize: '22px',
-							padding: '4px'
+							fontSize: '22px'
 						}
 					})}
 				>
 					{basicTools.map((props) => (
-						<IconBlock type="block" {...{ ...props }} />
+						<IconBlock {...{ ...(props as any) }} type="block" />
 					))}
 				</Box>
 			</Box>
@@ -92,54 +121,52 @@ export default ({ close }: { close?: () => void }) => {
 						}
 					})}
 				>
-					{blocklist.map(
-						({ cover: Cover, title, description, handler, type = 'block' }) => (
-							<ListItem
-								onClick={() => {
-									const { view } = nodeView;
-									const { state, dispatch } = view;
-									const {
-										selection: { $from },
-										tr,
-										doc
-									} = state;
-									const start = $from.before();
-									let transaction = tr;
-									if (type === 'block') {
-										transaction = tr.setSelection(
-											NodeSelection.create(doc, start)
-										);
-									}
-
-									const node = $from.parent;
-									if (node.type === schema.nodes.paragraph)
-										transaction = transaction.delete(
-											start + 1,
-											start + node.nodeSize - 1
-										);
-
-									handler(
-										overrides(state, { tr: transaction }),
-										dispatch,
-										view
-									);
-									if (type === 'block') view.focus();
-									close && close();
-								}}
-							>
-								<ListItemButton>
-									<ListItemAvatar>
-										<Avatar className="avatar" variant="rounded">
-											<Cover />
-										</Avatar>
-									</ListItemAvatar>
-									<ListItemText primary={title} secondary={description} />
-								</ListItemButton>
-							</ListItem>
-						)
-					)}
+					{blocklist.map(renderBlockItem)}
 				</List>
 			</Box>
+		</>
+	);
+
+	const res = ([] as BlockItem[])
+		.concat(basicTools, blocklist)
+		.filter((item) => item.name.includes(keyword));
+
+	const searchlist = (
+		<Box className="group">
+			<Typography className="subTitle">搜索结果</Typography>
+			<List>
+				{res.length > 0
+					? res.map((item) => {
+							if (!item.cover) item.cover = item.icon;
+							return renderBlockItem(item);
+						})
+					: 'no'}
+			</List>
+		</Box>
+	);
+
+	return (
+		<Paper
+			className="scrollbar"
+			sx={(t) => ({
+				width: 300,
+				maxHeight: '480px',
+				boxSizing: 'border-box',
+				'& .subTitle': {
+					fontSize: '12px',
+					paddingBottom: '4px',
+					color: t.palette.text.secondary
+				},
+				'& .group': {
+					padding: '8px 16px',
+					'&.basic': {
+						padding: '8px 0',
+						'.subTitle': { padding: '0 16px' }
+					}
+				}
+			})}
+		>
+			{keyword ? searchlist : baselist}
 		</Paper>
 	);
 };

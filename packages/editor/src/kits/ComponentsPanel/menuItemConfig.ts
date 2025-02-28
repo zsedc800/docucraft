@@ -19,7 +19,7 @@ import SvgTable from '../../assets/svg/SvgTable';
 import SvgBlockQuote from '../../assets/svg/BlockQuote';
 import SvgDivider from '../../assets/svg/Divider';
 import SvgEmphsis from '../../assets/svg/Emphsis';
-import { BlockItem, ToolItem } from './interface';
+import { BlockItem } from './interface';
 import { createNode, transformToNode } from '../../commands';
 import { schema } from '../../model';
 import { nextTick } from '../../utils';
@@ -28,9 +28,10 @@ import { createTable } from '../../components/tables/commands';
 import { insertTimeline } from '../../components/timeline';
 import { EmojiPickerPop, IconPickerPop } from '../Picker';
 import { TextSelection } from 'prosemirror-state';
-export const basicTools: ToolItem[] = [
+export const basicTools: BlockItem[] = [
 	{
 		title: '文本',
+		name: 'text',
 		icon: SvgTitle,
 		handler: (state, dispatch) => {
 			dispatch?.(state.tr);
@@ -39,56 +40,67 @@ export const basicTools: ToolItem[] = [
 	},
 	{
 		title: '一级标题',
+		name: 'h1',
 		icon: SvgH1,
 		handler: transformToNode(schema.nodes.heading, { level: 1 })
 	},
 	{
 		title: '二级标题',
+		name: 'h2',
 		icon: SvgH2,
 		handler: transformToNode(schema.nodes.heading, { level: 2 })
 	},
 	{
 		title: '三级标题',
+		name: 'h3',
 		icon: SvgH3,
 		handler: transformToNode(schema.nodes.heading, { level: 3 })
 	},
 	{
 		title: '四级标题',
+		name: 'h4',
 		icon: SvgH4,
 		handler: transformToNode(schema.nodes.heading, { level: 4 })
 	},
 	{
 		title: '五级标题',
+		name: 'h5',
 		icon: SvgH5,
 		handler: transformToNode(schema.nodes.heading, { level: 5 })
 	},
 	{
 		title: '六级标题',
+		name: 'h6',
 		icon: SvgH6,
 		handler: transformToNode(schema.nodes.heading, { level: 6 })
 	},
 	{
 		title: '代码块',
+		name: 'codeBlock',
 		icon: SvgCodeBlock,
 		handler: transformToNode(schema.nodes.codeBlock)
 	},
 	{
 		title: '有序列表',
+		name: 'orderlist',
 		icon: SvgOrderList,
 		handler: transformToNode(schema.nodes.ordered_list)
 	},
 	{
 		title: '无序列表',
+		name: 'bulletlist',
 		icon: SvgBulletList,
 		handler: transformToNode(schema.nodes.bullet_list)
 	},
 	{
 		title: '任务列表',
+		name: 'tasklist',
 		icon: SvgAddTask,
 		handler: transformToNode(schema.nodes.taskList)
 	},
 	{
 		title: '添加链接',
+		name: 'link',
 		icon: SvgLink,
 		handler: (state, dispatch, view) => {
 			if (!view) return false;

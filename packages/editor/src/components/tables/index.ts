@@ -18,7 +18,6 @@ import { Decoration, DecorationSet } from 'prosemirror-view';
 import { TableViewConstructor } from './tableView';
 import './style.scss';
 import { TableCellView, TableHeadCellView, TableRowView } from './view';
-import { callNodeView, fixSelection } from '../../utils';
 import { preventDispatch } from '../../utils/hooks';
 import { TableState } from './interface';
 import { NodeViewParameters } from '../../interface';
@@ -84,10 +83,10 @@ export function tableEditing({
 			handleDOMEvents: {
 				mousedown: handleMouseDown,
 				focus(view) {
-					callNodeView(view, 'onFocusIn')?.();
+					// callNodeView(view, 'onFocusIn')?.();
 				},
 				blur(view, event) {
-					callNodeView(view, 'onFocusOut')?.({ reason: 'blur', event });
+					// callNodeView(view, 'onFocusOut')?.({ reason: 'blur', event });
 				},
 				mouseup(view, event) {
 					const { clientX: x, clientY: y } = event;
@@ -105,41 +104,6 @@ export function tableEditing({
 
 			// 	return !isEmpty(set) ? view.state.selection : null;
 			// }
-		},
-		view(view) {
-			let timeout: any;
-			// const onSelectionChange = () => {
-			// 	timeout = setTimeout(() => {
-			// 		const selection = document.getSelection();
-			// 		const { state } = view;
-			// 		const { from, to, anchor, $anchor } = state.selection;
-
-			// 		if (selection && selection.anchorNode) {
-			// 			const { anchorNode, anchorOffset } = selection;
-			// 			const pos = view.posAtDOM(anchorNode, anchorOffset);
-			// 			if (pos < 0) return;
-			// 			console.log($anchor, pos, anchor, 'anchor');
-
-			// 			if (pos !== anchor) fixSelection(view, from, to);
-			// 		}
-			// 	}, 0);
-			// };
-			// document.addEventListener('selectionchange', onSelectionChange);
-			return {
-				update({ state: { selection }, dom }, { selection: sel }) {
-					if (timeout) clearTimeout(timeout);
-
-					if (!selection.eq(sel)) {
-						if (selection instanceof CellSelection) {
-							window.getSelection()?.removeAllRanges();
-							dom.blur();
-						}
-					}
-				},
-				destroy() {
-					// document.removeEventListener('selectionchange', onSelectionChange);
-				}
-			};
 		}
 
 		// appendTransaction(_, oldState, newState) {

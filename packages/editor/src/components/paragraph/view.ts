@@ -27,7 +27,7 @@ export class ParagraphView extends BaseNodeView {
 		const [node, view, getPos] = args;
 		super(node, view, getPos);
 		this.component = Paragraph;
-		this.render({ text: node.textContent });
+		this.setProps({ text: node.textContent });
 	}
 
 	update(node: Node) {
@@ -35,7 +35,8 @@ export class ParagraphView extends BaseNodeView {
 		const { attrs: props, type: t, textContent: text } = this.node;
 		if (type !== t || attrs.blockId !== props.blockId) return false;
 		this.node = node;
-		if (!shallowEqual(attrs, props) || txt !== text) this.render({ text: txt });
+		if (!shallowEqual(attrs, props) || txt !== text)
+			this.setProps({ text: txt });
 		return true;
 	}
 
@@ -44,10 +45,11 @@ export class ParagraphView extends BaseNodeView {
 		if (!parent) return;
 		const placeholder = getTextByNodeType(parent.type, this.view.state.schema);
 		this.setNodeAttribute('placeholder', placeholder);
-		getNodeView(parent.attrs.blockId)?.onFocusIn();
+		console.trace(placeholder, this);
 	}
 	onFocusOut(e: { reason: 'change' | 'blur'; event?: Event }): void {
 		this.setNodeAttribute('placeholder', '');
+		console.trace(this, 'focusout');
 	}
 }
 

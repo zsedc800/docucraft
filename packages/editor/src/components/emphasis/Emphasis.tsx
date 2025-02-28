@@ -5,15 +5,15 @@ import { EmphasisView } from './view';
 import { IconPicker, PickerValue } from '../../kits/Picker';
 import SvgMore from '@docucraft/icons/svg/More1';
 import SvgPalette from '@docucraft/icons/svg/Palette';
-import './style.scss';
 import Menu from '../../kits/Menu';
 import MenuList from '@mui/material/MenuList';
 import MenuItem from '@mui/material/MenuItem';
 import { ToggleButton } from '../../kits/ToggleButton';
-import ListItemIcon from '@mui/material/ListItemIcon';
 import { ListItemText } from '@mui/material';
 import ColorMark from '../../kits/ColorMark';
 import { CSSProperties } from '@docucraft/srender';
+import './style.scss';
+import { ColorPalette } from '../../kits/Button/OPMenus';
 
 interface Props {
 	nodeView: EmphasisView;
@@ -80,5 +80,5 @@ export default ({ nodeView, icon, color, bgColor }: Props) => {
 			</ToggleButton>
 		</div>
 	);
-	return <Tools>{body}</Tools>;
+	return <Tools extraMenu={ColorPalette}>{body}</Tools>;
 };

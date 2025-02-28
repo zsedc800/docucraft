@@ -8,6 +8,8 @@
 		display: flex;
 		align-items: flex-start;
 		text-indent: 0em;
+		font-size: 16px;
+		padding-left: 4px;
 		&.checked {
 			text-decoration: line-through rgba(55, 53, 47, 0.45);
 			color: rgba(55, 53, 47, 0.65);

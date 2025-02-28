@@ -48,6 +48,9 @@ export const nodeViewContext = createContext<{ nodeView: BaseNodeView }>(
 export interface BaseNodeViewProps {
 	nodeView: BaseNodeView;
 	hidden: boolean;
+	selected?: boolean;
+	color?: string;
+	bgColor?: string;
 }
 
 export class BaseNodeView implements NodeView {
@@ -187,6 +190,10 @@ export class BaseNodeView implements NodeView {
 	}
 	selectNode() {
 		console.log('selectNode');
+		this.setProps({ selected: true });
+	}
+	deselectNode() {
+		this.setProps({ selected: false });
 	}
 	// 抽象方法
 	onFocusIn() {}

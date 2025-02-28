@@ -12,7 +12,7 @@ import Icon from '@docucraft/icons';
 import { HeadingView } from './view';
 import Popover from '@mui/material/Popover';
 import { OutlineTree } from '../outline';
-import { useNodeView } from '../../utils/view';
+import { BaseNodeViewProps, useNodeView } from '../../utils/view';
 import Tools from '../toolBar/Tools';
 import Toast from '../Toast';
 import { NormalTooltip } from '../../kits';
@@ -21,8 +21,10 @@ import { SymbolControlBtn } from './SymbolCtrl';
 import { ToggleButton } from '../../kits/ToggleButton';
 import { IconPicker, PickerValue } from '../../kits/Picker';
 import { ImageUploader } from '../../kits/Uploader';
-import './style.scss';
 import { Helmet } from '../../kits/helmet';
+import { ColorPalette } from '../../kits/Button/OPMenus';
+import { Overrides } from '../../interface';
+import './style.scss';
 
 export type Level = 1 | 2 | 3 | 4 | 5 | 6;
 export interface Props {
@@ -126,15 +128,21 @@ export default ({
 	hidden,
 	blockId: id,
 	icon,
-	banner
-}: Props) => {
+	banner,
+	selected,
+	color,
+	bgColor
+}: Overrides<BaseNodeViewProps, Props>) => {
 	const outlineTree = view.outlineTree;
 	const { $dom, $contentDOM } = useNodeView(view);
 	const Tag = `h${level}`;
 	const hasTools = view.depth === 0 && level > 1;
 
 	const container = (
-		<div className="heading-container">
+		<div
+			style={{ color, backgroundColor: bgColor }}
+			className={classnames('heading-container', { selected })}
+		>
 			{outlineTree && outlineTree.orderType ? (
 				<BasicPopover outlineTree={outlineTree}>
 					<span
@@ -255,7 +263,11 @@ export default ({
 				</>
 			) : null}
 			{hasTools ? (
-				<Tools placement="left" toolsAfter={toolsAfter}>
+				<Tools
+					placement="left"
+					toolsAfter={toolsAfter}
+					extraMenu={ColorPalette}
+				>
 					{container}
 				</Tools>
 			) : (

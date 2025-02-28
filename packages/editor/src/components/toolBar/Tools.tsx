@@ -1,27 +1,29 @@
 import { TooltipProps, tooltipClasses } from '@mui/material/Tooltip';
 import Box from '@mui/material/Box';
+import Typography from '@mui/material/Typography';
 import SvgAdd from '@docucraft/icons/svg/Add';
 import SvgDragIndicator from '@docucraft/icons/svg/DragIndicatorFill';
 import { useContext, useEffect, useRef, useState } from '@docucraft/srender';
 import { BaseNodeView, nodeViewContext } from '../../utils/view';
-import Typography from '@mui/material/Typography';
 import { createNode, insert } from '../../commands/commands';
 import { schema } from '../../model';
 import { CSSProperties, MouseEvent, ReactNode } from 'react';
 import { RichTooltip as HtmlTooltip, NormalTooltip } from '../../kits';
+import { default as OPMenus, OPMenuProps } from '../../kits/Button/OPMenus';
 import './style.scss';
-import { OPMenus } from '../../kits/Button';
 
 const Toolbar = ({
 	before,
 	after,
 	style,
-	close
+	close,
+	extraMenu
 }: {
 	before: ReactNode;
 	after: ReactNode;
 	style?: CSSProperties;
 	close?: () => void;
+	extraMenu?: OPMenuProps['extraMenu'];
 }) => {
 	const { nodeView } = useContext(nodeViewContext);
 
@@ -68,7 +70,7 @@ const Toolbar = ({
 					}}
 				/>
 			</NormalTooltip>
-			<OPMenus close={close}>
+			<OPMenus close={close} extraMenu={extraMenu}>
 				<SvgDragIndicator className="iconButton" />
 			</OPMenus>
 			<>{after}</>
@@ -84,6 +86,7 @@ interface Props {
 	visible?: boolean;
 	style?: CSSProperties;
 	placement?: TooltipProps['placement'];
+	extraMenu?: OPMenuProps['extraMenu'];
 }
 
 export default ({
@@ -92,7 +95,8 @@ export default ({
 	toolsBefore,
 	visible,
 	style,
-	placement = 'left-start'
+	placement = 'left-start',
+	extraMenu
 }: Props) => {
 	const anchorEl = useRef<HTMLElement>(null);
 	const [height, setHeight] = useState<number | undefined>(undefined);
@@ -123,6 +127,7 @@ export default ({
 					before={toolsBefore}
 					after={toolsAfter}
 					close={handleClose}
+					extraMenu={extraMenu}
 				/>
 			}
 			placement={placement}

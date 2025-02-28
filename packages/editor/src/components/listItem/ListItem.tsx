@@ -1,21 +1,30 @@
+import { ColorPalette } from '../../kits/Button/OPMenus';
 import { classnames } from '../../utils';
-import { useNodeView } from '../../utils/view';
+import { BaseNodeViewProps, useNodeView } from '../../utils/view';
 import Tools from '../toolBar/Tools';
 import { ListItemView } from './view';
 
-interface Props {
+interface Props extends BaseNodeViewProps {
 	nodeView: ListItemView;
 	hasSublist: boolean;
 }
-export default ({ nodeView, hasSublist = false }: Props) => {
+export default ({
+	nodeView,
+	hasSublist = false,
+	selected,
+	color,
+	bgColor
+}: Props) => {
 	const { $dom, $contentDOM } = useNodeView<HTMLLIElement>(nodeView);
-	const isToplevel = nodeView.depth === 0;
+	const isToplevel = nodeView.depth === 1;
 	const body = (
 		<li
 			ref={$dom}
+			style={{ color, backgroundColor: bgColor }}
 			className={classnames('list-item', {
 				hasSublist,
-				inlist: nodeView.inlist
+				inlist: nodeView.inlist,
+				selected
 			})}
 		>
 			{hasSublist ? <></> : <div className="marker"></div>}
@@ -23,7 +32,13 @@ export default ({ nodeView, hasSublist = false }: Props) => {
 		</li>
 	);
 	return isToplevel ? (
-		<Tools visible={hasSublist ? false : void 0}>{body}</Tools>
+		<Tools
+			style={{ paddingTop: 3 }}
+			visible={hasSublist ? false : void 0}
+			extraMenu={ColorPalette}
+		>
+			{body}
+		</Tools>
 	) : (
 		body
 	);

@@ -44,7 +44,6 @@ export default ({ selectIn, nodeView }: Props) => {
 								attrsChange(key, value)(view.state, view.dispatch);
 							}
 						}
-						nodeView.setProps({ selectIn: false });
 					}}
 				/>
 				<Divider orientation="vertical" flexItem variant="middle" />
@@ -54,7 +53,6 @@ export default ({ selectIn, nodeView }: Props) => {
 					closePanel={!selectIn}
 					onChange={(align) => {
 						attrsChange('textAlign', align)(view.state, view.dispatch);
-						nodeView.setProps({ selectIn: false });
 					}}
 				/>
 				<Divider orientation="vertical" flexItem variant="middle" />

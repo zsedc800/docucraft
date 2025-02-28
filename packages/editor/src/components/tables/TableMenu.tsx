@@ -46,7 +46,7 @@ const TableMenu = ({ view, toolType, close, event }: TableMenuProps) => {
 	};
 
 	useEffect(() => {
-		window.getSelection()?.removeAllRanges();
+		// window.getSelection()?.removeAllRanges();
 	}, [event]);
 
 	const rect = selectedRect(view.state);

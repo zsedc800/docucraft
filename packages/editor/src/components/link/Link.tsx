@@ -15,12 +15,12 @@ import { schema } from '../../model';
 import Toast from '../Toast';
 import { createNode } from '../../commands';
 import { classnames, nextTick } from '../../utils';
-import { ToolItem } from '../../kits/ComponentsPanel';
+import { BlockItem } from '../../kits/ComponentsPanel';
 interface Props extends AnchorHTMLAttributes<HTMLAnchorElement> {
 	nodeView: LinkView;
 }
 
-const tools: ToolItem[] = [
+const tools: Omit<BlockItem, 'name'>[] = [
 	{
 		title: '访问链接',
 		icon: SvgOpenInNew,
@@ -113,7 +113,7 @@ const LinkTools = () => {
 			}}
 		>
 			{tools.map((item) => (
-				<IconBlock {...item} />
+				<IconBlock {...(item as any)} />
 			))}
 		</Paper>
 	);

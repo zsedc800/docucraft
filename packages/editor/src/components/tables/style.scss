@@ -248,6 +248,7 @@
 
 		th {
 			font-weight: 600;
+			background-color: #f3f4f5;
 		}
 
 		& tr:nth-child(odd),
@@ -275,10 +276,6 @@
 				td,
 				th {
 					border-top-width: 0;
-				}
-
-				th {
-					background-color: rgba(0, 0, 0, 0.1);
 				}
 			}
 		}

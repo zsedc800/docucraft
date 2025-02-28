@@ -1,29 +1,30 @@
-import { TaskItemView } from '.';
+import { TaskItemView } from './view';
+import { ColorPalette } from '../../kits/Button/OPMenus';
 import { classnames } from '../../utils';
-import { useNodeView } from '../../utils/view';
+import { BaseNodeViewProps, useNodeView } from '../../utils/view';
 import Tools from '../toolBar/Tools';
-interface Props {
+interface Props extends BaseNodeViewProps {
 	nodeView: TaskItemView;
 	checked: boolean;
 }
-export default ({ nodeView, checked }: Props) => {
+export default ({ nodeView, checked, selected, color, bgColor }: Props) => {
 	const { $dom, $contentDOM } = useNodeView<HTMLLIElement, HTMLDivElement>(
 		nodeView
 	);
 	return (
-		<Tools>
-			<li ref={$dom} className={classnames('task-item', { checked })}>
+		<Tools style={{ paddingTop: 3 }} extraMenu={ColorPalette}>
+			<li
+				ref={$dom}
+				style={{ color, backgroundColor: bgColor }}
+				className={classnames('task-item', { checked, selected })}
+			>
 				<div className="task-item-checkbox" contentEditable={false}>
 					<input
 						type="checkbox"
 						checked={checked}
 						onChange={(e) => {
-							const { view, getPos } = nodeView;
 							const val = (e.target as HTMLInputElement)?.checked;
-							let tr = view.state.tr;
-							view.dispatch(
-								tr.setNodeAttribute(getPos() as number, 'checked', !!val)
-							);
+							nodeView.setNodeAttribute('checked', !!val);
 						}}
 					/>
 				</div>
