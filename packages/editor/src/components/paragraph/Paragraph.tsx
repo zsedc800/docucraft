@@ -1,13 +1,13 @@
 import Typography from '@mui/material/Typography';
-import { useEffect } from '@docucraft/srender';
+import { useEffect, useRef } from '@docucraft/srender';
 import { BaseNodeViewProps, useNodeView } from '../../utils/view';
 import { ParagraphView } from './view';
 import Tools from '../toolBar/Tools';
 import { classnames } from '../../utils';
-import { usePopover } from '../popover';
+import { useViewBoard } from '../popover';
 import { ComponentsPanel } from '../../kits/ComponentsPanel';
-import './style.scss';
 import { ColorPalette } from '../../kits/Button/OPMenus';
+import './style.scss';
 
 interface Props extends BaseNodeViewProps {
 	nodeView: ParagraphView;
@@ -20,32 +20,34 @@ interface Props extends BaseNodeViewProps {
 export default ({
 	nodeView,
 	placeholder,
-	initialPop,
 	hidden,
 	text = '',
 	blockId,
 	selected,
 	color,
-	bgColor
+	bgColor,
+	initialPop
 }: Props) => {
 	const { $dom, $contentDOM } = useNodeView<HTMLDivElement>(nodeView);
 
-	const [{ plain }, childrenHolder] = usePopover(nodeView.view);
+	const [{ open, close }, childrenHolder] = useViewBoard(
+		nodeView.view,
+		({ close }) => <ComponentsPanel text={text} close={close} />,
+		() => {
+			if (initialPop) nodeView.setNodeAttribute('initialPop', false);
+		}
+	);
 
 	const isToplevel = nodeView.depth === 0;
-
-	const poper = <ComponentsPanel close={plain.close} />;
 
 	useEffect(() => {
 		if (!isToplevel) return;
 		if (initialPop) {
-			plain(poper, () => nodeView.setNodeAttribute('initialPop', false));
+			open();
 		} else if (/^\//.test(text)) {
-			if (!plain.visible) {
-				plain(poper);
-			}
-		} else if (plain.visible) {
-			plain.close();
+			open();
+		} else {
+			close();
 		}
 	}, [text]);
 

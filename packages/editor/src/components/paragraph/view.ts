@@ -45,11 +45,9 @@ export class ParagraphView extends BaseNodeView {
 		if (!parent) return;
 		const placeholder = getTextByNodeType(parent.type, this.view.state.schema);
 		this.setNodeAttribute('placeholder', placeholder);
-		console.trace(placeholder, this);
 	}
 	onFocusOut(e: { reason: 'change' | 'blur'; event?: Event }): void {
 		this.setNodeAttribute('placeholder', '');
-		console.trace(this, 'focusout');
 	}
 }
 

@@ -225,7 +225,7 @@ export const usePopover = (view: EditorView) => {
 		onClose?: () => void
 	) {
 		plainChildren.current = children;
-		setPlainVisible(true);
+		if (!plainVisible) setPlainVisible(true);
 		$onClose.current = onClose ?? null;
 		return ctx;
 	}, ctx);
@@ -269,4 +269,29 @@ export const usePlainPopover = (children: any) => {
 		open(e.currentTarget as HTMLElement);
 	};
 	return [{ setAnchorEl, open, close, onClick }, placeholder] as const;
+};
+
+export const useViewBoard = (
+	view: EditorView,
+	children: ReactNode | ((e: { close: () => void }) => ReactNode),
+	onClose?: () => void
+) => {
+	const [visible, setVisible] = useState(false);
+	const close = () => {
+		visible && setVisible(false);
+		onClose && onClose();
+	};
+	const placeholder = (
+		<PlainBoard open={visible} close={close} view={view}>
+			{typeof children === 'function' ? children({ close }) : children}
+		</PlainBoard>
+	);
+	return [
+		{
+			close,
+			open: () => !visible && setVisible(true),
+			visible
+		},
+		placeholder
+	] as const;
 };

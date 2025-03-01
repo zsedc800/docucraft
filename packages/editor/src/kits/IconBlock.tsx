@@ -32,6 +32,8 @@ export const IconBlock = ({
 			<Ico
 				style={style}
 				className="iconButton"
+				role="button"
+				tabIndex={0}
 				onClick={() => {
 					const { state, dispatch } = view;
 					const {

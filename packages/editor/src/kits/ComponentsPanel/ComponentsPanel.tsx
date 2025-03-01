@@ -1,3 +1,4 @@
+import { NodeSelection } from 'prosemirror-state';
 import Avatar from '@mui/material/Avatar';
 import Box from '@mui/material/Box';
 import List from '@mui/material/List';
@@ -5,24 +6,35 @@ import ListItem from '@mui/material/ListItem';
 import ListItemAvatar from '@mui/material/ListItemAvatar';
 import ListItemText from '@mui/material/ListItemText';
 import Paper from '@mui/material/Paper';
-import { NodeSelection } from 'prosemirror-state';
-import { basicTools, blocklist } from './menuItemConfig';
 import Typography from '@mui/material/Typography';
 import ListItemButton, {
 	listItemButtonClasses
 } from '@mui/material/ListItemButton';
 import Stack from '@mui/material/Stack';
 import Chip from '@mui/material/Chip';
-import { useContext } from '@docucraft/srender';
+import { useContext, useEffect, useRef } from '@docucraft/srender';
 import { schema } from '../../model';
 import { IconBlock } from '../IconBlock';
 import { nodeViewContext } from '../../utils/view';
 import { overrides } from '../../utils';
 import { BlockItem } from './interface';
+import { basicTools, blocklist } from './menuItemConfig';
+import { keyboardNavigator } from '../../utils/keyboardNav';
 
-export default ({ close, text }: { close?: () => void; text?: string }) => {
+export default ({
+	close,
+	text = ''
+}: {
+	close?: () => void;
+	text?: string;
+}) => {
 	const { nodeView } = useContext(nodeViewContext);
-	const keyword = text.slice(1);
+	const keyword = text.replace(/\//, '');
+	const $panel = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		return keyboardNavigator($panel.current, { selectableRole: 'button' });
+	}, []);
 
 	const renderBlockItem = ({
 		cover: Cover,
@@ -32,6 +44,7 @@ export default ({ close, text }: { close?: () => void; text?: string }) => {
 		type = 'block'
 	}: BlockItem) => (
 		<ListItem
+			tabIndex={0}
 			onClick={() => {
 				const { view } = nodeView;
 				const { state, dispatch } = view;
@@ -78,7 +91,7 @@ export default ({ close, text }: { close?: () => void; text?: string }) => {
 				})}
 			>
 				<Typography className="subTitle">最近使用</Typography>
-				<Stack direction="row" spacing={1}>
+				<Stack direction="row" spacing={1} className="content history">
 					<Chip size="small" label="代码块"></Chip>
 					<Chip size="small" label="任务列表"></Chip>
 					<Chip size="small" label="表格"></Chip>
@@ -87,6 +100,7 @@ export default ({ close, text }: { close?: () => void; text?: string }) => {
 			<Box className="group">
 				<Typography className="subTitle">常见块</Typography>
 				<Box
+					className="content basic-list"
 					sx={(t) => ({
 						display: 'grid',
 						gridTemplateColumns: 'repeat(6, 1fr)',
@@ -101,26 +115,11 @@ export default ({ close, text }: { close?: () => void; text?: string }) => {
 					))}
 				</Box>
 			</Box>
-			<Box className="group basic">
-				<Typography className="subTitle">基础块</Typography>
-				<List
-					sx={(t) => ({
-						[`& .${listItemButtonClasses.root}`]: {
-							padding: '4px',
-							marginLeft: '-4px',
-							borderRadius: '4px'
-						},
-						'& .avatar': {
-							backgroundColor: 'transparent',
-							border: `1px solid #e3e4e5`,
-							svg: {
-								width: '100%',
-								height: '100%',
-								color: '#e3e4e5'
-							}
-						}
-					})}
-				>
+			<Box className="group">
+				<Typography style={{ paddingBottom: 0 }} className="subTitle">
+					基础块
+				</Typography>
+				<List dense className="content block-list">
 					{blocklist.map(renderBlockItem)}
 				</List>
 			</Box>
@@ -134,12 +133,11 @@ export default ({ close, text }: { close?: () => void; text?: string }) => {
 	const searchlist = (
 		<Box className="group">
 			<Typography className="subTitle">搜索结果</Typography>
-			<List>
+			<List dense className="content search-list">
 				{res.length > 0
-					? res.map((item) => {
-							if (!item.cover) item.cover = item.icon;
-							return renderBlockItem(item);
-						})
+					? res.map((item) =>
+							renderBlockItem({ ...item, cover: item.cover || item.icon })
+						)
 					: 'no'}
 			</List>
 		</Box>
@@ -148,20 +146,20 @@ export default ({ close, text }: { close?: () => void; text?: string }) => {
 	return (
 		<Paper
 			className="scrollbar"
+			tabIndex={0}
+			ref={$panel}
 			sx={(t) => ({
 				width: 300,
 				maxHeight: '480px',
 				boxSizing: 'border-box',
 				'& .subTitle': {
 					fontSize: '12px',
-					paddingBottom: '4px',
+					padding: '8px 16px',
 					color: t.palette.text.secondary
 				},
 				'& .group': {
-					padding: '8px 16px',
-					'&.basic': {
-						padding: '8px 0',
-						'.subTitle': { padding: '0 16px' }
+					'.basic-list, .history': {
+						padding: '8px 16px'
 					}
 				}
 			})}

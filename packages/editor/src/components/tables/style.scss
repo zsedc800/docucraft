@@ -242,6 +242,9 @@
 		th {
 			border: 1px solid #dfe2e5;
 			border-width: 0;
+			&[data-block-id] {
+				border-radius: 0;
+			}
 			// border-left-width: 1px;
 			// border-top-width: 1px;
 		}
