@@ -45,7 +45,12 @@ export function joinMaybeClear(
 	let before = $pos.nodeBefore,
 		after = $pos.nodeAfter,
 		index = $pos.index();
-	if (!before || !after || !before.type.compatibleContent(after.type))
+	if (
+		!before ||
+		!after ||
+		!before.type.compatibleContent(after.type) ||
+		before.attrs.level === 1
+	)
 		return false;
 
 	if (after.attrs.initialPop) {

@@ -33,7 +33,7 @@ export default ({
 	const $panel = useRef<HTMLDivElement>(null);
 
 	useEffect(() => {
-		return keyboardNavigator($panel.current, { selectableRole: 'button' });
+		return keyboardNavigator($panel.current, { selector: '[data-item]' });
 	}, []);
 
 	const renderBlockItem = ({
@@ -44,7 +44,6 @@ export default ({
 		type = 'block'
 	}: BlockItem) => (
 		<ListItem
-			tabIndex={0}
 			onClick={() => {
 				const { view } = nodeView;
 				const { state, dispatch } = view;
@@ -71,7 +70,7 @@ export default ({
 				close && close();
 			}}
 		>
-			<ListItemButton>
+			<ListItemButton tabindex={null} data-item>
 				<ListItemAvatar>
 					<Avatar className="avatar" variant="rounded">
 						<Cover />
@@ -92,9 +91,9 @@ export default ({
 			>
 				<Typography className="subTitle">最近使用</Typography>
 				<Stack direction="row" spacing={1} className="content history">
-					<Chip size="small" label="代码块"></Chip>
-					<Chip size="small" label="任务列表"></Chip>
-					<Chip size="small" label="表格"></Chip>
+					<Chip size="small" data-item label="代码块"></Chip>
+					<Chip size="small" data-item label="任务列表"></Chip>
+					<Chip size="small" data-item label="表格"></Chip>
 				</Stack>
 			</Box>
 			<Box className="group">
@@ -106,12 +105,15 @@ export default ({
 						gridTemplateColumns: 'repeat(6, 1fr)',
 						gap: '4px',
 						'& .iconButton': {
-							fontSize: '22px'
+							fontSize: '24px'
 						}
 					})}
 				>
 					{basicTools.map((props) => (
-						<IconBlock {...{ ...(props as any) }} type="block" />
+						<IconBlock
+							{...{ ...(props as any), handleClose: close }}
+							data-item
+						/>
 					))}
 				</Box>
 			</Box>
@@ -161,6 +163,9 @@ export default ({
 					'.basic-list, .history': {
 						padding: '8px 16px'
 					}
+				},
+				'& .selected[data-item]': {
+					backgroundColor: '#e3e4e5'
 				}
 			})}
 		>

@@ -4,23 +4,28 @@ import { nodeViewContext } from '../utils/view';
 import Typography from '@mui/material/Typography';
 import { NodeSelection } from 'prosemirror-state';
 import { schema } from '../model';
-import { overrides } from '../utils';
+import { classnames, overrides } from '../utils';
 import { NormalTooltip } from './Tooltip';
+import { BaseProps, Overrides } from '../interface';
 export const IconBlock = ({
 	title,
 	icon: Ico,
 	handler,
 	handleClose,
-	type,
-	style
-}: {
-	title: string;
-	icon: (...args: any[]) => ReactNode;
-	handler: (...args: any[]) => any;
-	handleClose?: () => void;
-	type?: 'block';
-	style?: CSSProperties;
-}) => {
+	type = 'block',
+	className,
+	...props
+}: Overrides<
+	BaseProps,
+	{
+		title: string;
+		icon: (...args: any[]) => ReactNode;
+		handler: (...args: any[]) => any;
+		handleClose?: () => void;
+		type?: 'block';
+		style?: CSSProperties;
+	}
+>) => {
 	const { nodeView } = useContext(nodeViewContext);
 	const { view } = nodeView;
 	return (
@@ -30,32 +35,36 @@ export const IconBlock = ({
 			placement="top"
 		>
 			<Ico
-				style={style}
-				className="iconButton"
+				{...props}
+				className={classnames('iconButton', className)}
 				role="button"
-				tabIndex={0}
+				// tabindex={0}
 				onClick={() => {
-					const { state, dispatch } = view;
+					const { state } = view;
 					const {
 						selection: { $from },
 						tr,
 						doc
 					} = state;
 
+					const start = $from.before();
+					let transaction = tr;
+					transaction = tr.setSelection(NodeSelection.create(doc, start));
+
+					const node = $from.parent;
+					if (node.type === schema.nodes.paragraph)
+						transaction = transaction.delete(
+							start + 1,
+							start + node.nodeSize - 1
+						);
+
 					if (type === 'block') {
-						const start = $from.before();
-
-						let transction = tr.setSelection(NodeSelection.create(doc, start));
-						const node = $from.parent;
-						if (node.type === schema.nodes.paragraph)
-							transction = transction.delete(start + 1, start + node.nodeSize);
-
-						handler(overrides(state, { tr: transction }), view.dispatch, view);
+						handler(overrides(state, { tr: transaction }), view.dispatch, view);
+						view.focus();
 					} else {
 						handler(nodeView);
 					}
 
-					view.focus();
 					handleClose?.();
 				}}
 			/>

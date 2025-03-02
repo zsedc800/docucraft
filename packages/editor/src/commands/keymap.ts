@@ -113,6 +113,8 @@ function findNextVisiblePos(doc: Node, pos: number) {
 }
 
 const headingEnter: Command = (state, dispatch) => {
+	console.log('enter input');
+
 	const { $from, $to } = state.selection;
 	if (!$from.sameParent($to) || $from.parent.type !== schema.nodes.heading)
 		return false;

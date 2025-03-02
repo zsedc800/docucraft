@@ -9,7 +9,7 @@ import {
 	RootFiberNode
 } from '../interface';
 import { batchedUpdates } from './update';
-import { putRef, traverseFiber } from './utils';
+import { fiberTraverse, putRef, traverseFiber } from './utils';
 
 function getHostParent(fiber: Fiber): HTMLElement | null {
 	let domParentFiber = fiber.parent;
@@ -134,46 +134,30 @@ function commitUpdate(fiber: Fiber) {
 	fiber.flags &= ~FiberFlags.Update;
 }
 
-const deleteChild = (domParent: HTMLElement, fiber: Fiber) => {
-	let node: Fiber | null = fiber;
-	while (node) {
-		node = traverseFiber(
-			node,
-			(f) => {
-				if (f.tag === FiberTag.Portal) return true;
-				if (f.tag === FiberTag.HostComponent || f.tag === FiberTag.HostText) {
-					const el = f.stateNode as Element;
-					if (domParent.contains(el)) domParent.removeChild(el);
-					return true;
-				}
-				return false;
-			},
-			(f) => f === fiber
-		);
-	}
-};
+// const deleteChild = (domParent: HTMLElement, fiber: Fiber) => {
+// 	let node: Fiber | null = fiber;
+// 	while (node) {
+// 		node = traverseFiber(
+// 			node,
+// 			(f) => {
+// 				if (f.tag === FiberTag.Portal) return true;
+// 				if (f.tag === FiberTag.HostComponent || f.tag === FiberTag.HostText) {
+// 					const el = f.stateNode as Element;
+// 					if (domParent.contains(el)) domParent.removeChild(el);
+// 					return true;
+// 				}
+// 				return false;
+// 			},
+// 			(f) => f === fiber
+// 		);
+// 	}
+// };
 
-function commitDeletion(fiber: Fiber) {
-	const domParent = getHostParent(fiber);
-
-	const deleteChildren = (domParent: HTMLElement | null, fiber: Fiber) => {
-		let node = fiber.child;
-
-		while (domParent && node) {
-			deleteChild(domParent, node);
-			node = node.sibling;
-		}
-	};
-
-	if (fiber.tag === FiberTag.Portal) {
-		deleteChildren(fiber.stateNode as HTMLElement, fiber);
-	}
-
-	let node = fiber.child;
-	while (node) {
+function deletionRecord(fiber: Fiber) {
+	fiberTraverse(fiber, (node: Fiber) => {
 		switch (node.tag) {
 			case FiberTag.Portal:
-				deleteChildren(node.stateNode as HTMLElement, node);
+				// deleteChildren(node.stateNode as HTMLElement, node);
 				break;
 			case FiberTag.FunctionComponent:
 				callEffect(node, 'destroy');
@@ -181,16 +165,57 @@ function commitDeletion(fiber: Fiber) {
 			case FiberTag.ClassComponent:
 				(node.stateNode as Component).destory();
 				break;
-		}
-		node = traverseFiber(
-			node,
-			() => false,
-			(f) => f === fiber
-		);
-	}
+			case FiberTag.HostComponent:
+			case FiberTag.HostText:
+				const hostParent = getHostParent(node);
+				hostParent?.removeChild(node.stateNode as Element);
 
-	if (domParent) deleteChild(domParent, fiber);
+				break;
+		}
+	});
 	fiber.flags &= ~FiberFlags.Deletion;
+}
+
+function commitDeletion(fiber: Fiber) {
+	deletionRecord(fiber);
+
+	// const domParent = getHostParent(fiber);
+
+	// const deleteChildren = (domParent: HTMLElement | null, fiber: Fiber) => {
+	// 	let node = fiber.child;
+
+	// 	while (domParent && node) {
+	// 		deleteChild(domParent, node);
+	// 		node = node.sibling;
+	// 	}
+	// };
+
+	// if (fiber.tag === FiberTag.Portal) {
+	// 	deleteChildren(fiber.stateNode as HTMLElement, fiber);
+	// }
+
+	// let node = fiber.child;
+	// while (node) {
+	// 	switch (node.tag) {
+	// 		case FiberTag.Portal:
+	// 			deleteChildren(node.stateNode as HTMLElement, node);
+	// 			break;
+	// 		case FiberTag.FunctionComponent:
+	// 			callEffect(node, 'destroy');
+	// 			break;
+	// 		case FiberTag.ClassComponent:
+	// 			(node.stateNode as Component).destory();
+	// 			break;
+	// 	}
+	// 	node = traverseFiber(
+	// 		node,
+	// 		() => false,
+	// 		(f) => f === fiber
+	// 	);
+	// }
+
+	// if (domParent) deleteChild(domParent, fiber);
+	// fiber.flags &= ~FiberFlags.Deletion;
 }
 
 export function commitWork(fiber: Fiber) {

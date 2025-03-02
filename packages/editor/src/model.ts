@@ -181,6 +181,10 @@ export function getSchemaNode(schema: Schema, key: NodesKey) {
 	return schema.nodes[key];
 }
 
+export function getNodeTypes(schema: Schema, keys: NodesKey[]) {
+	return keys.map((key) => schema.nodes[key]);
+}
+
 export type MarksKey =
 	| 'bold'
 	| 'italic'

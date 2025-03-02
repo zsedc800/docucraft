@@ -3,13 +3,21 @@ import Box from '@mui/material/Box';
 import Typography from '@mui/material/Typography';
 import SvgAdd from '@docucraft/icons/svg/Add';
 import SvgDragIndicator from '@docucraft/icons/svg/DragIndicatorFill';
-import { useContext, useEffect, useRef, useState } from '@docucraft/srender';
+import {
+	useContext,
+	useEffect,
+	useRef,
+	useState,
+	CSSProperties,
+	MouseEvent,
+	ReactNode
+} from '@docucraft/srender';
 import { BaseNodeView, nodeViewContext } from '../../utils/view';
-import { createNode, insert } from '../../commands/commands';
+import { insert } from '../../commands/commands';
 import { schema } from '../../model';
-import { CSSProperties, MouseEvent, ReactNode } from 'react';
 import { RichTooltip as HtmlTooltip, NormalTooltip } from '../../kits';
 import { default as OPMenus, OPMenuProps } from '../../kits/Button/OPMenus';
+import { initDrag } from '../../plugins/dragSort';
 import './style.scss';
 
 const Toolbar = ({
@@ -26,6 +34,11 @@ const Toolbar = ({
 	extraMenu?: OPMenuProps['extraMenu'];
 }) => {
 	const { nodeView } = useContext(nodeViewContext);
+	const dragIndicator = useRef<HTMLDivElement>(null);
+
+	useEffect(() => {
+		initDrag(dragIndicator.current, nodeView);
+	}, []);
 
 	return (
 		<Box
@@ -70,9 +83,11 @@ const Toolbar = ({
 					}}
 				/>
 			</NormalTooltip>
-			<OPMenus close={close} extraMenu={extraMenu}>
-				<SvgDragIndicator className="iconButton" />
-			</OPMenus>
+			<div ref={dragIndicator} className="iconButton">
+				<OPMenus close={close} extraMenu={extraMenu}>
+					<SvgDragIndicator />
+				</OPMenus>
+			</div>
 			<>{after}</>
 		</Box>
 	);

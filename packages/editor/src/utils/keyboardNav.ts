@@ -9,35 +9,41 @@ export function keyboardNavigator(
 		) as HTMLElement[];
 	}
 
-	function highlightElement(element: HTMLElement) {
+	function highlightElement(element?: HTMLElement) {
 		const elements = getSelectableElements();
 		elements.forEach((el) => el.classList.remove(activeClassName));
 		if (element) {
 			element.classList.add(activeClassName);
 			element.focus();
 			selectedElement = element;
+			element.scrollIntoView({ block: 'center' });
 		}
 	}
 
 	function findClosestElementInColumn(
-		current,
-		elements,
+		current: HTMLElement,
+		elements: HTMLElement[],
 		direction: 'up' | 'down'
 	) {
 		if (!current) return null;
 		const rect = current.getBoundingClientRect();
-		const sameColumnElements = elements
-			.map((el) => ({ el, rect: el.getBoundingClientRect() }))
-			.filter(({ rect: r }) => Math.abs(r.left - rect.left) < 5); // 允许少量误差
+		const index = elements.indexOf(current);
 
 		if (direction === 'up') {
-			return sameColumnElements
-				.filter(({ rect: r }) => r.top < rect.top)
-				.sort((a, b) => b.rect.top - a.rect.top)[0]?.el;
+			for (let i = index - 1; i >= 0; i--) {
+				const element = elements[i];
+				const { top } = element.getBoundingClientRect();
+				if (top < rect.top) return element;
+			}
+
+			return elements[0];
 		} else {
-			return sameColumnElements
-				.filter(({ rect: r }) => r.top > rect.top)
-				.sort((a, b) => a.rect.top - b.rect.top)[0]?.el;
+			for (let i = index + 1; i < elements.length; i++) {
+				const element = elements[i];
+				const { top } = element.getBoundingClientRect();
+				if (top > rect.top) return element;
+			}
+			return elements[elements.length - 1];
 		}
 	}
 
@@ -91,21 +97,13 @@ export function keyboardNavigator(
 		}
 	}
 
-	document.addEventListener('keydown', handleKeyNavigation);
+	document.addEventListener('keydown', handleKeyNavigation, true);
 
 	const elements = getSelectableElements();
-	if (elements.length === 0) return;
 
-	console.log(elements, 'eles');
-
-	if (!selectedElement) {
-		highlightElement(elements[0]);
-		return;
-	}
+	if (!selectedElement) highlightElement(elements[0]);
 
 	return () => {
-		console.log('destroy++=');
-
-		document.removeEventListener('keydown', handleKeyNavigation);
+		document.removeEventListener('keydown', handleKeyNavigation, true);
 	};
 }

@@ -236,3 +236,8 @@ body {
 .selected {
 	background-color: #e3e4e5;
 }
+
+.drag-line[data-block-id] {
+	border-radius: 0;
+	border-top: 3px solid #3183db;
+}

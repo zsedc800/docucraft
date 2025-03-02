@@ -45,7 +45,9 @@ function callbackWrapper(
 		? () => {}
 		: sync
 			? () => (effectHook.destroy = callback())
-			: wait(() => (effectHook.destroy = callback()), 17);
+			: wait(() => {
+					effectHook.destroy = callback();
+				}, 17);
 	effectHook.deps = deps;
 	return res;
 }
@@ -67,7 +69,6 @@ export const useEffect = (
 		create: callback
 	};
 	const hook = createWorkInProgressHook(effectHook);
-	const oldDeps = hook.state.deps;
 	hook.state.create = callbackWrapper(callback, hook.state, deps, false);
 };
 

@@ -244,6 +244,7 @@ function defaultShouldSkip(node: Fiber) {
 	return false;
 }
 type SkipFn = (n: Fiber) => boolean;
+
 export function traverseFiber(
 	root: Fiber,
 	shouldSkip: SkipFn = defaultShouldSkip,
@@ -257,4 +258,20 @@ export function traverseFiber(
 		cursor = cursor.parent;
 	}
 	return null;
+}
+
+export function fiberTraverse(root: Fiber, fn: (fiber: Fiber) => void) {
+	let cursor: Fiber | null = root;
+	while (cursor) {
+		while (cursor.child) cursor = cursor.child;
+		while (cursor) {
+			fn(cursor);
+			if (cursor === root) return;
+			if (cursor.sibling) {
+				cursor = cursor.sibling;
+				break;
+			}
+			cursor = cursor.parent;
+		}
+	}
 }
