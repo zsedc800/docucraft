@@ -46,17 +46,20 @@ export const IconBlock = ({
 						tr,
 						doc
 					} = state;
+					console.log(111);
 
-					const start = $from.before();
 					let transaction = tr;
-					transaction = tr.setSelection(NodeSelection.create(doc, start));
+					if (!(state.selection instanceof NodeSelection)) {
+						const start = $from.before();
+						transaction = tr.setSelection(NodeSelection.create(doc, start));
 
-					const node = $from.parent;
-					if (node.type === schema.nodes.paragraph)
-						transaction = transaction.delete(
-							start + 1,
-							start + node.nodeSize - 1
-						);
+						const node = $from.parent;
+						if (node.type === schema.nodes.paragraph)
+							transaction = transaction.delete(
+								start + 1,
+								start + node.nodeSize - 1
+							);
+					}
 
 					if (type === 'block') {
 						handler(overrides(state, { tr: transaction }), view.dispatch, view);

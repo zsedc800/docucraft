@@ -83,9 +83,22 @@ export const insertAfter =
 		return false;
 	};
 
+function createNodeAndFilled(nodeType: NodeType, attrs?: any) {
+	let { contentMatch } = nodeType;
+
+	const missContent = contentMatch.fillBefore(Fragment.empty, true);
+	if (!missContent) return nodeType.create();
+
+	const children = [];
+	missContent.forEach((node) => {
+		children.push(createNodeAndFilled(node.type));
+	});
+	return nodeType.create(attrs, children);
+}
+
 export const transformToNode =
 	(
-		nodeType: NodeType,
+		nodeType: NodeType | (() => Node),
 		attrs?: any,
 		content?: Node | Fragment | readonly Node[]
 	): Command =>
@@ -96,42 +109,49 @@ export const transformToNode =
 		if (nodeType.name === 'heading' && attrs?.level === 1) attrs.level = 2;
 
 		if (selection instanceof NodeSelection && dispatch) {
-			const { from, to, $from, $to } = selection;
-			let start = Math.min(from, to);
-			if (nodeType.isTextblock) tr = tr.setBlockType(from, to, nodeType, attrs);
-			else if (nodeType.isInline) {
-				const { parent: node, pos } = tr.doc.resolve(start + 1);
-				if (!node.isAtom) {
-					const n = createNode(nodeType, attrs, content);
-					tr = tr.insert(pos, n);
-					start += n.nodeSize - 1;
-				}
-			} else if (nodeType.isAtom) {
-				tr.insert(from, createNode(nodeType, attrs));
-				tr.setSelection(TextSelection.create(tr.doc, from + 2));
-				dispatch(tr);
-				return true;
-			} else {
-				const range = new NodeRange($from, $to, $from.depth);
-				const wrapping = findWrapping(range, nodeType);
-				if (!wrapping) return false;
+			const node =
+				typeof nodeType === 'function'
+					? nodeType()
+					: createNodeAndFilled(nodeType, attrs);
+			dispatch(tr.replaceSelectionWith(node).scrollIntoView());
+			// if (nodeType.isTextblock)
+			// 	tr = tr.setBlockType(from, to, nodeType, attrs);
+			// else if (nodeType.isInline) {
+			// 	const { parent: node, pos } = tr.doc.resolve(start + 1);
+			// 	if (!node.isAtom) {
+			// 		const n = createNode(nodeType, attrs, content);
+			// 		tr = tr.insert(pos, n);
+			// 		start += n.nodeSize - 1;
+			// 	}
+			// } else if (nodeType.isAtom) {
+			// 	tr.insert(from, createNode(nodeType, attrs));
+			// 	tr.setSelection(TextSelection.create(tr.doc, from + 2));
+			// 	dispatch(tr);
+			// 	return true;
+			// } else {
+			// 	const range = new NodeRange($from, $to, $from.depth);
+			// 	const wrapping = findWrapping(range, nodeType);
+			// 	if (!wrapping) return false;
 
-				let node = wrapping[wrapping.length - 1]?.type.isTextblock
-					? void 0
-					: createNode(state.schema.nodes.paragraph);
-				for (const { type, attrs } of wrapping.reverse()) {
-					node = createNode(type, attrs, node);
-				}
-				node && tr.replaceSelectionWith(node);
-				// tr.wrap(range, wrapping);
-				// const before = tr.doc.resolve(start).nodeBefore;
-				// if (before && before.type === nodeType && canJoin(tr.doc, start))
-				// 	tr.join(start);
-			}
+			// 	let node = wrapping[wrapping.length - 1]?.type.isTextblock
+			// 		? void 0
+			// 		: createNode(state.schema.nodes.paragraph);
+			// 	for (const { type, attrs } of wrapping.reverse()) {
+			// 		node = createNode(type, attrs, node);
+			// 	}
+			// 	node && tr.replaceSelectionWith(node);
+			// 	// tr.wrap(range, wrapping);
+			// 	// const before = tr.doc.resolve(start).nodeBefore;
+			// 	// if (before && before.type === nodeType && canJoin(tr.doc, start))
+			// 	// 	tr.join(start);
+			// }
 
-			const sel = TextSelection.create(tr.doc, start + 1);
+			// const sel = TextSelection.create(tr.doc, start + 1);
 
-			dispatch(tr.setSelection(sel));
+			// dispatch(tr.setSelection(sel));
+			//
+			// dispatch(tr.replaceSelectionWith())
+
 			return true;
 		}
 		return false;

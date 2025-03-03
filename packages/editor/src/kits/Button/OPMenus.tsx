@@ -1,5 +1,6 @@
-import { ReactNode } from 'react';
 import ListItemIcon, { listItemIconClasses } from '@mui/material/ListItemIcon';
+import Typography from '@mui/material/Typography';
+import Divider from '@mui/material/Divider';
 import ListItemText from '@mui/material/ListItemText';
 import MenuItem from '@mui/material/MenuItem';
 import MenuList from '@mui/material/MenuList';
@@ -8,15 +9,14 @@ import SvgCopy from '@docucraft/icons/svg/ContentCopy';
 import SvgSwap from '@docucraft/icons/svg/SwapHoriz';
 import SvgPalette from '@docucraft/icons/svg/Palette';
 import SvgArrowRight from '@docucraft/icons/svg/ChevronRight';
+import { ReactNode, useContext } from '@docucraft/srender';
 import { ToggleButton } from '../ToggleButton';
-import Typography from '@mui/material/Typography';
-import { useContext } from '@docucraft/srender';
 import { BaseNodeView, nodeViewContext } from '../../utils/view';
-import Divider from '@mui/material/Divider';
 import Toast from '../../components/Toast';
 import Menu from '../Menu';
 import ColorMark from '../ColorMark';
 import { MenuItemConfig } from '../../interface';
+import TransformBlock from '../ComponentsPanel/TransformBlock';
 export type ExtraCmpProps = {
 	nodeView: BaseNodeView;
 };
@@ -87,9 +87,13 @@ export default ({ children, close, extraMenu }: Props) => {
 			maskProps={{}}
 			IconComponent={() => null}
 			slotProps={{ paper: { style: { width: 120, borderRadius: 10 } } }}
-			onMouseEnter={() => nodeView.selectNode()}
-			onMouseLeave={() => nodeView.deselectNode()}
-			onClose={close}
+			onMouseEnter={() => nodeView.setProps({ selected: true })}
+			// onMouseLeave={() => nodeView.setProps({ selected: false })}
+			onClick={() => nodeView.selectNode()}
+			onClose={() => {
+				close && close();
+				nodeView.deselectNode();
+			}}
 			subPanel={
 				<MenuList
 					sx={() => ({
@@ -122,13 +126,24 @@ export default ({ children, close, extraMenu }: Props) => {
 						</ListItemIcon>
 						<ListItemText>复制</ListItemText>
 					</MenuItem>
-					<MenuItem>
-						<ListItemIcon>
-							<SvgSwap />
-						</ListItemIcon>
-						<ListItemText>转换</ListItemText>
-						<SvgArrowRight />
-					</MenuItem>
+					<Menu
+						placement="right-start"
+						content={
+							<TransformBlock
+								style={{ marginLeft: 8 }}
+								nodeView={nodeView}
+								close={close}
+							/>
+						}
+					>
+						<MenuItem>
+							<ListItemIcon>
+								<SvgSwap />
+							</ListItemIcon>
+							<ListItemText>转换</ListItemText>
+							<SvgArrowRight />
+						</MenuItem>
+					</Menu>
 
 					{extraMenu && (
 						<>

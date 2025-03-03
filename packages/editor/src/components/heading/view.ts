@@ -19,6 +19,8 @@ export class HeadingView extends BaseNodeView {
 		if (node.attrs.level === 1) {
 			this.render();
 		} else if (outlineTree && typeof pos !== 'undefined') {
+			console.log(pos, 'xxx');
+
 			outlineTree.insertOrUpdate(this, view.state.doc.resolve(pos));
 			this.outlineTree = outlineTree;
 			outlineTree.updateHeading();

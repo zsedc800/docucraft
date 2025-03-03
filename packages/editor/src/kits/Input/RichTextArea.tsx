@@ -45,7 +45,10 @@ export default forwardRef<RichTextAreaRef, Props>(
 		const onInput = useMemo(() => toInput(history.current), []);
 		const onFocus = useMemo(() => toFocus(history.current), []);
 		const onCompositionEnd = useMemo(() => compositionEnd(history.current), []);
-		const updateValue = (val) => (textarea.current.innerText = val);
+		const updateValue = (val) => {
+			textarea.current.innerText = val;
+			text.current = val;
+		};
 		useLayoutEffect(() => {
 			if (value !== text.current) updateValue(value || '');
 		}, [value]);

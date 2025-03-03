@@ -20,6 +20,8 @@ import { overrides } from '../../utils';
 import { BlockItem } from './interface';
 import { basicTools, blocklist } from './menuItemConfig';
 import { keyboardNavigator } from '../../utils/keyboardNav';
+import Empty from './Empty';
+import { onTrigger } from './utils';
 
 export default ({
 	close,
@@ -45,28 +47,7 @@ export default ({
 	}: BlockItem) => (
 		<ListItem
 			onClick={() => {
-				const { view } = nodeView;
-				const { state, dispatch } = view;
-				const {
-					selection: { $from },
-					tr,
-					doc
-				} = state;
-				const start = $from.before();
-				let transaction = tr;
-				if (type === 'block') {
-					transaction = tr.setSelection(NodeSelection.create(doc, start));
-				}
-
-				const node = $from.parent;
-				if (node.type === schema.nodes.paragraph)
-					transaction = transaction.delete(
-						start + 1,
-						start + node.nodeSize - 1
-					);
-
-				handler(overrides(state, { tr: transaction }) as any, dispatch, view);
-				if (type === 'block') view.focus();
+				onTrigger(nodeView, { type, handler });
 				close && close();
 			}}
 		>
@@ -136,11 +117,13 @@ export default ({
 		<Box className="group">
 			<Typography className="subTitle">搜索结果</Typography>
 			<List dense className="content search-list">
-				{res.length > 0
-					? res.map((item) =>
-							renderBlockItem({ ...item, cover: item.cover || item.icon })
-						)
-					: 'no'}
+				{res.length > 0 ? (
+					res.map((item) =>
+						renderBlockItem({ ...item, cover: item.cover || item.icon })
+					)
+				) : (
+					<Empty />
+				)}
 			</List>
 		</Box>
 	);

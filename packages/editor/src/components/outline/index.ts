@@ -71,6 +71,8 @@ export class OutlineTree {
 		lastLevel = Infinity;
 		count = -1;
 
+		console.log(index, $pos, '$pos');
+
 		nodesBetween(
 			parent,
 			index - 1,

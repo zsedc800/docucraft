@@ -3,21 +3,20 @@ import { useEffect, useRef, useState } from '@docucraft/srender';
 
 import Icon from '@docucraft/icons';
 import TexInputBox from './TexInput';
-import { BaseNodeView, useNodeView } from '../../utils/view';
+import { BaseNodeView, BaseNodeViewProps, useNodeView } from '../../utils/view';
 import Tools from '../toolBar/Tools';
 import Menu from '../../kits/Menu';
 import { classnames, nextTick } from '../../utils';
 import './style.scss';
 
-interface Props {
+interface Props extends BaseNodeViewProps {
 	tex: string;
 	nodeView: BaseNodeView;
 }
 
 function useMathTex<T extends HTMLElement = HTMLDivElement>({
-	tex,
-	nodeView: { dom }
-}: Props) {
+	tex
+}: Pick<Props, 'tex'>) {
 	const $katex = useRef<T>(null);
 	const [txt, setTxt] = useState('');
 	const [errorMsg, setError] = useState('');
@@ -38,19 +37,21 @@ function useMathTex<T extends HTMLElement = HTMLDivElement>({
 		setTxt(tex);
 	}, [tex]);
 
-	useEffect(() => {
-		if (!txt) dom.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-	}, []);
-
 	return { txt, setTxt, errorMsg, $katex };
 }
 
-export const MathBlockNode = ({ tex, nodeView }: Props) => {
+export const MathBlockNode = ({ tex, nodeView, selected }: Props) => {
 	const { $dom } = useNodeView(nodeView);
-	const { txt, setTxt, errorMsg, $katex } = useMathTex({ tex, nodeView });
-
+	const $content = useRef<HTMLDivElement>(null);
+	const { txt, setTxt, errorMsg, $katex } = useMathTex({ tex });
+	useEffect(() => {
+		if (!txt)
+			$content.current.dispatchEvent(
+				new MouseEvent('click', { cancelable: false, bubbles: true })
+			);
+	}, []);
 	const body = (
-		<div ref={$dom} className="math-block">
+		<div ref={$dom} className={classnames('math-block', { selected })}>
 			<Menu
 				trigger="click"
 				placement="bottom"
@@ -75,7 +76,10 @@ export const MathBlockNode = ({ tex, nodeView }: Props) => {
 					/>
 				)}
 			>
-				<div className={classnames('math-block-content', { empty: !txt })}>
+				<div
+					ref={$content}
+					className={classnames('math-block-content', { empty: !txt })}
+				>
 					{txt ? (
 						<div className="tex-box" ref={$katex} />
 					) : (
@@ -91,9 +95,15 @@ export const MathBlockNode = ({ tex, nodeView }: Props) => {
 export const MathInlineNode = ({ tex, nodeView }: Props) => {
 	const { $dom } = useNodeView<HTMLSpanElement>(nodeView);
 	const { $katex, txt, setTxt, errorMsg } = useMathTex<HTMLSpanElement>({
-		tex,
-		nodeView
+		tex
 	});
+
+	useEffect(() => {
+		if (!txt)
+			$dom.current.dispatchEvent(
+				new MouseEvent('click', { cancelable: false, bubbles: true })
+			);
+	}, []);
 
 	const body = (
 		<span

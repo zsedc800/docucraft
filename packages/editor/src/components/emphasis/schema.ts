@@ -1,7 +1,7 @@
 import { NodeSpec } from 'prosemirror-model';
 
 export const emphasisSpec: NodeSpec = {
-	content: 'block*',
+	content: 'block+',
 	group: 'block',
 	attrs: {
 		icon: { default: { type: 'emoji', value: '💡' } },

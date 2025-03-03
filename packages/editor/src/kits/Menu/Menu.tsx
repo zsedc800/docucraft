@@ -45,8 +45,6 @@ export default function Menu({
 	const open = Boolean(anchorEl);
 	const originalChildProps = children.props;
 	const onClick = (e: Event) => {
-		console.log('onClick', e);
-
 		const { onClick: toClick } = originalChildProps;
 		if (typeof toClick === 'function') toClick(e);
 

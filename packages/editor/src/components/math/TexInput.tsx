@@ -35,7 +35,7 @@ function TexInputBox(
 ) {
 	const ctx = useRef<RichTextAreaRef>({} as RichTextAreaRef);
 	useEffect(() => {
-		if (value) ctx.current.selectAll();
+		ctx.current.selectAll();
 	}, []);
 	return (
 		<div className="tex-input" {...props}>
@@ -47,16 +47,18 @@ function TexInputBox(
 					onChange={onChange}
 					placeholder={placeholder}
 					style={inputStyle}
-					// onKeyDown={(e) => {
-					// 	if (e.key === 'Enter') {
-					// 		e.preventDefault();
-					// 		onFinish && onFinish(ctx.current.value());
-					// 	}
-					// }}
+					onKeyDown={(e) => {
+						if (e.key === 'Enter') {
+							e.preventDefault();
+							onFinish && onFinish(ctx.current.value());
+						}
+					}}
 				/>
 				<div className="tex-input-extra">
 					<Button
-						onClick={() => onFinish && onFinish(ctx.current.value() || '')}
+						onClick={() => {
+							onFinish && onFinish(ctx.current.value() || '');
+						}}
 						variant="contained"
 						size="small"
 						disabled={!!errorMsg}

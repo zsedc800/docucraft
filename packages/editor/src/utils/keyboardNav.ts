@@ -48,13 +48,20 @@ export function keyboardNavigator(
 	}
 
 	function handleKeyNavigation(event: KeyboardEvent) {
-		event.preventDefault();
 		const elements = getSelectableElements();
 		if (elements.length === 0) return;
 
 		if (!selectedElement) {
 			highlightElement(elements[0]);
 			return;
+		}
+
+		if (
+			['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Enter'].includes(
+				event.key
+			)
+		) {
+			event.preventDefault();
 		}
 
 		let newElement: HTMLElement = null;

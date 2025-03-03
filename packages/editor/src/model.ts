@@ -134,7 +134,7 @@ const nodes = {
 		}
 	}),
 	list_item: createNodeSpec({
-		content: 'block*',
+		content: 'block+',
 		group: 'block',
 		parseDOM: [{ tag: 'li' }],
 		toDOM() {

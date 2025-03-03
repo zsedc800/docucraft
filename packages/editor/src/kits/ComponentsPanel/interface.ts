@@ -1,6 +1,8 @@
 import { CSSProperties, ReactNode } from '@docucraft/srender';
-import { Command } from 'prosemirror-state';
+import { Command, EditorState } from 'prosemirror-state';
 import { BaseNodeView } from '../../utils/view';
+import { NodesKey } from '../../model';
+import { EditorView } from 'prosemirror-view';
 
 export interface BlockItem {
 	title: string;
@@ -8,8 +10,15 @@ export interface BlockItem {
 	icon?: (p: any) => ReactNode;
 	cover?: string | ((props: any) => ReactNode);
 	description?: string;
-	handler: Command | ((nodeView: BaseNodeView) => void);
+	handler:
+		| ((
+				state: EditorState,
+				dispatch?: EditorView['dispatch'],
+				view?: EditorView
+		  ) => void)
+		| ((nodeView: BaseNodeView) => void);
 	style?: CSSProperties;
+	blockType: NodesKey;
 	// handler: Command;
 	type?: 'block' | 'inline' | 'pop';
 }

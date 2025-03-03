@@ -13,6 +13,9 @@ export default () => {
 				mousedown: () => {
 					updated = false;
 				},
+				mousemove: () => {
+					updated = true;
+				},
 				mouseup: (view: EditorView) => {
 					const {
 						state: { selection }
@@ -60,11 +63,11 @@ export default () => {
 					const { state } = view;
 					const { selection } = state;
 					const { from, to } = sel;
-
-					if (selection.from !== from || selection.to !== to) {
-						closeFloatBar();
-						updated = true;
-					}
+					if (!selection.eq(sel)) closeFloatBar();
+					// if (selection.from !== from || selection.to !== to) {
+					// 	closeFloatBar();
+					// 	updated = true;
+					// }
 				},
 				destroy() {
 					root.removeEventListener('selectionchange', onSelectionChange);

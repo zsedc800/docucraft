@@ -1,15 +1,13 @@
-import { Plugin } from 'prosemirror-state';
-import { BaseNodeView, getNodeView } from '../utils/view';
 import { CSSProperties } from '@docucraft/srender';
+import { Fragment } from 'prosemirror-model';
+import { BaseNodeView, getNodeView } from '../utils/view';
+import { getNodeTypes, getSchemaNode } from '../model';
 import { setStyles } from '../utils/domUtils';
-import { getNodeTypes, schema } from '../model';
-import { Fragment, ResolvedPos } from 'prosemirror-model';
 
 export function initDrag(dom: HTMLElement, nodeView: BaseNodeView) {
-	let isDraging = false;
 	function onMouseDown(startEvent: MouseEvent) {
 		const { dom, view } = nodeView;
-		const copy = dom.cloneNode(true) as HTMLElement;
+		const ghostElement = dom.cloneNode(true) as HTMLElement;
 
 		const { clientX: startX, clientY: startY } = startEvent;
 		const { left, top } = dom.getBoundingClientRect();
@@ -25,21 +23,28 @@ export function initDrag(dom: HTMLElement, nodeView: BaseNodeView) {
 			height: dom.offsetHeight,
 			backgroundColor: 'transparent'
 		};
-		setStyles(copy, style);
-		document.body.appendChild(copy);
+		setStyles(ghostElement, style);
+		document.body.appendChild(ghostElement);
 		let lastNodeView = nodeView;
 		function onMouseMove(e: MouseEvent) {
-			isDraging = true;
 			const { clientX: x, clientY: y } = e;
+			const {
+				state: { schema, doc }
+			} = view;
 			style.left = x + offsetX;
 			style.top = y + offsetY;
 			const pos = view.posAtCoords({ left: Math.max(left, x), top: y });
 			if (pos) {
-				const $pos = view.state.doc.resolve(pos.pos);
-				let node = $pos.node(1);
-
+				const $pos = doc.resolve(pos.pos);
+				let node = $pos.depth === 0 ? $pos.nodeAfter : $pos.node(1);
 				if (
-					getNodeTypes(view.state.schema, [
+					node.type === getSchemaNode(schema, 'heading') &&
+					node.attrs.level === 1
+				)
+					return;
+				if (
+					$pos.depth &&
+					getNodeTypes(schema, [
 						'taskList',
 						'ordered_list',
 						'bullet_list'
@@ -56,12 +61,12 @@ export function initDrag(dom: HTMLElement, nodeView: BaseNodeView) {
 					lastNodeView = nodeView;
 				}
 			}
-			setStyles(copy, style);
+			setStyles(ghostElement, style);
 		}
 
 		function stop(e: MouseEvent) {
 			e.preventDefault();
-			copy.parentNode.removeChild(copy);
+			ghostElement.parentNode.removeChild(ghostElement);
 			lastNodeView.dom.classList.remove('drag-line');
 
 			if (lastNodeView !== nodeView) {
@@ -95,14 +100,14 @@ export function initDrag(dom: HTMLElement, nodeView: BaseNodeView) {
 	dom.addEventListener('mousedown', onMouseDown);
 }
 
-export default () => {
-	return new Plugin({
-		props: {
-			handleDOMEvents: {
-				dragstart(view, event) {
-					console.log(event, 'ev');
-				}
-			}
-		}
-	});
-};
+// export default () => {
+// 	return new Plugin({
+// 		props: {
+// 			handleDOMEvents: {
+// 				dragstart(view, event) {
+// 					console.log(event, 'ev');
+// 				}
+// 			}
+// 		}
+// 	});
+// };

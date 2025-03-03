@@ -1,7 +1,7 @@
 import { NodeSpec } from 'prosemirror-model';
 
 export const blockQuote: NodeSpec = {
-	content: 'paragraph block*',
+	content: 'paragraph+',
 	group: 'block',
 	toDOM() {
 		return ['blockquote', 0];

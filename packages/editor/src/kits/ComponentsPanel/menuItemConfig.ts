@@ -1,3 +1,4 @@
+import { TextSelection } from 'prosemirror-state';
 import SvgTitle from '@docucraft/icons/svg/TitleFill';
 import SvgH1 from '@docucraft/icons/svg/FormatH1';
 import SvgH2 from '@docucraft/icons/svg/FormatH2';
@@ -11,10 +12,14 @@ import SvgAddTask from '@docucraft/icons/svg/AddTaskFill';
 import SvgLink from '@docucraft/icons/svg/LinkFill';
 import SvgCodeBlock from '@docucraft/icons/svg/CodeBlocks';
 import SvgImage from '@docucraft/icons/svg/ImagesmodeFill';
+import SvgImagelist from '@docucraft/icons/svg/PhotoLibrary';
 import SvgVideo from '@docucraft/icons/svg/MovieFill';
 import SvgAudio from '@docucraft/icons/svg/MicFill';
 import SvgMood from '@docucraft/icons/svg/Mood';
+import SvgIcon from '@docucraft/icons/svg/EmojiObjects';
 import SvgMath from '@docucraft/icons/svg/Functions';
+import SvgTimeline from '@docucraft/icons/svg/Timeline';
+
 import SvgTable from '../../assets/svg/SvgTable';
 import SvgBlockQuote from '../../assets/svg/BlockQuote';
 import SvgDivider from '../../assets/svg/Divider';
@@ -25,80 +30,12 @@ import { schema } from '../../model';
 import { nextTick } from '../../utils';
 import { prompt } from '../../components/popover';
 import { createTable } from '../../components/tables/commands';
-import { insertTimeline } from '../../components/timeline';
+import { insertTimeline } from '../../components/timeline/commands';
 import { EmojiPickerPop, IconPickerPop } from '../Picker';
-import { TextSelection } from 'prosemirror-state';
-export const basicTools: BlockItem[] = [
+
+export const inlineBlocks: BlockItem[] = [
 	{
-		title: '文本',
-		name: 'text',
-		icon: SvgTitle,
-		handler: (state, dispatch) => {
-			dispatch?.(state.tr);
-			return false;
-		}
-	},
-	{
-		title: '一级标题',
-		name: 'h1',
-		icon: SvgH1,
-		handler: transformToNode(schema.nodes.heading, { level: 1 })
-	},
-	{
-		title: '二级标题',
-		name: 'h2',
-		icon: SvgH2,
-		handler: transformToNode(schema.nodes.heading, { level: 2 })
-	},
-	{
-		title: '三级标题',
-		name: 'h3',
-		icon: SvgH3,
-		handler: transformToNode(schema.nodes.heading, { level: 3 })
-	},
-	{
-		title: '四级标题',
-		name: 'h4',
-		icon: SvgH4,
-		handler: transformToNode(schema.nodes.heading, { level: 4 })
-	},
-	{
-		title: '五级标题',
-		name: 'h5',
-		icon: SvgH5,
-		handler: transformToNode(schema.nodes.heading, { level: 5 })
-	},
-	{
-		title: '六级标题',
-		name: 'h6',
-		icon: SvgH6,
-		handler: transformToNode(schema.nodes.heading, { level: 6 })
-	},
-	{
-		title: '代码块',
-		name: 'codeBlock',
-		icon: SvgCodeBlock,
-		handler: transformToNode(schema.nodes.codeBlock)
-	},
-	{
-		title: '有序列表',
-		name: 'orderlist',
-		icon: SvgOrderList,
-		handler: transformToNode(schema.nodes.ordered_list)
-	},
-	{
-		title: '无序列表',
-		name: 'bulletlist',
-		icon: SvgBulletList,
-		handler: transformToNode(schema.nodes.bullet_list)
-	},
-	{
-		title: '任务列表',
-		name: 'tasklist',
-		icon: SvgAddTask,
-		handler: transformToNode(schema.nodes.taskList)
-	},
-	{
+		blockType: 'link',
 		title: '添加链接',
 		name: 'link',
 		icon: SvgLink,
@@ -128,75 +65,9 @@ export const basicTools: BlockItem[] = [
 			});
 			return false;
 		}
-	}
-];
-
-export const blocklist: BlockItem[] = [
-	{
-		title: '表格',
-		description: '添加表格',
-		cover: SvgTable,
-		name: 'table',
-		handler: createTable(3, 3)
 	},
 	{
-		title: '引用',
-		description: '摘要引用',
-		cover: SvgBlockQuote,
-		name: 'blockquote',
-		handler: transformToNode(schema.nodes.blockQuote)
-	},
-
-	{
-		title: '分隔线',
-		description: '创建元素分割线',
-		cover: SvgDivider,
-		name: 'divider',
-		handler: transformToNode(schema.nodes.divider)
-	},
-	{
-		title: '标注',
-		description: '强调块',
-		cover: SvgEmphsis,
-		name: 'emphsis',
-		handler: transformToNode(schema.nodes.emphasis)
-	},
-	{
-		title: '时间轴',
-		description: '时间线',
-		name: 'timeline',
-		cover: SvgEmphsis,
-		handler: insertTimeline()
-	},
-	{
-		title: '图片',
-		description: 'image',
-		name: 'image',
-		cover: SvgImage,
-		handler: transformToNode(schema.nodes.image)
-	},
-	{
-		title: '图片列表',
-		description: '图片库，图片画廊',
-		name: 'imageGallery',
-		cover: SvgImage,
-		handler: transformToNode(schema.nodes.imageGallery)
-	},
-	{
-		title: '视频',
-		description: '视频链接或文件',
-		name: 'video',
-		cover: SvgVideo,
-		handler: transformToNode(schema.nodes.video)
-	},
-	{
-		title: '音频',
-		description: '音频链接或文件',
-		name: 'audio',
-		cover: SvgAudio,
-		handler: transformToNode(schema.nodes.audio)
-	},
-	{
+		blockType: 'emoji',
 		title: 'emoji表情',
 		description: 'emoji',
 		name: 'emoji',
@@ -211,10 +82,11 @@ export const blocklist: BlockItem[] = [
 		}
 	},
 	{
+		blockType: 'icon',
 		title: '图标',
 		description: '图标',
 		name: 'icon',
-		cover: SvgMood,
+		cover: SvgIcon,
 		handler: ({ tr }, dispatch, view) => {
 			if (!view) return false;
 			dispatch?.(
@@ -225,6 +97,7 @@ export const blocklist: BlockItem[] = [
 		}
 	},
 	{
+		blockType: 'mathInline',
 		title: '行内公式',
 		description: '行内公式',
 		name: 'mathInline',
@@ -241,8 +114,171 @@ export const blocklist: BlockItem[] = [
 				dispatch(tr.insert(pos, createNode(schema.nodes.mathInline)));
 			return true;
 		}
+	}
+];
+
+export const basicBlocks: BlockItem[] = [
+	{
+		blockType: 'paragraph',
+		title: '文本',
+		name: 'text',
+		icon: SvgTitle,
+		handler: (state, dispatch) => {
+			dispatch?.(state.tr);
+			return false;
+		}
 	},
 	{
+		blockType: 'heading',
+		title: '一级标题',
+		name: 'h1',
+		icon: SvgH1,
+		handler: transformToNode(schema.nodes.heading, { level: 1 })
+	},
+	{
+		blockType: 'heading',
+		title: '二级标题',
+		name: 'h2',
+		icon: SvgH2,
+		handler: transformToNode(schema.nodes.heading, { level: 2 })
+	},
+	{
+		blockType: 'heading',
+		title: '三级标题',
+		name: 'h3',
+		icon: SvgH3,
+		handler: transformToNode(schema.nodes.heading, { level: 3 })
+	},
+	{
+		blockType: 'heading',
+		title: '四级标题',
+		name: 'h4',
+		icon: SvgH4,
+		handler: transformToNode(schema.nodes.heading, { level: 4 })
+	},
+	{
+		blockType: 'heading',
+		title: '五级标题',
+		name: 'h5',
+		icon: SvgH5,
+		handler: transformToNode(schema.nodes.heading, { level: 5 })
+	},
+	{
+		blockType: 'heading',
+		title: '六级标题',
+		name: 'h6',
+		icon: SvgH6,
+		handler: transformToNode(schema.nodes.heading, { level: 6 })
+	},
+	{
+		blockType: 'codeBlock',
+		title: '代码块',
+		name: 'codeBlock',
+		icon: SvgCodeBlock,
+		handler: transformToNode(schema.nodes.codeBlock)
+	},
+	{
+		blockType: 'ordered_list',
+		title: '有序列表',
+		name: 'orderlist',
+		icon: SvgOrderList,
+		handler: transformToNode(schema.nodes.ordered_list)
+	},
+	{
+		blockType: 'bullet_list',
+		title: '无序列表',
+		name: 'bulletlist',
+		icon: SvgBulletList,
+		handler: transformToNode(schema.nodes.bullet_list)
+	},
+	{
+		blockType: 'taskList',
+		title: '任务列表',
+		name: 'tasklist',
+		icon: SvgAddTask,
+		handler: transformToNode(schema.nodes.taskList)
+	}
+];
+const [link, ...others] = inlineBlocks;
+export const basicTools: BlockItem[] = [...basicBlocks, link];
+
+export const blocks: BlockItem[] = [
+	{
+		blockType: 'table',
+		title: '表格',
+		description: '添加表格',
+		cover: SvgTable,
+		name: 'table',
+		handler: createTable(3, 3)
+	},
+	{
+		blockType: 'blockQuote',
+		title: '引用',
+		description: '摘要引用',
+		cover: SvgBlockQuote,
+		name: 'blockquote',
+		handler: transformToNode(schema.nodes.blockQuote)
+	},
+
+	{
+		blockType: 'divider',
+		title: '分隔线',
+		description: '创建元素分割线',
+		cover: SvgDivider,
+		name: 'divider',
+		handler: transformToNode(schema.nodes.divider)
+	},
+	{
+		blockType: 'emphasis',
+		title: '标注',
+		description: '强调块',
+		cover: SvgEmphsis,
+		name: 'emphsis',
+		handler: transformToNode(schema.nodes.emphasis)
+	},
+	{
+		blockType: 'timeline',
+		title: '时间轴',
+		description: '时间线',
+		name: 'timeline',
+		cover: SvgTimeline,
+		handler: insertTimeline()
+	},
+	{
+		blockType: 'image',
+		title: '图片',
+		description: 'image',
+		name: 'image',
+		cover: SvgImage,
+		handler: transformToNode(schema.nodes.image)
+	},
+	{
+		blockType: 'imageGallery',
+		title: '图片列表',
+		description: '图片库，图片画廊',
+		name: 'imageGallery',
+		cover: SvgImagelist,
+		handler: transformToNode(schema.nodes.imageGallery)
+	},
+	{
+		blockType: 'video',
+		title: '视频',
+		description: '视频链接或文件',
+		name: 'video',
+		cover: SvgVideo,
+		handler: transformToNode(schema.nodes.video)
+	},
+	{
+		blockType: 'audio',
+		title: '音频',
+		description: '音频链接或文件',
+		name: 'audio',
+		cover: SvgAudio,
+		handler: transformToNode(schema.nodes.audio)
+	},
+
+	{
+		blockType: 'mathBlock',
 		title: '公式块',
 		description: '块状公式',
 		name: 'mathBlock',
@@ -250,3 +286,5 @@ export const blocklist: BlockItem[] = [
 		handler: transformToNode(schema.nodes.mathBlock)
 	}
 ];
+
+export const blocklist: BlockItem[] = [...blocks, ...others];

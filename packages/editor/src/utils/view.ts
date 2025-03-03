@@ -15,8 +15,9 @@ import {
 	useRef,
 	createContext
 } from '@docucraft/srender';
-import { generateUniqueId, shallowEqual } from './base';
+import { generateUniqueId, nextTick, shallowEqual } from './base';
 import EditorView from '../EditorView';
+import { NodeSelection, TextSelection } from 'prosemirror-state';
 
 export function useNodeView<
 	T extends HTMLElement = HTMLDivElement,
@@ -189,11 +190,24 @@ export class BaseNodeView implements NodeView {
 		this.dom.remove();
 	}
 	selectNode() {
-		console.log('selectNode');
 		this.setProps({ selected: true });
+		const { state, dispatch } = this.view;
+		const pos = this.getPos();
+
+		dispatch(state.tr.setSelection(NodeSelection.create(state.doc, pos)));
 	}
 	deselectNode() {
 		this.setProps({ selected: false });
+		const {
+			state: { selection, tr },
+			dispatch
+		} = this.view;
+		const $pos = this.getResolvedPos();
+		// if (
+		// 	selection instanceof NodeSelection &&
+		// 	selection.$anchor.pos === $pos.pos
+		// )
+		// nextTick(() => dispatch(tr.setSelection(TextSelection.near($pos))));
 	}
 	// 抽象方法
 	onFocusIn() {}

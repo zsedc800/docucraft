@@ -6,7 +6,6 @@ import { tableEditing } from '../components/tables';
 import { outlineTreePlugin } from '../components/outline';
 import checkSelection from './selection';
 import { handleImagePaste } from '../components/image';
-import dragSort from './dragSort';
 export default [
 	buildInputRules(),
 	keymap(getMyKeyMap()),
@@ -14,6 +13,5 @@ export default [
 	tableEditing({}),
 	outlineTreePlugin,
 	checkSelection(),
-	handleImagePaste(),
-	dragSort()
+	handleImagePaste()
 ];

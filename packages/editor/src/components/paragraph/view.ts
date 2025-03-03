@@ -1,7 +1,7 @@
 import { ViewMutationRecord } from 'prosemirror-view';
 import { Node, NodeType, Schema } from 'prosemirror-model';
 import { BaseNodeView, getNodeView } from '../../utils/view';
-import { shallowEqual } from '../../utils/base';
+import { nextTick, shallowEqual } from '../../utils/base';
 import Paragraph from './Paragraph';
 import { getSchemaNodes } from '../../model';
 import { NodeViewConstructor, NodeViewParameters } from '../../interface';
@@ -28,6 +28,9 @@ export class ParagraphView extends BaseNodeView {
 		super(node, view, getPos);
 		this.component = Paragraph;
 		this.setProps({ text: node.textContent });
+		nextTick(() => {
+			this.onFocusIn();
+		});
 	}
 
 	update(node: Node) {

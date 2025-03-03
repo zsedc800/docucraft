@@ -20,7 +20,7 @@ interface Props extends AnchorHTMLAttributes<HTMLAnchorElement> {
 	nodeView: LinkView;
 }
 
-const tools: Omit<BlockItem, 'name'>[] = [
+const tools: Omit<BlockItem, 'name' | 'blockType'>[] = [
 	{
 		title: '访问链接',
 		icon: SvgOpenInNew,
