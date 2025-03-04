@@ -1,16 +1,16 @@
 import { AnchorHTMLAttributes } from 'react';
-import { LinkView } from './view';
-import { BaseNodeView, useNodeView } from '../../utils/view';
 import Link from '@mui/material/Link';
-import { IconBlock, RichTooltip } from '../../kits';
+import Paper from '@mui/material/Paper';
+import { NodeSelection } from 'prosemirror-state';
+import { Fragment, Slice } from 'prosemirror-model';
 import SvgEdit from '@docucraft/icons/svg/Edit';
 import SvgOpenInNew from '@docucraft/icons/svg/OpenInNewFill';
 import SvgCopy from '@docucraft/icons/svg/ContentCopy';
 import SvgLinkOff from '@docucraft/icons/svg/LinkOffFill';
-import Paper from '@mui/material/Paper';
-import { NodeSelection } from 'prosemirror-state';
+import { LinkView } from './view';
+import { BaseNodeView, useNodeView } from '../../utils/view';
+import { IconBlock, RichTooltip } from '../../kits';
 import { prompt } from '../popover';
-import { Fragment, Slice } from 'prosemirror-model';
 import { schema } from '../../model';
 import Toast from '../Toast';
 import { createNode } from '../../commands';
@@ -24,6 +24,7 @@ const tools: Omit<BlockItem, 'name' | 'blockType'>[] = [
 	{
 		title: '访问链接',
 		icon: SvgOpenInNew,
+		type: 'inline',
 		handler: ({ node }: BaseNodeView) => {
 			window.open(node.attrs.href, node.attrs.target);
 		}
@@ -31,6 +32,7 @@ const tools: Omit<BlockItem, 'name' | 'blockType'>[] = [
 	{
 		title: '编辑链接',
 		icon: SvgEdit,
+		type: 'inline',
 		handler: async ({ getPos, view, node }: BaseNodeView) => {
 			const pos = getPos();
 			const { state, dispatch } = view;
@@ -74,6 +76,7 @@ const tools: Omit<BlockItem, 'name' | 'blockType'>[] = [
 	},
 	{
 		title: '复制链接',
+		type: 'inline',
 		icon: SvgCopy,
 		handler: ({ node }: BaseNodeView) => {
 			navigator.clipboard
@@ -84,6 +87,7 @@ const tools: Omit<BlockItem, 'name' | 'blockType'>[] = [
 	{
 		title: '取消链接',
 		icon: SvgLinkOff,
+		type: 'inline',
 		handler: ({ node, getPos, view }: BaseNodeView) => {
 			const pos = getPos();
 			const { state, dispatch } = view;
@@ -108,7 +112,8 @@ const LinkTools = () => {
 				padding: '2px 8px',
 				display: 'flex',
 				'& .iconButton': {
-					padding: '4px'
+					padding: '4px',
+					boxSizing: 'content-box'
 				}
 			}}
 		>

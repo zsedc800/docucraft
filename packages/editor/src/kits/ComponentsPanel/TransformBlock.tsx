@@ -22,7 +22,7 @@ export default ({ nodeView, close, ...props }: Props) => {
 			<Box
 				sx={(t) => ({
 					display: 'grid',
-					padding: '8px 16px',
+					padding: '8px 16px 0',
 					gridTemplateColumns: 'repeat(6, 1fr)',
 					gap: '4px',
 					'& .iconButton': {
@@ -30,16 +30,22 @@ export default ({ nodeView, close, ...props }: Props) => {
 					}
 				})}
 			>
-				{basicBlocks.map((props) => (
-					<IconBlock
-						{...{ ...(props as any), handleClose: close }}
-						className={classnames({
-							selected: props.blockType === node.type.name
-						})}
-					/>
-				))}
+				{basicBlocks.map((props) => {
+					const name =
+						node.type.name === 'heading'
+							? `h${node.attrs.level}`
+							: node.type.name;
+					return (
+						<IconBlock
+							{...{ ...(props as any), handleClose: close }}
+							className={classnames({
+								selected: props.name === name
+							})}
+						/>
+					);
+				})}
 			</Box>
-			<List dense>
+			<List dense style={{ paddingTop: 0 }}>
 				{blocks.map(
 					({ type, handler, title, cover: Cover, description, blockType }) => (
 						<ListItem

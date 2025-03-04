@@ -9,8 +9,8 @@ import SvgCopy from '@docucraft/icons/svg/ContentCopy';
 import SvgSwap from '@docucraft/icons/svg/SwapHoriz';
 import SvgPalette from '@docucraft/icons/svg/Palette';
 import SvgArrowRight from '@docucraft/icons/svg/ChevronRight';
-import { ReactNode, useContext } from '@docucraft/srender';
-import { ToggleButton } from '../ToggleButton';
+import { ReactNode, useContext, useRef } from '@docucraft/srender';
+import { ToggleButton, ToggleButtonInstance } from '../ToggleButton';
 import { BaseNodeView, nodeViewContext } from '../../utils/view';
 import Toast from '../../components/Toast';
 import Menu from '../Menu';
@@ -75,8 +75,14 @@ export const ColorPalette = ({ nodeView }: ExtraCmpProps) => {
 
 export default ({ children, close, extraMenu }: Props) => {
 	const { nodeView } = useContext(nodeViewContext);
+	const toggleBtnRef = useRef<ToggleButtonInstance>({} as ToggleButtonInstance);
+	const toClose = () => {
+		close && close();
+		nodeView.deselectNode();
+	};
 	return (
 		<ToggleButton
+			ref={toggleBtnRef}
 			title={
 				<Typography textAlign="center">
 					按住可以拖动
@@ -88,12 +94,13 @@ export default ({ children, close, extraMenu }: Props) => {
 			IconComponent={() => null}
 			slotProps={{ paper: { style: { width: 120, borderRadius: 10 } } }}
 			onMouseEnter={() => nodeView.setProps({ selected: true })}
-			// onMouseLeave={() => nodeView.setProps({ selected: false })}
+			onMouseLeave={() =>
+				toggleBtnRef.current.visible
+					? null
+					: nodeView.setProps({ selected: false })
+			}
 			onClick={() => nodeView.selectNode()}
-			onClose={() => {
-				close && close();
-				nodeView.deselectNode();
-			}}
+			onClose={toClose}
 			subPanel={
 				<MenuList
 					sx={() => ({
@@ -118,7 +125,7 @@ export default ({ children, close, extraMenu }: Props) => {
 							navigator.clipboard
 								.writeText(nodeView.node.textContent)
 								.then(() => Toast.success('已复制'))
-								.then(close);
+								.then(toClose);
 						}}
 					>
 						<ListItemIcon>
@@ -128,13 +135,8 @@ export default ({ children, close, extraMenu }: Props) => {
 					</MenuItem>
 					<Menu
 						placement="right-start"
-						content={
-							<TransformBlock
-								style={{ marginLeft: 8 }}
-								nodeView={nodeView}
-								close={close}
-							/>
-						}
+						slotProps={{ paper: { style: { marginLeft: 8 } } }}
+						content={<TransformBlock nodeView={nodeView} close={close} />}
 					>
 						<MenuItem>
 							<ListItemIcon>

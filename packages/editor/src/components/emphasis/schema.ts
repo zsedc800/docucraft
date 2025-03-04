@@ -6,7 +6,8 @@ export const emphasisSpec: NodeSpec = {
 	attrs: {
 		icon: { default: { type: 'emoji', value: '💡' } },
 		color: { default: '' },
-		bgColor: { default: '' }
+		bgColor: { default: '' },
+		borderColor: { default: '' }
 	},
 	toDOM() {
 		return ['div', { class: 'emphasis-block' }, 0];

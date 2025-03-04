@@ -22,7 +22,7 @@ export const IconBlock = ({
 		icon: (...args: any[]) => ReactNode;
 		handler: (...args: any[]) => any;
 		handleClose?: () => void;
-		type?: 'block';
+		type?: 'block' | 'inline' | 'pop';
 		style?: CSSProperties;
 	}
 >) => {
@@ -46,7 +46,6 @@ export const IconBlock = ({
 						tr,
 						doc
 					} = state;
-					console.log(111);
 
 					let transaction = tr;
 					if (!(state.selection instanceof NodeSelection)) {

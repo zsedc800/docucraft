@@ -97,11 +97,7 @@ function createNodeAndFilled(nodeType: NodeType, attrs?: any) {
 }
 
 export const transformToNode =
-	(
-		nodeType: NodeType | (() => Node),
-		attrs?: any,
-		content?: Node | Fragment | readonly Node[]
-	): Command =>
+	(nodeType: NodeType | (() => Node), attrs?: any): Command =>
 	(state, dispatch) => {
 		let { tr } = state;
 		const { selection } = tr;

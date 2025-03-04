@@ -1,6 +1,6 @@
 import { ReactNode, useRef } from '@docucraft/srender';
 import Tabs, { TabChild } from '../Tabs';
-import { ToggleButton } from '../ToggleButton';
+import { ToggleButton, ToggleButtonInstance } from '../ToggleButton';
 import { EmojiPickerPanel } from './EmojiPicker';
 import { IconPickerPanel } from './IconPicker';
 import { EmojiItem, IconInfo, PickerValue, SelectedType } from './interface';
@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default ({ children, onChange, ...attrs }: BaseProps<Props>) => {
-	const panelCtx = useRef<{ close(): void }>(null);
+	const panelCtx = useRef<ToggleButtonInstance>(null);
 	const handleChange = (type: SelectedType) => (e: IconInfo | EmojiItem) => {
 		const data = {
 			type,

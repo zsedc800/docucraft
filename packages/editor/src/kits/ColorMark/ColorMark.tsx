@@ -91,7 +91,7 @@ const textGrey = [
 }));
 type ColorOpts = (typeof baseColors)[number];
 type OnChange = (
-	val: { bgColor?: string; color?: string },
+	val: { bgColor?: string; color?: string; borderColor?: string },
 	opts?: ColorOpts
 ) => void;
 export default ({
@@ -107,14 +107,14 @@ export default ({
 	bgColor?: string;
 	footer?: ReactNode;
 }) => {
-	const [state, setState] = useState({ color, bgColor });
+	const [state, setState] = useState({ color, bgColor, borderColor: void 0 });
 	const handleChange = (value: typeof state, opts?: ColorOpts) => {
 		onChange && onChange(value, opts);
 		setState(value);
 	};
 	useEffect(() => {
 		if (state.color !== color || state.bgColor !== bgColor)
-			setState({ color, bgColor });
+			setState({ ...state, color, bgColor });
 	}, [color, bgColor]);
 
 	return (
@@ -178,7 +178,7 @@ export default ({
 							active={bgColor === state.bgColor}
 							onClick={() =>
 								handleChange(
-									{ ...state, bgColor },
+									{ ...state, bgColor, borderColor },
 									{ bgColor, name, borderColor, ...rest }
 								)
 							}

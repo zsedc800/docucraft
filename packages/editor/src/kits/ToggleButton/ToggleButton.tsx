@@ -52,7 +52,12 @@ const NormalTooltip = styled(({ className, ...props }: TooltipProps) => (
 	}
 }));
 
-export default forwardRef<{ close(): void }, BaseProps<Props>>(
+export interface ToggleButtonInstance {
+	close(): void;
+	visible: boolean;
+}
+
+export default forwardRef<ToggleButtonInstance, BaseProps<Props>>(
 	(
 		{
 			children,
@@ -119,7 +124,10 @@ export default forwardRef<{ close(): void }, BaseProps<Props>>(
 
 		const open = Boolean(anchorEl);
 
-		useImperativeHandle(ref, () => ({ close: handleClose }));
+		useImperativeHandle(ref, () => ({
+			close: handleClose,
+			visible: open
+		}));
 
 		const content = (
 			<div

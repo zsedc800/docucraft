@@ -54,10 +54,12 @@ export const inlineBlocks: BlockItem[] = [
 					view!
 				)
 					.then((res: any) =>
-						transformToNode(
-							schema.nodes.link,
-							{ href: res.url },
-							schema.text(res.text || '链接')
+						transformToNode(() =>
+							createNode(
+								schema.nodes.link,
+								{ href: res.url },
+								schema.text(res.text || '链接')
+							)
 						)
 					)
 					.then((fn) => fn(view.state, view.dispatch, view))
