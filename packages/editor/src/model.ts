@@ -20,6 +20,7 @@ import {
 import { createNodeSpec } from './utils/basic';
 import { blockQuote } from './components/blockQuote/schema';
 import { emphasisSpec } from './components/emphasis/schema';
+import { xmindNodeSpec } from './components/xmind/schema';
 
 const nodes = {
 	// 整个文档
@@ -151,6 +152,7 @@ const nodes = {
 	...createTimelineNodes(),
 	divider: createNodeSpec(DividerSpec),
 	link: createNodeSpec(LinkSpec),
+	xmind: createNodeSpec(xmindNodeSpec),
 	image: createNodeSpec(imageNodeSpec),
 	imageGallery: createNodeSpec(imageGalleryNodeSpec),
 	emoji: createNodeSpec(emojiNodeSpec),
@@ -227,7 +229,8 @@ const marks: Record<MarksKey, MarkSpec> = {
 	// 		href: { default: null },
 	// 		ref: { default: 'noopener noreferrer nofollow' },
 	// 		target: { default: '_blank' },
-	// 		title: { default: '' }
+	// 		title: { default: '' },
+	// 		id: { default: '' }
 	// 	},
 	// 	toDOM: (mark) => {
 	// 		const { href, ref, target, title } = mark.attrs;

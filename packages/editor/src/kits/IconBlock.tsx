@@ -64,7 +64,7 @@ export const IconBlock = ({
 						handler(overrides(state, { tr: transaction }), view.dispatch, view);
 						view.focus();
 					} else {
-						handler(nodeView);
+						// handler(nodeView);
 					}
 
 					handleClose?.();

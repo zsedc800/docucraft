@@ -18,6 +18,7 @@ import { AudioNodeViewConstructor } from './components/audio';
 import { createMathNodeView } from './components/math';
 import { BlockQuoteViewConstructor } from './components/blockQuote';
 import { EmphasisViewConstructor } from './components/emphasis';
+import { XMindViewConstructor } from './components/xmind';
 import EditorView from './EditorView';
 import plugins from './plugins';
 import './themes/default.scss';
@@ -57,8 +58,12 @@ export const setupEditor = (el: HTMLElement | null) => {
 			audio: AudioNodeViewConstructor,
 			blockQuote: BlockQuoteViewConstructor,
 			emphasis: EmphasisViewConstructor,
+			xmind: XMindViewConstructor,
 			...createMathNodeView(),
 			...createTimelineViews()
+		},
+		markViews: {
+			// link: LinkViewConstructor
 		},
 		handleClickOn(view, pos, node, nodePos, event, direct) {
 			const markType = view.state.schema.marks.link;

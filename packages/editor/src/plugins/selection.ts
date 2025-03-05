@@ -1,4 +1,4 @@
-import { Plugin } from 'prosemirror-state';
+import { NodeSelection, Plugin } from 'prosemirror-state';
 import { CellSelection } from '../components/tables/cellSelection/cellSelection';
 import { closeFloatBar, showFloatBar } from '../components/floatBar';
 import { BaseNodeView, getNodeView } from '../utils/view';
@@ -16,18 +16,19 @@ export default () => {
 				mousemove: () => {
 					updated = true;
 				},
-				mouseup: (view: EditorView) => {
+				mouseup: (view: EditorView, e) => {
 					const {
 						state: { selection }
 					} = view;
+					console.log(e, 'eee');
 
 					if (
-						!selection.empty &&
-						!(selection instanceof CellSelection) &&
-						updated &&
-						view.hasFocus()
+						selection.empty ||
+						selection instanceof CellSelection ||
+						selection instanceof NodeSelection
 					)
-						showFloatBar(view);
+						return;
+					showFloatBar(view);
 				}
 			}
 		},

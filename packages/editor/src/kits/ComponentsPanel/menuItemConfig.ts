@@ -19,6 +19,7 @@ import SvgMood from '@docucraft/icons/svg/Mood';
 import SvgIcon from '@docucraft/icons/svg/EmojiObjects';
 import SvgMath from '@docucraft/icons/svg/Functions';
 import SvgTimeline from '@docucraft/icons/svg/Timeline';
+import SvgMind from '@docucraft/icons/svg/Flowsheet';
 
 import SvgTable from '../../assets/svg/SvgTable';
 import SvgBlockQuote from '../../assets/svg/BlockQuote';
@@ -35,7 +36,7 @@ import { EmojiPickerPop, IconPickerPop } from '../Picker';
 
 export const inlineBlocks: BlockItem[] = [
 	{
-		blockType: 'link',
+		// blockType: 'link',
 		title: '添加链接',
 		name: 'link',
 		icon: SvgLink,
@@ -182,21 +183,21 @@ export const basicBlocks: BlockItem[] = [
 	{
 		blockType: 'ordered_list',
 		title: '有序列表',
-		name: 'orderlist',
+		name: 'ordered_list',
 		icon: SvgOrderList,
 		handler: transformToNode(schema.nodes.ordered_list)
 	},
 	{
 		blockType: 'bullet_list',
 		title: '无序列表',
-		name: 'bulletlist',
+		name: 'bullet_list',
 		icon: SvgBulletList,
 		handler: transformToNode(schema.nodes.bullet_list)
 	},
 	{
 		blockType: 'taskList',
 		title: '任务列表',
-		name: 'tasklist',
+		name: 'taskList',
 		icon: SvgAddTask,
 		handler: transformToNode(schema.nodes.taskList)
 	}
@@ -218,7 +219,7 @@ export const blocks: BlockItem[] = [
 		title: '引用',
 		description: '摘要引用',
 		cover: SvgBlockQuote,
-		name: 'blockquote',
+		name: 'blockQuote',
 		handler: transformToNode(schema.nodes.blockQuote)
 	},
 
@@ -235,7 +236,7 @@ export const blocks: BlockItem[] = [
 		title: '标注',
 		description: '强调块',
 		cover: SvgEmphsis,
-		name: 'emphsis',
+		name: 'emphasis',
 		handler: transformToNode(schema.nodes.emphasis)
 	},
 	{
@@ -286,6 +287,13 @@ export const blocks: BlockItem[] = [
 		name: 'mathBlock',
 		cover: SvgMath,
 		handler: transformToNode(schema.nodes.mathBlock)
+	},
+	{
+		title: '思维导图',
+		description: 'mindMap 思维导图',
+		cover: SvgMind,
+		handler: transformToNode(schema.nodes.xmind),
+		name: 'xmind'
 	}
 ];
 

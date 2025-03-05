@@ -1,7 +1,7 @@
 import { Decoration, DecorationSource, NodeView } from 'prosemirror-view';
 import { HTMLAttributes } from 'react';
 import EditorView from './EditorView';
-import { Node } from 'prosemirror-model';
+import { Mark, Node } from 'prosemirror-model';
 import { ReactNode } from '@docucraft/srender';
 import { BaseNodeView } from './utils/view';
 
@@ -40,6 +40,12 @@ export type NodeViewParameters = readonly [
 	getPos: () => number | undefined,
 	decorations: readonly Decoration[],
 	innerDecorations: DecorationSource
+];
+
+export type MarkViewParameters = readonly [
+	Mark: Mark,
+	view: EditorView,
+	inline: boolean
 ];
 
 export interface MenuItemConfig {
