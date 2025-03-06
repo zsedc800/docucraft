@@ -56,8 +56,10 @@ const esmConfig = {
 	...common,
 
 	output: {
-		file: 'dist/index.mjs',
+		dir: 'dist',
+		entryFileNames: '[name].mjs',
 		format: 'esm',
+
 		sourcemap: true
 	},
 	plugins: [
@@ -69,7 +71,8 @@ const esmConfig = {
 const cjsConfig = {
 	...common,
 	output: {
-		file: 'dist/index.js',
+		dir: 'dist',
+		entryFileNames: '[name].js',
 		format: 'cjs',
 		sourcemap: true,
 		name: 'DocucraftEditor',

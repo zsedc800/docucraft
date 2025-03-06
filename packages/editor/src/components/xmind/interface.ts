@@ -1,15 +1,15 @@
-export interface MindNode {
+export interface IMindNode {
 	id: string;
 	parentId: string;
 	title: string;
 	structureClass: string;
 	children: {
-		attached: MindNode[];
+		attached: IMindNode[];
 	};
 }
 
-export interface MindRoot {
+export interface IMindRoot {
 	title: string;
-	topics: MindNode[];
+	topics: IMindNode[];
 	theme: string;
 }

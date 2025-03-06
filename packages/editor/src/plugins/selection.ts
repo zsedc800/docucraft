@@ -10,6 +10,16 @@ export default () => {
 	return new Plugin({
 		props: {
 			handleDOMEvents: {
+				keydown(view, e) {
+					const {
+						state: { selection }
+					} = view;
+					if (selection instanceof NodeSelection && selection.node.isAtom) {
+						e.preventDefault();
+						return true;
+					}
+					return false;
+				},
 				mousedown: () => {
 					updated = false;
 				},

@@ -6,12 +6,13 @@ export const xmindNodeSpec: NodeSpec = {
 	group: 'block',
 	isolating: true,
 	defining: true,
+	selectable: true,
 	toDOM(node) {
-		return ['div', { class: 'xmind' }];
+		return ['div', { class: 'Mindmap' }];
 	},
 	parseDOM: [
 		{
-			tag: 'div.xmind'
+			tag: 'div.Mindmap'
 		}
 	]
 };

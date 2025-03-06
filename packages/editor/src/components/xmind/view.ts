@@ -9,11 +9,15 @@ export class XMindView extends BaseNodeView {
 		this.component = Mind;
 		this.render();
 	}
-	ignoreMutation(mutation: ViewMutationRecord): boolean {
-		return true;
-	}
-	stopEvent() {
-		return true;
+	// ignoreMutation(mutation: ViewMutationRecord): boolean {
+	// 	return true;
+	// }
+	stopEvent(e: Event) {
+		if (e.type.includes('drag')) {
+			e.preventDefault();
+			return true;
+		}
+		return false;
 	}
 }
 

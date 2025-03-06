@@ -1,7 +1,9 @@
-import { useEffect } from '@docucraft/srender';
-import { Leafer, Rect } from 'leafer-ui';
+import { useEffect, useRef } from '@docucraft/srender';
+import Paper from '@mui/material/Paper';
 import { BaseNodeViewProps, useNodeView } from '../../utils/view';
 import { XMindView } from './view';
+import { Tools } from '../toolBar';
+import './style.scss';
 
 interface Props extends BaseNodeViewProps {
 	nodeView: XMindView;
@@ -9,16 +11,87 @@ interface Props extends BaseNodeViewProps {
 }
 export default ({ nodeView, blockId }: Props) => {
 	const { $dom } = useNodeView(nodeView);
+	const canvas = useRef<HTMLDivElement>(null);
 	useEffect(() => {
-		const leafer = new Leafer({ view: blockId });
-		leafer.add(
-			new Rect({ width: 200, height: 200, fill: '#32cd79', draggable: true })
-		);
+		let mind,
+			isDestroy = false;
+		import('./mind').then(({ Mind }) => {
+			if (isDestroy) return;
+			mind = new Mind(canvas.current);
+			mind.render({
+				title: '思维导图',
+				children: {
+					attached: [
+						{
+							title: 'node',
+							children: {
+								attached: [
+									{
+										title: 'node'
+									}
+								]
+							}
+						},
+						{
+							title: 'node',
+							children: {
+								attached: [
+									{
+										title: 'node',
+										children: {
+											attached: [
+												{
+													title: 'node',
+													children: {
+														attached: [
+															{
+																title: 'node'
+															}
+														]
+													}
+												},
+												{
+													title: 'node',
+													children: {
+														attached: [
+															{
+																title: 'node'
+															}
+														]
+													}
+												}
+											]
+										}
+									}
+								]
+							}
+						},
+						{
+							title: 'node'
+						},
+						{
+							title: 'node'
+						},
+						{
+							title: 'node'
+						},
+						{
+							title: 'node'
+						}
+					]
+				}
+			} as any);
+		});
 		return () => {
-			leafer.destroy();
+			mind?.destroy();
+			isDestroy = true;
 		};
 	}, []);
 	return (
-		<div id={blockId} className="xmind" style={{ height: 500 }} ref={$dom} />
+		<Tools>
+			<div id={blockId} className="Mindmap" ref={$dom}>
+				<Paper ref={canvas} className="canvas" style={{ height: 500 }} />
+			</div>
+		</Tools>
 	);
 };

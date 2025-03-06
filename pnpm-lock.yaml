@@ -205,6 +205,9 @@ importers:
       '@emotion/styled':
         specifier: ^11.14.0
         version: 11.14.0(@emotion/react@11.14.0(@types/react@18.3.12)(react@18.3.1))(@types/react@18.3.12)(react@18.3.1)
+      '@leafer-in/viewport':
+        specifier: ^1.4.2
+        version: 1.4.2(@leafer-in/interface@1.4.2(@leafer-ui/interface@1.4.2)(@leafer/interface@1.4.2))(@leafer-ui/core@1.4.2)(@leafer-ui/interface@1.4.2)
       '@lezer/highlight':
         specifier: ^1.2.1
         version: 1.2.1
@@ -1607,6 +1610,13 @@ packages:
     peerDependencies:
       '@leafer-ui/interface': ^1.4.2
       '@leafer/interface': ^1.4.2
+
+  '@leafer-in/viewport@1.4.2':
+    resolution: {integrity: sha512-esurvu9YnSEmBnPBl5UeiMKDJnayuNJey/ikvCNhMtoz3M8iMi5O9Y/bOCCNek7wbpGh9AVvI0lAgJI9BzPqmw==}
+    peerDependencies:
+      '@leafer-in/interface': ^1.4.2
+      '@leafer-ui/core': ^1.4.2
+      '@leafer-ui/interface': ^1.4.2
 
   '@leafer-ui/app@1.4.2':
     resolution: {integrity: sha512-9Q4VWJFxt8x2Kn2CWMjjAI/puX/i1SlaNnptuxitWasUeczCq5Dqkcd8Aio+J+u1JDm6MCBC+FoErCvJlOILCg==}
@@ -8100,6 +8110,12 @@ snapshots:
     dependencies:
       '@leafer-ui/interface': 1.4.2
       '@leafer/interface': 1.4.2
+
+  '@leafer-in/viewport@1.4.2(@leafer-in/interface@1.4.2(@leafer-ui/interface@1.4.2)(@leafer/interface@1.4.2))(@leafer-ui/core@1.4.2)(@leafer-ui/interface@1.4.2)':
+    dependencies:
+      '@leafer-in/interface': 1.4.2(@leafer-ui/interface@1.4.2)(@leafer/interface@1.4.2)
+      '@leafer-ui/core': 1.4.2
+      '@leafer-ui/interface': 1.4.2
 
   '@leafer-ui/app@1.4.2':
     dependencies:
