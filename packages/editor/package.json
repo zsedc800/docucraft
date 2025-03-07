@@ -7,7 +7,7 @@
 	"module": "dist/index.mjs",
 	"scripts": {
 		"build": "tsc && cp ./src/style.css ./dist/",
-		"dev": "rollup -c -w"
+		"dev": "rollup -c rollup.dev.config.mjs -w"
 	},
 	"keywords": [],
 	"author": "zsedc800",

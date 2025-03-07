@@ -1,6 +1,18 @@
-import { App, Box, Frame, Group, Leafer, Line, Rect, Text } from 'leafer-ui';
+import {
+	App,
+	Box,
+	Frame,
+	Group,
+	Path,
+	Leafer,
+	Line,
+	Rect,
+	Text,
+	IPathInputData
+} from 'leafer-ui';
 import '@leafer-in/viewport';
 import { IMindNode, IMindRoot } from './interface';
+import { baseColors } from './theme';
 
 interface IRect {
 	x: number;
@@ -27,7 +39,7 @@ class MindNode implements IRect {
 
 const NODE_WIDTH = 60;
 const NODE_HEIGHT = 24;
-const HORIZONTAL_GAP = 80;
+const HORIZONTAL_GAP = 40;
 const VERTICAL_GAP = 20;
 
 function computeTreeSize(node: MindNode) {
@@ -54,7 +66,6 @@ function computeTreeSize(node: MindNode) {
 function layoutTree(node: MindNode, x: number, y: number) {
 	node.x = x;
 	node.y = y;
-	console.log(node, x, y, 'node');
 	if (
 		!node.children ||
 		node.children.visible === false ||
@@ -72,19 +83,63 @@ function layoutTree(node: MindNode, x: number, y: number) {
 	}
 }
 
-function renderTree(node: MindNode, leafer: Group) {
+function drawBeizerline(
+	[startX, startY, endX, endY],
+	data: Partial<IPathInputData> = {}
+) {
+	const dx = endX - startX;
+	const dy = endY - startY;
+
+	const controlX = startX + dx * (0.3 + Math.abs(dy) / 500);
+	const controlY = startY;
+	return new Path({
+		path: `M ${startX} ${startY} C ${controlX} ${controlY}, ${controlX} ${endY}, ${endX} ${endY}`,
+		strokeWidth: 1.5,
+		stroke: '#32cd79',
+		zIndex: -1,
+		...data
+	});
+}
+
+function drawPolyline(
+	[startX, startY, endX, endY],
+	data: Partial<IPathInputData>
+) {
+	const midX = (startX + endX) / 2;
+	const radius = 5;
+	const path = `M ${startX} ${startY} H ${midX} `;
+	return new Path({
+		path:
+			path +
+			(endY === startY
+				? `H ${endX}`
+				: `V ${endY - (endY > startY ? 1 : -1) * radius} Q ${midX} ${endY} ${midX + radius} ${endY} H ${endX}`),
+		strokeWidth: 1,
+		stroke: '#32cd79',
+		...data
+	});
+}
+
+function renderTree(
+	node: MindNode,
+	leafer: Group,
+	{
+		depth = 0,
+		colors
+	}: { depth?: number; colors?: (typeof baseColors)[number] } = {}
+) {
 	const rect = new Box({
 		x: node.x,
 		y: node.y,
 		width: NODE_WIDTH,
 		height: NODE_HEIGHT,
-		fill: 'orange',
+		fill: colors ? colors.bgColor : 'orange',
 		cornerRadius: 5,
 		children: [
 			{
 				tag: 'Text',
 				text: node.title,
-				fill: 'black',
+				fill: colors ? colors.color : 'black',
 				textAlign: 'left',
 				verticalAlign: 'top'
 			}
@@ -92,22 +147,26 @@ function renderTree(node: MindNode, leafer: Group) {
 	});
 
 	leafer.add(rect);
-	node.children?.attached?.forEach((child) => {
+	node.children?.attached?.forEach((child, i) => {
+		const startX = node.x + NODE_WIDTH / 2;
+		const startY = node.y + NODE_HEIGHT / 2;
+		const endX = child.x;
+		const endY = child.y + NODE_HEIGHT / 2;
+		const { length } = baseColors;
+		const colorItem = colors || baseColors[i % length];
 		leafer.add(
-			new Line({
-				points: [
-					node.x + NODE_WIDTH / 2,
-					node.y + NODE_HEIGHT / 2,
-					child.x,
-					child.y + NODE_HEIGHT / 2
-				],
-				curve: 0.5,
-				strokeWidth: 3,
-				stroke: '#32cd79',
-				zIndex: -1
-			})
+			depth
+				? drawPolyline([node.x + NODE_WIDTH, startY, endX, endY], {
+						stroke: colorItem.borderColor
+					})
+				: drawBeizerline([startX, startY, endX, endY], {
+						stroke: colorItem.borderColor
+					})
 		);
-		renderTree(child, leafer);
+		renderTree(child, leafer, {
+			depth: depth + 1,
+			colors: colorItem
+		});
 	});
 }
 

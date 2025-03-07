@@ -4,14 +4,23 @@ import postcss from 'rollup-plugin-postcss';
 import typescript from 'rollup-plugin-typescript2';
 import alias from '@rollup/plugin-alias';
 import replace from '@rollup/plugin-replace';
-import { visualizer } from 'rollup-plugin-visualizer';
 import path from 'path';
 
-const common = {
+export default {
 	input: 'src/index.ts',
-	watch: {
-		include: ['src/**/*'],
-		exclude: ['node_modules/**']
+	// watch: {
+	// 	include: ['src/**/*'],
+	// 	exclude: ['node_modules/**']
+	// },
+	output: {
+		dir: 'dist',
+		entryFileNames: '[name].mjs',
+		format: 'esm',
+
+		sourcemap: true
+	},
+	onerror(...args) {
+		console.log(args, 'args');
 	},
 	onwarn(warning, warn) {
 		if (warning.code === 'CIRCULAR_DEPENDENCY') {
@@ -34,17 +43,10 @@ const common = {
 				{ find: 'react-dom', replacement: path.resolve('../srender') }
 			]
 		}),
-		// visualizer({
-		// 	filename: 'stats.html', // 生成分析报告
-		// 	// open: true, // 自动打开浏览器
-		// 	gzipSize: true, // 显示 gzip 之后的大小
-		// 	brotliSize: true // 显示 brotli 之后的大小
-		// }),
 		replace({ 'use client': '', preventAssignment: true }),
 
 		typescript({
-			tsconfig: './tsconfig.json',
-			cacheRoot: null
+			tsconfig: './tsconfig.json'
 		}),
 		resolve({
 			extensions: ['.js', '.jsx', '.ts', '.tsx']
@@ -56,43 +58,3 @@ const common = {
 		postcss({ extract: 'style.css', extensions: ['.css', '.scss', 'sass'] })
 	]
 };
-
-const esmConfig = {
-	...common,
-
-	output: {
-		dir: 'dist',
-		entryFileNames: '[name].mjs',
-		format: 'esm',
-
-		sourcemap: true
-	},
-	plugins: [
-		...common.plugins
-		// babel(createBabelConfig('defaults'))
-	]
-};
-
-const cjsConfig = {
-	...common,
-	output: {
-		dir: 'dist',
-		entryFileNames: '[name].js',
-		format: 'cjs',
-		sourcemap: true,
-		name: 'DocucraftEditor',
-		exports: 'auto',
-		interop: 'auto'
-	},
-	plugins: [
-		...common.plugins,
-		resolve({
-			extensions: ['.js', '.jsx', '.ts', '.tsx'],
-			mainFields: ['main'],
-			exportConditions: ['require']
-		})
-		// babel(createBabelConfig({ browsers: ['last 2 versions', 'ie 11'] }))
-	]
-};
-
-export default [esmConfig, cjsConfig];

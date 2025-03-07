@@ -15,6 +15,8 @@ export default ({ nodeView, blockId }: Props) => {
 	useEffect(() => {
 		let mind,
 			isDestroy = false;
+		console.log(11);
+
 		import('./mind').then(({ Mind }) => {
 			if (isDestroy) return;
 			mind = new Mind(canvas.current);
