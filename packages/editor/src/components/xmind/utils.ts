@@ -1,5 +1,5 @@
 let uniqueIdCounter = 1000;
-export function generateUniqueId(prefix = '') {
+export function generateUniqueId(prefix = 'mind_') {
 	uniqueIdCounter++;
 	const base36 = uniqueIdCounter.toString(36);
 	const randomPart = Math.random().toString(36).substring(2, 4);

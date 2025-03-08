@@ -15,72 +15,73 @@ export default ({ nodeView, blockId }: Props) => {
 	useEffect(() => {
 		let mind,
 			isDestroy = false;
-		console.log(11);
 
 		import('./mind').then(({ Mind }) => {
 			if (isDestroy) return;
 			mind = new Mind(canvas.current);
-			mind.render({
-				title: '思维导图',
-				children: {
-					attached: [
-						{
-							title: 'node',
-							children: {
-								attached: [
-									{
-										title: 'node'
-									}
-								]
-							}
-						},
-						{
-							title: 'node',
-							children: {
-								attached: [
-									{
-										title: 'node',
-										children: {
-											attached: [
-												{
-													title: 'node',
-													children: {
-														attached: [
-															{
-																title: 'node'
-															}
-														]
-													}
-												},
-												{
-													title: 'node',
-													children: {
-														attached: [
-															{
-																title: 'node'
-															}
-														]
-													}
-												}
-											]
+			mind.parseJSON({
+				rootTopic: {
+					title: '思维导图',
+					children: {
+						attached: [
+							{
+								title: 'node',
+								children: {
+									attached: [
+										{
+											title: 'node'
 										}
-									}
-								]
+									]
+								}
+							},
+							{
+								title: 'node',
+								children: {
+									attached: [
+										{
+											title: 'node',
+											children: {
+												attached: [
+													{
+														title: 'node',
+														children: {
+															attached: [
+																{
+																	title: 'node'
+																}
+															]
+														}
+													},
+													{
+														title: 'node',
+														children: {
+															attached: [
+																{
+																	title: 'node'
+																}
+															]
+														}
+													}
+												]
+											}
+										}
+									]
+								}
+							},
+							{
+								title: 'node'
+							},
+							{
+								title: 'node'
+							},
+							{
+								title: 'node'
+							},
+							{
+								title: 'node'
 							}
-						},
-						{
-							title: 'node'
-						},
-						{
-							title: 'node'
-						},
-						{
-							title: 'node'
-						},
-						{
-							title: 'node'
-						}
-					]
+						]
+					}
 				}
 			} as any);
 		});

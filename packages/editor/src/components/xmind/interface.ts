@@ -1,15 +1,24 @@
+export interface NodeChildren<T> {
+	visible?: boolean;
+	attached: T[];
+}
 export interface IMindNode {
 	id: string;
 	parentId: string;
 	title: string;
 	structureClass: string;
-	children: {
-		attached: IMindNode[];
-	};
+	children?: NodeChildren<IMindNode>;
 }
 
 export interface IMindRoot {
 	title: string;
-	topics: IMindNode[];
+	rootTopic: IMindNode;
 	theme: string;
+}
+
+export interface IRect {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
 }

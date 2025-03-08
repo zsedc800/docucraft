@@ -8,33 +8,23 @@ import {
 	Line,
 	Rect,
 	Text,
-	IPathInputData
+	IPathInputData,
+	IUI
 } from 'leafer-ui';
 import '@leafer-in/viewport';
-import { IMindNode, IMindRoot } from './interface';
+import { IMindNode, IMindRoot, IRect, NodeChildren } from './interface';
 import { baseColors } from './theme';
+import { generateUniqueId } from './utils';
 
-interface IRect {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-}
+type ColorItem = (typeof baseColors)[number];
 
-interface NodeChildren {
-	visible?: boolean;
-	attached?: MindNode[];
-}
-
-class MindNode implements IRect {
-	id: string;
-	parentId?: string;
-	children?: NodeChildren;
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-	constructor(public title: string) {}
+interface MindNode extends IRect, IMindNode {
+	parent?: MindNode;
+	children?: NodeChildren<MindNode>;
+	UIBox: IUI;
+	theme?: {
+		colors?: ColorItem;
+	};
 }
 
 const NODE_WIDTH = 60;
@@ -42,12 +32,16 @@ const NODE_HEIGHT = 24;
 const HORIZONTAL_GAP = 40;
 const VERTICAL_GAP = 20;
 
+function hasChildren(node: IMindNode) {
+	return !!(
+		node.children &&
+		node.children.visible !== false &&
+		node.children.attached?.length
+	);
+}
+
 function computeTreeSize(node: MindNode) {
-	if (
-		!node.children ||
-		node.children.visible === false ||
-		node.children.attached.length === 0
-	) {
+	if (!hasChildren(node)) {
 		node.width = NODE_WIDTH;
 		node.height = NODE_HEIGHT;
 		return;
@@ -66,12 +60,12 @@ function computeTreeSize(node: MindNode) {
 function layoutTree(node: MindNode, x: number, y: number) {
 	node.x = x;
 	node.y = y;
-	if (
-		!node.children ||
-		node.children.visible === false ||
-		node.children.attached.length === 0
-	)
-		return;
+	node.UIBox.set({ x, y });
+	if (!hasChildren(node)) return;
+
+	const { width: NODE_WIDTH, height: NODE_HEIGHT } = node.UIBox.boxBounds;
+	// const NODE_HEIGHT = node.UIBox.__.height;
+	console.log(NODE_HEIGHT, NODE_WIDTH);
 
 	const childX = x + NODE_WIDTH + HORIZONTAL_GAP;
 	let childY = y - node.height / 2 + NODE_HEIGHT / 2;
@@ -128,39 +122,41 @@ function renderTree(
 		colors
 	}: { depth?: number; colors?: (typeof baseColors)[number] } = {}
 ) {
-	const rect = new Box({
-		x: node.x,
-		y: node.y,
-		width: NODE_WIDTH,
-		height: NODE_HEIGHT,
-		fill: colors ? colors.bgColor : 'orange',
-		cornerRadius: 5,
-		children: [
-			{
-				tag: 'Text',
-				text: node.title,
-				fill: colors ? colors.color : 'black',
-				textAlign: 'left',
-				verticalAlign: 'top'
-			}
-		]
-	});
+	// const rect = new Box({
+	// 	x: node.x,
+	// 	y: node.y,
+	// 	width: NODE_WIDTH,
+	// 	height: NODE_HEIGHT,
+	// 	fill: colors ? colors.bgColor : 'orange',
+	// 	cornerRadius: 5,
+	// 	children: [
+	// 		{
+	// 			tag: 'Text',
+	// 			text: node.title,
+	// 			fill: colors ? colors.color : 'black',
+	// 			textAlign: 'left',
+	// 			verticalAlign: 'top'
+	// 		}
+	// 	]
+	// });
 
-	leafer.add(rect);
+	const { width: NODE_WIDTH, height: NODE_HEIGHT } = node.UIBox.boxBounds;
+	leafer.add(node.UIBox);
 	node.children?.attached?.forEach((child, i) => {
 		const startX = node.x + NODE_WIDTH / 2;
 		const startY = node.y + NODE_HEIGHT / 2;
 		const endX = child.x;
 		const endY = child.y + NODE_HEIGHT / 2;
-		const { length } = baseColors;
-		const colorItem = colors || baseColors[i % length];
+		// const { length } = baseColors;
+		const colorItem = colors || child.theme.colors;
+
 		leafer.add(
 			depth
 				? drawPolyline([node.x + NODE_WIDTH, startY, endX, endY], {
-						stroke: colorItem.borderColor
+						stroke: colorItem.bgColor
 					})
 				: drawBeizerline([startX, startY, endX, endY], {
-						stroke: colorItem.borderColor
+						stroke: colorItem.bgColor
 					})
 		);
 		renderTree(child, leafer, {
@@ -170,10 +166,70 @@ function renderTree(
 	});
 }
 
+function buildMindNode(
+	node: IMindNode,
+	{ colors }: { colors?: ColorItem } = {}
+) {
+	const { children, title, ...rest } = node;
+
+	const UIBox = new Box({
+		fill: colors ? colors.bgColor : 'orange',
+		cornerRadius: 5,
+		children: [
+			{
+				tag: 'Text',
+				text: node.title,
+				fill: colors ? colors.color : 'black',
+				textAlign: 'left',
+				verticalAlign: 'top',
+				padding: [4, 8]
+			}
+		]
+	});
+
+	const { width, height } = UIBox.boxBounds;
+	console.log(width, height, '1');
+
+	const { length } = baseColors;
+	const mindNode: MindNode = {
+		...rest,
+		id: generateUniqueId(),
+		title,
+		x: 0,
+		y: 0,
+		width,
+		height,
+		UIBox,
+		children: {
+			...children,
+			attached: []
+		},
+		theme: { colors }
+	};
+
+	if (hasChildren(node)) {
+		let totalHeight = 0,
+			maxWidth = 0;
+		mindNode.children.attached = children.attached.map((child, i) => {
+			const node = buildMindNode(child, {
+				colors: colors || baseColors[i % length]
+			});
+			totalHeight += node.height + VERTICAL_GAP;
+			maxWidth = Math.max(maxWidth, node.width);
+			node.parent = mindNode;
+			return node;
+		});
+		mindNode.width = width + HORIZONTAL_GAP + maxWidth;
+		mindNode.height = Math.max(height, totalHeight - VERTICAL_GAP);
+	}
+	return mindNode;
+}
+
 export class Mind {
 	frame: Frame;
 	app: App;
 	group: Group;
+	root: MindNode;
 	constructor(id: string | HTMLElement) {
 		this.app = new App({
 			view: id,
@@ -186,10 +242,18 @@ export class Mind {
 		this.frame.add(this.group);
 	}
 
-	render(root: MindNode) {
-		computeTreeSize(root);
+	parseJSON(root: IMindRoot) {
+		this.root = buildMindNode(root.rootTopic);
+		this.render();
+	}
+
+	render() {
+		this.app.stop();
+		const { root } = this;
+		// computeTreeSize(root);
 		layoutTree(root, 200, 200);
 		renderTree(root, this.group);
+		this.app.start();
 	}
 
 	destroy() {
