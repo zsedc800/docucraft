@@ -9,12 +9,18 @@ import {
 	Rect,
 	Text,
 	IPathInputData,
-	IUI
+	IUI,
+	DragEvent,
+	PointerEvent
 } from 'leafer-ui';
 import '@leafer-in/viewport';
+// import '@leafer-in/editor';
+import '@leafer-in/text-editor';
 import { IMindNode, IMindRoot, IRect, NodeChildren } from './interface';
 import { baseColors } from './theme';
 import { generateUniqueId } from './utils';
+import { EditorEvent } from '@leafer-in/editor';
+import { boxSizing } from '@mui/system';
 
 type ColorItem = (typeof baseColors)[number];
 
@@ -22,13 +28,13 @@ interface MindNode extends IRect, IMindNode {
 	parent?: MindNode;
 	children?: NodeChildren<MindNode>;
 	UIBox: IUI;
-	theme?: {
+	theme: {
 		colors?: ColorItem;
 	};
 }
 
-const NODE_WIDTH = 60;
-const NODE_HEIGHT = 24;
+// const NODE_WIDTH = 60;
+// const NODE_HEIGHT = 24;
 const HORIZONTAL_GAP = 40;
 const VERTICAL_GAP = 20;
 
@@ -40,22 +46,22 @@ function hasChildren(node: IMindNode) {
 	);
 }
 
-function computeTreeSize(node: MindNode) {
-	if (!hasChildren(node)) {
-		node.width = NODE_WIDTH;
-		node.height = NODE_HEIGHT;
-		return;
-	}
-	let totalHeight = 0,
-		maxWidth = 0;
-	for (const child of node.children.attached) {
-		computeTreeSize(child);
-		totalHeight += child.height + VERTICAL_GAP;
-		maxWidth = Math.max(maxWidth, child.width);
-	}
-	node.width = NODE_WIDTH + HORIZONTAL_GAP + maxWidth;
-	node.height = Math.max(NODE_HEIGHT, totalHeight - VERTICAL_GAP);
-}
+// function computeTreeSize(node: MindNode) {
+// 	if (!hasChildren(node)) {
+// 		node.width = NODE_WIDTH;
+// 		node.height = NODE_HEIGHT;
+// 		return;
+// 	}
+// 	let totalHeight = 0,
+// 		maxWidth = 0;
+// 	for (const child of node.children.attached) {
+// 		computeTreeSize(child);
+// 		totalHeight += child.height + VERTICAL_GAP;
+// 		maxWidth = Math.max(maxWidth, child.width);
+// 	}
+// 	node.width = NODE_WIDTH + HORIZONTAL_GAP + maxWidth;
+// 	node.height = Math.max(NODE_HEIGHT, totalHeight - VERTICAL_GAP);
+// }
 
 function layoutTree(node: MindNode, x: number, y: number) {
 	node.x = x;
@@ -63,17 +69,15 @@ function layoutTree(node: MindNode, x: number, y: number) {
 	node.UIBox.set({ x, y });
 	if (!hasChildren(node)) return;
 
-	const { width: NODE_WIDTH, height: NODE_HEIGHT } = node.UIBox.boxBounds;
-	// const NODE_HEIGHT = node.UIBox.__.height;
-	console.log(NODE_HEIGHT, NODE_WIDTH);
+	const { width, height } = node.UIBox.boxBounds;
 
-	const childX = x + NODE_WIDTH + HORIZONTAL_GAP;
-	let childY = y - node.height / 2 + NODE_HEIGHT / 2;
+	const childX = x + width + HORIZONTAL_GAP;
+	let childY = y - node.height / 2 + height / 2;
 
 	for (const child of node.children.attached) {
-		childY += child.height / 2 - NODE_HEIGHT / 2;
+		childY += child.height / 2 - height / 2;
 		layoutTree(child, childX, childY);
-		childY += child.height / 2 + NODE_HEIGHT / 2 + VERTICAL_GAP;
+		childY += child.height / 2 + height / 2 + VERTICAL_GAP;
 	}
 }
 
@@ -122,37 +126,18 @@ function renderTree(
 		colors
 	}: { depth?: number; colors?: (typeof baseColors)[number] } = {}
 ) {
-	// const rect = new Box({
-	// 	x: node.x,
-	// 	y: node.y,
-	// 	width: NODE_WIDTH,
-	// 	height: NODE_HEIGHT,
-	// 	fill: colors ? colors.bgColor : 'orange',
-	// 	cornerRadius: 5,
-	// 	children: [
-	// 		{
-	// 			tag: 'Text',
-	// 			text: node.title,
-	// 			fill: colors ? colors.color : 'black',
-	// 			textAlign: 'left',
-	// 			verticalAlign: 'top'
-	// 		}
-	// 	]
-	// });
-
-	const { width: NODE_WIDTH, height: NODE_HEIGHT } = node.UIBox.boxBounds;
+	const { width, height } = node.UIBox.boxBounds;
 	leafer.add(node.UIBox);
 	node.children?.attached?.forEach((child, i) => {
-		const startX = node.x + NODE_WIDTH / 2;
-		const startY = node.y + NODE_HEIGHT / 2;
+		const startX = node.x + width / 2;
+		const startY = node.y + height / 2;
 		const endX = child.x;
-		const endY = child.y + NODE_HEIGHT / 2;
-		// const { length } = baseColors;
+		const endY = child.y + height / 2;
 		const colorItem = colors || child.theme.colors;
 
 		leafer.add(
 			depth
-				? drawPolyline([node.x + NODE_WIDTH, startY, endX, endY], {
+				? drawPolyline([node.x + width, startY, endX, endY], {
 						stroke: colorItem.bgColor
 					})
 				: drawBeizerline([startX, startY, endX, endY], {
@@ -175,20 +160,28 @@ function buildMindNode(
 	const UIBox = new Box({
 		fill: colors ? colors.bgColor : 'orange',
 		cornerRadius: 5,
+		data: { node },
+		editable: true,
 		children: [
 			{
 				tag: 'Text',
+				padding: [4, 8],
 				text: node.title,
 				fill: colors ? colors.color : 'black',
 				textAlign: 'left',
 				verticalAlign: 'top',
-				padding: [4, 8]
+				editable: true
 			}
 		]
 	});
 
+	if (!colors) {
+		UIBox.on(DragEvent.DRAG, ({ moveX, moveY }: DragEvent) => {
+			UIBox.parent.move(moveX, moveY);
+		});
+	}
+
 	const { width, height } = UIBox.boxBounds;
-	console.log(width, height, '1');
 
 	const { length } = baseColors;
 	const mindNode: MindNode = {
@@ -233,13 +226,49 @@ export class Mind {
 	constructor(id: string | HTMLElement) {
 		this.app = new App({
 			view: id,
-
+			editor: {
+				moveable: false,
+				buttonsDirection: 'right',
+				selector: false
+			},
 			tree: { type: 'design' }
 		});
-		this.frame = new Frame();
+		this.frame = new Frame({ fill: 'transparent' });
 		this.app.tree.add(this.frame);
-		this.group = new Group({ draggable: true });
+		this.group = new Group({ fill: 'red' });
 		this.frame.add(this.group);
+		const addButton = Box.one({
+			cursor: 'pointer',
+
+			children: [
+				Path.one({
+					width: 30,
+					height: 30,
+					path: 'M 15 0 A 15 15 0 1 1 14.99 0 M 15 5 V 25 M 5 15 H 25',
+					stroke: '#999',
+					fill: 'transparent',
+					scale: 0.5
+				})
+			]
+		});
+		const {
+			app: { editor }
+		} = this;
+
+		addButton.on('click', (e) => {
+			console.log(e, this.app.editor.target, 'xx');
+		});
+		editor.buttons.add(addButton);
+
+		editor.on(EditorEvent.SELECT, (e) => {
+			console.log(e, 'select');
+		});
+		editor.on(EditorEvent.HOVER, (e) => {
+			console.log(e, 'hover');
+		});
+		this.app.on('click', (e) => {
+			console.log(e, 'xx');
+		});
 	}
 
 	parseJSON(root: IMindRoot) {
@@ -250,7 +279,6 @@ export class Mind {
 	render() {
 		this.app.stop();
 		const { root } = this;
-		// computeTreeSize(root);
 		layoutTree(root, 200, 200);
 		renderTree(root, this.group);
 		this.app.start();

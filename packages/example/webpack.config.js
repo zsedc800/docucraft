@@ -14,7 +14,8 @@ module.exports = (env) => ({
 		extensions: ['.js', '.mjs', '.jsx', '.ts', '.tsx'],
 		alias: {
 			react: '@docucraft/srender',
-			'react-dom': '@docucraft/srender'
+			'react-dom': '@docucraft/srender',
+			'react/jsx-runtime': '@docucraft/srender/jsx-runtime'
 		},
 		// modules: [
 		// 	'node_modules',
@@ -26,7 +27,7 @@ module.exports = (env) => ({
 		// ]
 		modules: [
 			'node_modules',
-			'/root/workspace/docucraft/node_modules/.pnpm/node_modules'
+			'/home/zsedc800/workspace/docucraft/node_modules/.pnpm/node_modules'
 		]
 		// modules: [
 		// 	'/root/workspace/docucraft/node_modules/.pnpm/node_modules',

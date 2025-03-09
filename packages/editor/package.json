@@ -29,6 +29,8 @@
 		"@docucraft/ui": "workspace:^",
 		"@emotion/react": "^11.14.0",
 		"@emotion/styled": "^11.14.0",
+		"@leafer-in/editor": "^1.4.2",
+		"@leafer-in/text-editor": "^1.4.2",
 		"@leafer-in/viewport": "^1.4.2",
 		"@lezer/highlight": "^1.2.1",
 		"@mui/lab": "6.0.0-beta.22",

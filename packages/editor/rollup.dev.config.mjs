@@ -8,19 +8,12 @@ import path from 'path';
 
 export default {
 	input: 'src/index.ts',
-	// watch: {
-	// 	include: ['src/**/*'],
-	// 	exclude: ['node_modules/**']
-	// },
 	output: {
 		dir: 'dist',
-		entryFileNames: '[name].mjs',
 		format: 'esm',
-
-		sourcemap: true
-	},
-	onerror(...args) {
-		console.log(args, 'args');
+		entryFileNames: '[name].mjs',
+		sourcemap: true,
+		chunkFileNames: '[name].js'
 	},
 	onwarn(warning, warn) {
 		if (warning.code === 'CIRCULAR_DEPENDENCY') {
@@ -46,7 +39,9 @@ export default {
 		replace({ 'use client': '', preventAssignment: true }),
 
 		typescript({
-			tsconfig: './tsconfig.json'
+			tsconfig: './tsconfig.json',
+			clean: true,
+			cacheRoot: '.'
 		}),
 		resolve({
 			extensions: ['.js', '.jsx', '.ts', '.tsx']
