@@ -9,13 +9,17 @@ module.exports = {
 				// modules: 'cjs'
 			}
 		],
-		'@babel/preset-typescript'
+		['@babel/preset-typescript']
 	],
 	plugins: [
 		[
 			'@babel/plugin-transform-react-jsx',
 			{ runtime: 'automatic', importSource: '@docucraft/srender' }
 		]
+		// ['@babel/plugin-transform-typescript', { allowDeclareFields: true }],
+		// ['@babel/plugin-proposal-decorators', { version: 'legacy' }],
+		// ['@babel/plugin-proposal-class-properties', { loose: true }]
+		// ['@babel/plugin-transform-private-methods', { loose: true }]
 		// '@babel/plugin-transform-modules-commonjs'
 	]
 };

@@ -1,8 +1,8 @@
-import { Mind } from '@docucraft/editor/src/components/xmind/mind';
+import { MindMap } from '@docucraft/mindmap';
 import { useEffect } from '@docucraft/srender';
 export default () => {
 	useEffect(() => {
-		const mind = new Mind('mind');
+		const mind = new MindMap('mind');
 		mind.parseJSON({
 			rootTopic: {
 				title: '思维导图',
@@ -75,7 +75,7 @@ export default () => {
 	return (
 		<main>
 			<h1>hello</h1>
-			<div id="mind" style={{ height: 800 }} className="container"></div>
+			<div id="mind" style={{ height: 1000 }} className="container"></div>
 		</main>
 	);
 };

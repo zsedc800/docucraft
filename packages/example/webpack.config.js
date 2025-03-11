@@ -6,6 +6,7 @@ module.exports = (env) => ({
 		main: './src/index.ts'
 	},
 	context: __dirname,
+	devtool: 'source-map',
 	resolve: {
 		// mainFiles: ['index'],
 		// mainFields: ['browser', 'module', 'main'],

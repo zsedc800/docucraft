@@ -12,7 +12,10 @@
 		"strict": true,
 
 		"skipLibCheck": true,
-		"typeRoots": ["./node_modules/@docucraft/srender"]
+		"typeRoots": ["./node_modules/@docucraft/srender"],
+		"experimentalDecorators": true,
+		"emitDecoratorMetadata": true,
+		"useDefineForClassFields": false
 	},
 	"include": ["src/"],
 	"exclude": ["node_modules/@types/react"]

@@ -1,0 +1,29 @@
+{
+	"name": "@docucraft/mindmap",
+	"version": "0.0.1",
+	"main": "dist/index.js",
+	"module": "dist/index.js",
+	"types": "dist/index.d.ts",
+	"scripts": {
+		"test": "echo \"Error: no test specified\" && exit 1",
+		"dev": " NODE_ENV=development rollup -c -w",
+		"build": "rollup -c"
+	},
+	"keywords": [],
+	"author": "",
+	"license": "ISC",
+	"description": "",
+	"dependencies": {
+		"@leafer-in/editor": "^1.4.2",
+		"@leafer-in/interface": "^1.4.2",
+		"@leafer-in/resize": "^1.4.2",
+		"@leafer-in/viewport": "^1.4.2",
+		"@leafer-ui/core": "^1.4.2",
+		"@leafer-ui/draw": "^1.4.2",
+		"@leafer-ui/interface": "^1.4.2",
+		"leafer-ui": "^1.4.2"
+	},
+	"devDependencies": {
+		"typescript": "^5.8.2"
+	}
+}

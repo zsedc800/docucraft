@@ -4,20 +4,13 @@ import {
 	Frame,
 	Group,
 	Path,
-	Leafer,
-	Line,
-	Rect,
-	Text,
 	IPathInputData,
 	IUI,
-	DragEvent,
-	PointerEvent,
-	Debug
+	DragEvent
 } from 'leafer-ui';
 import '@leafer-in/viewport';
-import { EditorEvent, EditorScaleEvent } from '@leafer-in/editor';
-import '@leafer-in/text-editor';
-// import '@leafer-in/editor';
+// import { EditorEvent } from '@leafer-in/editor';
+import { EditorEvent, EditorScaleEvent } from './editor';
 import { IMindNode, IMindRoot, IRect, NodeChildren } from './interface';
 import { baseColors } from './theme';
 import { generateUniqueId } from './utils';
@@ -49,23 +42,6 @@ function hasChildren(node: IMindNode) {
 		node.children.attached?.length
 	);
 }
-
-// function computeTreeSize(node: MindNode) {
-// 	if (!hasChildren(node)) {
-// 		node.width = NODE_WIDTH;
-// 		node.height = NODE_HEIGHT;
-// 		return;
-// 	}
-// 	let totalHeight = 0,
-// 		maxWidth = 0;
-// 	for (const child of node.children.attached) {
-// 		computeTreeSize(child);
-// 		totalHeight += child.height + VERTICAL_GAP;
-// 		maxWidth = Math.max(maxWidth, child.width);
-// 	}
-// 	node.width = NODE_WIDTH + HORIZONTAL_GAP + maxWidth;
-// 	node.height = Math.max(NODE_HEIGHT, totalHeight - VERTICAL_GAP);
-// }
 
 function layoutTree(node: MindNode, x: number, y: number) {
 	node.x = x;
@@ -169,7 +145,7 @@ function buildMindNode(
 		textBox: true,
 		children: [
 			{
-				// cornerRadius: 5,
+				cornerRadius: 5,
 				tag: 'Text',
 				padding: [4, 8],
 				text: node.title,
@@ -224,7 +200,7 @@ function buildMindNode(
 	return mindNode;
 }
 
-export class Mind {
+export class MindMap {
 	frame: Frame;
 	app: App;
 	group: Group;
@@ -232,15 +208,15 @@ export class Mind {
 	constructor(id: string | HTMLElement) {
 		this.app = new App({
 			view: id,
-			// editor: {
-			// 	moveable: false,
-			// 	buttonsDirection: 'right',
-			// 	// selector: false
-			// 	pointSize: 0,
-			// 	boxSelect: false,
-			// 	rotateable: false,
-
-			// },
+			editor: {
+				moveable: false,
+				buttonsDirection: 'right',
+				// selector: false
+				pointSize: 0,
+				boxSelect: false,
+				rotateable: false,
+				rect: { opacity: 0 }
+			},
 			tree: { type: 'design' }
 		});
 		this.frame = new Frame({ fill: 'transparent', draggable: true });
@@ -261,18 +237,21 @@ export class Mind {
 				})
 			]
 		});
-		// const {
-		// 	app: { editor }
-		// } = this;
+		const {
+			app: { editor }
+		} = this;
 
-		// addButton.on('click', (e) => {
-		// 	console.log(e, this.app.editor.target, 'xx');
-		// });
-		// editor.buttons.add(addButton);
+		addButton.on('click', (e) => {
+			console.log(e, this.app.editor.target, 'xx');
+		});
+		editor.buttons.add(addButton);
+		editor.on(EditorEvent.SELECT, (e) => {
+			console.log(e, 'e');
+		});
 
-		// editor.on(EditorScaleEvent.SCALE, (e) => {
-		// 	console.log(e, 'eee');
-		// });
+		editor.on(EditorScaleEvent.SCALE, (e) => {
+			console.log(e, 'eee');
+		});
 	}
 
 	parseJSON(root: IMindRoot) {

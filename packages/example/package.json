@@ -22,8 +22,9 @@
 	"dependencies": {
 		"@docucraft/editor": "workspace:^",
 		"@docucraft/icons": "workspace:^",
-		"@docucraft/ui": "workspace:^",
+		"@docucraft/mindmap": "workspace:^",
 		"@docucraft/srender": "workspace:^",
+		"@docucraft/ui": "workspace:^",
 		"react-router-dom": "^6.23.1"
 	}
 }
