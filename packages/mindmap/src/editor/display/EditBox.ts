@@ -9,7 +9,8 @@ import {
 	IBoxInputData,
 	IAlign,
 	IUI,
-	IEditorConfig
+	IEditorConfig,
+	IRectInputData
 } from '@leafer-ui/interface';
 import { Group, Box, Text, AroundHelper, Direction9 } from '@leafer-ui/draw';
 import { DragEvent, PointerEvent } from '@leafer-ui/core';
@@ -125,6 +126,7 @@ export class EditBox extends Group implements IEditBox {
 					hitFill: 'all'
 				});
 				resizeLines.push(resizeLine);
+
 				this.listenPointEvents(resizeLine, 'resize', i);
 			}
 
@@ -498,7 +500,6 @@ export class EditBox extends Group implements IEditBox {
 			rect.on_(PointerEvent.DOUBLE_TAP, this.onDoubleTap, this),
 			rect.on_(PointerEvent.LONG_PRESS, this.onLongPress, this)
 		];
-		console.log(this.__eventIds, 'ev');
 	}
 
 	protected __removeListenEvents(): void {

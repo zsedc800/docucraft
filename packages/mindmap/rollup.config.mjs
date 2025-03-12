@@ -14,6 +14,10 @@ const common = {
 			warn(warning);
 		}
 	},
+	external: (id) => {
+		// return /\@docucraft\/icons|\@codemirror/.test(id);
+		return /node_modules/.test(id);
+	},
 	plugins: [
 		// visualizer({
 		// 	filename: 'stats.html', // 生成分析报告

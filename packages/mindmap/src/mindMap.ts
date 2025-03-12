@@ -6,7 +6,8 @@ import {
 	Path,
 	IPathInputData,
 	IUI,
-	DragEvent
+	DragEvent,
+	KeyEvent
 } from 'leafer-ui';
 import '@leafer-in/viewport';
 // import { EditorEvent } from '@leafer-in/editor';
@@ -14,6 +15,7 @@ import { EditorEvent, EditorScaleEvent } from './editor';
 import { IMindNode, IMindRoot, IRect, NodeChildren } from './interface';
 import { baseColors } from './theme';
 import { generateUniqueId } from './utils';
+import { MindMapSelection } from './selection';
 
 // Debug.showBoundsView = true;
 // Debug.showHitView = true;
@@ -21,7 +23,7 @@ import { generateUniqueId } from './utils';
 
 type ColorItem = (typeof baseColors)[number];
 
-interface MindNode extends IRect, IMindNode {
+export interface MindNode extends IRect, IMindNode {
 	parent?: MindNode;
 	children?: NodeChildren<MindNode>;
 	UIBox: IUI;
@@ -138,7 +140,6 @@ function buildMindNode(
 	const { children, title, ...rest } = node;
 
 	const UIBox = new Box({
-		data: { node },
 		cornerRadius: 5,
 		editable: true,
 		fill: colors ? colors.bgColor : 'orange',
@@ -182,6 +183,8 @@ function buildMindNode(
 		theme: { colors }
 	};
 
+	UIBox.data.node = mindNode;
+
 	if (hasChildren(node)) {
 		let totalHeight = 0,
 			maxWidth = 0;
@@ -205,6 +208,7 @@ export class MindMap {
 	app: App;
 	group: Group;
 	root: MindNode;
+	selection: MindMapSelection;
 	constructor(id: string | HTMLElement) {
 		this.app = new App({
 			view: id,
@@ -215,7 +219,9 @@ export class MindMap {
 				pointSize: 0,
 				boxSelect: false,
 				rotateable: false,
-				rect: { opacity: 0 }
+				selectorPadding: 1.5,
+				rect: { opacity: 0 },
+				hoverStyle: { stroke: '#D4C5FF' }
 			},
 			tree: { type: 'design' }
 		});
@@ -223,6 +229,7 @@ export class MindMap {
 		this.app.tree.add(this.frame);
 		this.group = new Group({});
 		this.frame.add(this.group);
+		this.selection = new MindMapSelection();
 		const addButton = Box.one({
 			cursor: 'pointer',
 
@@ -241,22 +248,56 @@ export class MindMap {
 			app: { editor }
 		} = this;
 
-		addButton.on('click', (e) => {
-			console.log(e, this.app.editor.target, 'xx');
-		});
-		editor.buttons.add(addButton);
+		// addButton.on('click', (e) => {
+		// 	console.log(e, this.app.editor.target, 'xx');
+		// });
+		// editor.buttons.add(addButton);
 		editor.on(EditorEvent.SELECT, (e) => {
-			console.log(e, 'e');
+			const ele: IUI | undefined = e.value;
+			let node = ele;
+			while (node && node.tag !== 'Box') node = node.parent;
+			this.selection = new MindMapSelection(node?.data.node);
+			console.log(this.selection, 'sel');
 		});
+		this.app.on(KeyEvent.DOWN, (e) => {
+			switch (e.key) {
+				case 'ArrowUp':
+					return this.selectUp();
+				case 'ArrowRight':
+					return this.selectRight();
+				case 'ArrowDown':
+					return this.selectDown();
+				case 'ArrowLeft':
+					return this.selectLeft();
+			}
+		});
+	}
 
-		editor.on(EditorScaleEvent.SCALE, (e) => {
-			console.log(e, 'eee');
-		});
+	selectUp() {
+		const { anchorNode } = this.selection;
+
+		if (anchorNode && anchorNode.parent) {
+			const { parent } = anchorNode;
+			const index = parent.children.attached.indexOf(anchorNode);
+			if (index > 0) this.select(parent.children.attached[index - 1]);
+		}
+	}
+	selectDown() {}
+	selectLeft() {}
+
+	selectRight() {}
+
+	selectDir() {}
+
+	select(node: MindNode) {
+		this.app.editor.select(node.UIBox);
 	}
 
 	parseJSON(root: IMindRoot) {
 		this.root = buildMindNode(root.rootTopic);
 		this.render();
+		this.selection = new MindMapSelection(this.root);
+		this.select(this.root);
 	}
 
 	render() {

@@ -43,8 +43,8 @@ export class EditSelect extends Group implements IEditSelect {
 		return this.app && this.app.interaction.moveMode;
 	}
 
-	public hoverStroker: IStroker = new Stroker();
-	public targetStroker: IStroker = new Stroker();
+	public hoverStroker: IStroker;
+	public targetStroker: IStroker;
 
 	public bounds: IBounds = new Bounds();
 	public selectArea: ISelectArea = new SelectArea();
@@ -59,6 +59,8 @@ export class EditSelect extends Group implements IEditSelect {
 	constructor(editor: IEditor) {
 		super();
 		this.editor = editor;
+		this.hoverStroker = new Stroker(this.editor);
+		this.targetStroker = new Stroker(this.editor);
 		this.addMany(this.targetStroker, this.hoverStroker, this.selectArea);
 		this.__listenEvents();
 	}

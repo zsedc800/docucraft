@@ -39,6 +39,11 @@ module.exports = (env) => ({
 	module: {
 		rules: [
 			{
+				test: /\.m?js$/,
+				enforce: 'pre', // 让 Webpack 在解析前处理 Source Map
+				use: ['source-map-loader']
+			},
+			{
 				test: /\.(t|j)sx?$/,
 				use: 'babel-loader'
 			},
