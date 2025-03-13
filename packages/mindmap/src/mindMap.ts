@@ -7,9 +7,12 @@ import {
 	IPathInputData,
 	IUI,
 	DragEvent,
-	KeyEvent
+	KeyEvent,
+	ILeafer,
+	IBoundsData
 } from 'leafer-ui';
 import '@leafer-in/viewport';
+// import '@leafer-in/view';
 // import { EditorEvent } from '@leafer-in/editor';
 import { EditorEvent, EditorScaleEvent } from './editor';
 import { IMindNode, IMindRoot, IRect, NodeChildren } from './interface';
@@ -203,6 +206,41 @@ function buildMindNode(
 	return mindNode;
 }
 
+function getViewBounds(leafer: ILeafer): IBoundsData {
+	// const transform = leafer.worldTransform;
+	return {
+		x: 0,
+		y: 0,
+		width: leafer.canvas.width,
+		height: leafer.canvas.height
+	};
+}
+
+function isOutOfView(node: IUI, viewBounds: IBoundsData) {
+	const bounds = node.getBounds();
+	return (
+		bounds.x + bounds.width < viewBounds.x ||
+		bounds.x > viewBounds.x + viewBounds.width ||
+		bounds.y + bounds.height < viewBounds.y ||
+		bounds.y > viewBounds.y + viewBounds.height
+	);
+}
+
+function scrollIntoView(node: IUI, leafer: ILeafer) {
+	const viewBounds = getViewBounds(leafer);
+	if (!isOutOfView(node, viewBounds)) return;
+	const bounds = node.getBounds();
+
+	const targetX = viewBounds.x + viewBounds.width / 2 - bounds.width / 2;
+	const targetY = viewBounds.y + viewBounds.height / 2 - bounds.height / 2;
+
+	const offsetX = bounds.x - targetX;
+	const offsetY = bounds.y - targetY;
+	console.log(offsetX, offsetY, bounds, viewBounds, 'ii');
+
+	leafer.zoomLayer.move(offsetX, offsetY);
+}
+
 export class MindMap {
 	frame: Frame;
 	app: App;
@@ -277,20 +315,52 @@ export class MindMap {
 		const { anchorNode } = this.selection;
 
 		if (anchorNode && anchorNode.parent) {
-			const { parent } = anchorNode;
-			const index = parent.children.attached.indexOf(anchorNode);
-			if (index > 0) this.select(parent.children.attached[index - 1]);
+			const {
+				parent: { children: { attached = [] } = {} }
+			} = anchorNode;
+			const index = attached.indexOf(anchorNode);
+			if (index > 0) this.select(attached[index - 1]);
 		}
 	}
-	selectDown() {}
-	selectLeft() {}
+	selectDown() {
+		const { anchorNode } = this.selection;
+		if (anchorNode && anchorNode.parent) {
+			const {
+				parent: { children: { attached = [] } = {} }
+			} = anchorNode;
+			const index = attached.indexOf(anchorNode);
+			if (index < attached.length - 1) this.select(attached[index + 1]);
+		}
+	}
+	selectLeft() {
+		const { anchorNode } = this.selection;
+		if (anchorNode && anchorNode.parent) {
+			const { parent } = anchorNode;
+			this.select(parent);
+		}
+	}
 
-	selectRight() {}
+	selectRight() {
+		const { anchorNode } = this.selection;
 
-	selectDir() {}
+		if (anchorNode && anchorNode.children) {
+			const { children: { visible = true, attached = [] } = {} } = anchorNode;
+			if (visible && attached.length) this.select(attached[0]);
+		}
+	}
 
 	select(node: MindNode) {
+		// console.log(
+		// 	node.UIBox.getBounds(),
+		// 	'bounds',
+		// 	this.app.tree.worldTransform,
+		// 	this.app.tree.canvas,
+		// 	this.app.tree.getBounds()
+		// );
+
+		// this.app.tree.zoom(node.UIBox, 0, true);
 		this.app.editor.select(node.UIBox);
+		scrollIntoView(node.UIBox, this.app.tree);
 	}
 
 	parseJSON(root: IMindRoot) {

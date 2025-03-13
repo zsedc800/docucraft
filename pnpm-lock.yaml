@@ -424,6 +424,9 @@ importers:
       '@leafer-in/resize':
         specifier: ^1.4.2
         version: 1.4.2(@leafer-in/interface@1.4.2(@leafer-ui/interface@1.4.2)(@leafer/interface@1.4.2))(@leafer-ui/draw@1.4.2)(@leafer-ui/interface@1.4.2)
+      '@leafer-in/view':
+        specifier: ^1.4.2
+        version: 1.4.2(@leafer-in/interface@1.4.2(@leafer-ui/interface@1.4.2)(@leafer/interface@1.4.2))(@leafer-ui/draw@1.4.2)(@leafer-ui/interface@1.4.2)
       '@leafer-in/viewport':
         specifier: ^1.4.2
         version: 1.4.2(@leafer-in/interface@1.4.2(@leafer-ui/interface@1.4.2)(@leafer/interface@1.4.2))(@leafer-ui/core@1.4.2)(@leafer-ui/interface@1.4.2)
@@ -1483,6 +1486,13 @@ packages:
       '@leafer-in/editor': ^1.4.2
       '@leafer-in/interface': ^1.4.2
       '@leafer-ui/core': ^1.4.2
+      '@leafer-ui/interface': ^1.4.2
+
+  '@leafer-in/view@1.4.2':
+    resolution: {integrity: sha512-QCSADagZiyADxIuyHIyIiLVT1ubvXDy4IRhC4HF+C/olKxsSSnKFQ+txavRNltju1/QSoe9AdQKXtjgoMtVZag==}
+    peerDependencies:
+      '@leafer-in/interface': ^1.4.2
+      '@leafer-ui/draw': ^1.4.2
       '@leafer-ui/interface': ^1.4.2
 
   '@leafer-in/viewport@1.4.2':
@@ -7774,6 +7784,12 @@ snapshots:
       '@leafer-in/editor': 1.4.2(@leafer-in/interface@1.4.2(@leafer-ui/interface@1.4.2)(@leafer/interface@1.4.2))(@leafer-in/resize@1.4.2(@leafer-in/interface@1.4.2(@leafer-ui/interface@1.4.2)(@leafer/interface@1.4.2))(@leafer-ui/draw@1.4.2)(@leafer-ui/interface@1.4.2))(@leafer-ui/core@1.4.2)(@leafer-ui/interface@1.4.2)
       '@leafer-in/interface': 1.4.2(@leafer-ui/interface@1.4.2)(@leafer/interface@1.4.2)
       '@leafer-ui/core': 1.4.2
+      '@leafer-ui/interface': 1.4.2
+
+  '@leafer-in/view@1.4.2(@leafer-in/interface@1.4.2(@leafer-ui/interface@1.4.2)(@leafer/interface@1.4.2))(@leafer-ui/draw@1.4.2)(@leafer-ui/interface@1.4.2)':
+    dependencies:
+      '@leafer-in/interface': 1.4.2(@leafer-ui/interface@1.4.2)(@leafer/interface@1.4.2)
+      '@leafer-ui/draw': 1.4.2
       '@leafer-ui/interface': 1.4.2
 
   '@leafer-in/viewport@1.4.2(@leafer-in/interface@1.4.2(@leafer-ui/interface@1.4.2)(@leafer/interface@1.4.2))(@leafer-ui/core@1.4.2)(@leafer-ui/interface@1.4.2)':
