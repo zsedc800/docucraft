@@ -4,9 +4,9 @@ export interface NodeChildren<T> {
 }
 export interface IMindNode {
 	id: string;
-	parentId: string;
+	parentId?: string;
 	title: string;
-	structureClass: string;
+	structureClass?: string;
 	children?: NodeChildren<IMindNode>;
 }
 
