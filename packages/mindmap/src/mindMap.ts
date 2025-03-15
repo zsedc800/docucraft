@@ -12,7 +12,8 @@ import {
 	Bounds,
 	ILeaf,
 	LeafBoundsHelper,
-	Line
+	Line,
+	PointerEvent
 } from 'leafer-ui';
 import '@leafer-in/viewport';
 import { EditorEvent } from './editor';
@@ -56,15 +57,14 @@ function layoutTree(node: MindNode, x: number, y: number) {
 	node.UIBox.set({ x, y });
 	if (!hasChildren(node)) return;
 
-	const { width, height } = node.UIBox.boxBounds;
-	const xh =
-		height === node.height ? node.children.attached[0].height : node.height;
+	const { width, height: h } = node.UIBox.boxBounds;
 	const childX = x + width + HORIZONTAL_GAP;
-	let childY = y - node.height / 2 + height / 2;
+	let childY = y + h / 2 - node.height / 2;
 
 	for (const child of node.children.attached) {
-		// const { height } = child.UIBox.boxBounds;
+		const { height } = child.UIBox.boxBounds;
 		childY += child.height / 2 - height / 2;
+		if (childY === y && height < h) childY += (h - height) / 2;
 		layoutTree(child, childX, childY);
 		childY += child.height / 2 + height / 2 + VERTICAL_GAP;
 	}
@@ -95,6 +95,8 @@ function drawPolyline(
 	[startX, startY, endX, endY],
 	data: Partial<IPathInputData>
 ) {
+	console.log(startX, startY, endX, endY);
+
 	const midX = (startX + endX) / 2;
 	const radius = 5;
 	const path = `M ${startX} ${startY} H ${midX} `;
@@ -121,10 +123,11 @@ function renderTree(
 	const { width, height } = node.UIBox.boxBounds;
 	leafer.add(node.UIBox);
 	node.children?.attached?.forEach((child, i) => {
+		const { height: h } = child.UIBox.boxBounds;
 		const startX = node.x + width / 2;
 		const startY = node.y + height / 2;
 		const endX = child.x;
-		const endY = child.y + height / 2;
+		const endY = child.y + h / 2;
 		const colorItem = colors || child.theme.colors;
 
 		leafer.add(
@@ -228,7 +231,7 @@ function insertNode({ title, ...rest }, parent: MindNode) {
 	const UIBox = new Box({
 		cornerRadius,
 		editable: true,
-		fill: colors ? colors.bgColor : 'orange',
+		fill: colors.bgColor,
 		children: [
 			{
 				cornerRadius,
@@ -280,6 +283,7 @@ export class MindMap {
 	group: Group;
 	root: MindNode;
 	selection: MindMapSelection;
+	addButton: IUI;
 	constructor(id: string | HTMLElement) {
 		this.app = new App({
 			view: id,
@@ -324,6 +328,7 @@ export class MindMap {
 			let node = ele;
 			while (node && node.tag !== 'Box') node = node.parent;
 			this.selection = new MindMapSelection(node?.data.node);
+			this.insertAddButton();
 		});
 
 		this.app.on(KeyEvent.DOWN, (e) => {
@@ -345,6 +350,33 @@ export class MindMap {
 					return this.deleteSel();
 			}
 		});
+	}
+
+	insertAddButton() {
+		const { anchorNode } = this.selection;
+		this.addButton?.remove();
+		if (anchorNode && !hasChildren(anchorNode)) {
+			const { x, y, width, height } = anchorNode.UIBox.getLayoutBounds(
+				'box',
+				this.group
+			);
+			this.addButton = Path.one({
+				cursor: 'pointer',
+				x: x + width + 12,
+				y: y + height / 2 - 7.5,
+				width: 30,
+				height: 30,
+				path: 'M 15 0 A 15 15 0 1 1 14.99 0 M 15 5 V 25 M 5 15 H 25',
+				stroke: '#999',
+				fill: 'transparent',
+				scale: 0.5
+			});
+			this.addButton.on(PointerEvent.BEFORE_DOWN, (e) => {
+				e.stopNow();
+				this.addChild();
+			});
+			this.group.add(this.addButton);
+		}
 	}
 
 	deleteSel() {
