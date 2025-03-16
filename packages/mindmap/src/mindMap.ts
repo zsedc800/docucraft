@@ -1,281 +1,22 @@
 import {
 	App,
-	Box,
 	Frame,
 	Group,
 	Path,
-	IPathInputData,
 	IUI,
-	DragEvent,
 	KeyEvent,
-	ILeafer,
-	Bounds,
-	ILeaf,
-	LeafBoundsHelper,
-	Line,
 	PointerEvent
 } from 'leafer-ui';
 import '@leafer-in/viewport';
 import { EditorEvent } from './editor';
 import './editor/textEditor';
-import { IMindNode, IMindRoot, IRect, NodeChildren } from './interface';
-import { baseColors } from './theme';
-import { generateUniqueId } from './utils';
+import { IMindNode, IMindRoot } from './interface';
+import { hasChildren, scrollIntoView } from './utils';
 import { MindMapSelection } from './selection';
-
-// Debug.showBoundsView = true;
-// Debug.showHitView = true;
-// Debug.enable = true;
-
-type ColorItem = (typeof baseColors)[number];
-
-export interface MindNode extends IRect, IMindNode {
-	parent?: MindNode;
-	children?: NodeChildren<MindNode>;
-	UIBox: IUI;
-	theme: {
-		colors?: ColorItem;
-	};
-}
-
-// const NODE_WIDTH = 60;
-// const NODE_HEIGHT = 24;
-const HORIZONTAL_GAP = 40;
-const VERTICAL_GAP = 20;
-
-function hasChildren(node: IMindNode) {
-	return !!(
-		node.children &&
-		node.children.visible !== false &&
-		node.children.attached?.length
-	);
-}
-
-function layoutTree(node: MindNode, x: number, y: number) {
-	node.x = x;
-	node.y = y;
-	node.UIBox.set({ x, y });
-	if (!hasChildren(node)) return;
-
-	const { width, height: h } = node.UIBox.boxBounds;
-	const childX = x + width + HORIZONTAL_GAP;
-	let childY = y + h / 2 - node.height / 2;
-
-	for (const child of node.children.attached) {
-		const { height } = child.UIBox.boxBounds;
-		childY += child.height / 2 - height / 2;
-		if (childY === y && height < h) childY += (h - height) / 2;
-		layoutTree(child, childX, childY);
-		childY += child.height / 2 + height / 2 + VERTICAL_GAP;
-	}
-}
-
-function drawBeizerline(
-	[startX, startY, endX, endY],
-	data: Partial<IPathInputData> = {}
-) {
-	const dx = endX - startX;
-	const dy = endY - startY;
-
-	const controlX = startX + dx * 0.2;
-	const controlY = startY;
-	const path = `M ${startX} ${startY} C ${controlX} ${controlY}, ${controlX} ${endY}, ${endX} ${endY}`;
-
-	return new Line({
-		path,
-		strokeWidth: 2,
-		stroke: '#32cd79',
-		zIndex: -1,
-		strokeAlign: 'center',
-		...data
-	});
-}
-
-function drawPolyline(
-	[startX, startY, endX, endY],
-	data: Partial<IPathInputData>
-) {
-	console.log(startX, startY, endX, endY);
-
-	const midX = (startX + endX) / 2;
-	const radius = 5;
-	const path = `M ${startX} ${startY} H ${midX} `;
-	return new Path({
-		path:
-			path +
-			(endY === startY
-				? `H ${endX}`
-				: `V ${endY - (endY > startY ? 1 : -1) * radius} Q ${midX} ${endY} ${midX + radius} ${endY} H ${endX}`),
-		strokeWidth: 1,
-		stroke: '#32cd79',
-		...data
-	});
-}
-
-function renderTree(
-	node: MindNode,
-	leafer: Group,
-	{
-		depth = 0,
-		colors
-	}: { depth?: number; colors?: (typeof baseColors)[number] } = {}
-) {
-	const { width, height } = node.UIBox.boxBounds;
-	leafer.add(node.UIBox);
-	node.children?.attached?.forEach((child, i) => {
-		const { height: h } = child.UIBox.boxBounds;
-		const startX = node.x + width / 2;
-		const startY = node.y + height / 2;
-		const endX = child.x;
-		const endY = child.y + h / 2;
-		const colorItem = colors || child.theme.colors;
-
-		leafer.add(
-			depth
-				? drawPolyline([node.x + width, startY, endX, endY], {
-						stroke: colorItem.bgColor
-					})
-				: drawBeizerline([startX, startY, endX, endY], {
-						stroke: colorItem.bgColor
-					})
-		);
-		renderTree(child, leafer, {
-			depth: depth + 1,
-			colors: colorItem
-		});
-	});
-}
-
-let i = 0;
-
-function getBaseColor() {
-	const { length } = baseColors;
-	return baseColors[i++ % length];
-}
-
-function computeSize(node: MindNode) {
-	const { children } = node;
-	const { width, height } = node.UIBox.boxBounds;
-	if (!hasChildren(node)) {
-		node.width = width;
-		node.height = height;
-		return;
-	}
-	let totalHeight = 0,
-		maxWidth = 0;
-
-	for (const child of children.attached) {
-		computeSize(child);
-		totalHeight += child.height + VERTICAL_GAP;
-		maxWidth = Math.max(maxWidth, child.width);
-	}
-	node.width = width + HORIZONTAL_GAP + maxWidth;
-	node.height = Math.max(height, totalHeight - VERTICAL_GAP);
-}
-
-function buildMindNode(node: IMindNode, parent?: MindNode) {
-	const { children } = node;
-	const mindNode = insertNode(node, parent);
-	if (hasChildren(node)) {
-		mindNode.children.attached = children.attached.map((child, i) => {
-			const node = buildMindNode(child, mindNode);
-			node.parent = mindNode;
-			return node;
-		});
-	}
-	return mindNode;
-}
-
-function scrollIntoView(node: IUI, leafer: ILeafer) {
-	const padding = 20;
-	const limitBounds = leafer.canvas.bounds.clone(),
-		// .shrink(padding !== undefined ? padding : 30)
-		bounds = new Bounds();
-
-	const { zoomLayer } = leafer;
-	const { x, y, scaleX, scaleY } = zoomLayer;
-	const data = { x, y, scaleX, scaleY };
-	bounds.setListWithFn([node], LeafBoundsHelper.worldBounds);
-	const { width, height } = bounds;
-
-	let moveX = 0,
-		moveY = 0;
-
-	if (bounds.x < limitBounds.x) moveX += limitBounds.x + padding - bounds.x;
-	else if (bounds.x + width > limitBounds.x + limitBounds.width)
-		moveX += limitBounds.x + limitBounds.width - padding - bounds.x - width;
-	if (bounds.y < limitBounds.y) moveY += limitBounds.y + padding - bounds.y;
-	else if (bounds.y + height > limitBounds.y + limitBounds.height)
-		moveY += limitBounds.y + limitBounds.height - padding - bounds.y - height;
-
-	data.x += moveX;
-	data.y += moveY;
-
-	zoomLayer.set(data);
-}
-
-const cornerRadius = 5;
-function insertNode({ title, ...rest }, parent: MindNode) {
-	const { theme: { colors: c } = {} } = parent || {};
-	const colors =
-		c ||
-		(parent
-			? getBaseColor()
-			: ({ bgColor: '#455A64', color: '#FFFFFF' } as ColorItem));
-	let depth = 0,
-		p = parent;
-	while (p) {
-		depth++;
-		p = p.parent;
-	}
-	const UIBox = new Box({
-		cornerRadius,
-		editable: true,
-		fill: colors.bgColor,
-		children: [
-			{
-				cornerRadius,
-				tag: 'Text',
-				padding: depth < 2 ? [6, 12] : [4, 8],
-				text: title,
-
-				fontSize: depth > 0 ? (depth === 1 ? 18 : 14) : 20,
-				fill: colors ? colors.color : 'black',
-				textAlign: 'left',
-				verticalAlign: 'top',
-				editable: true
-			}
-		]
-	});
-
-	// if (!colors) {
-	// 	UIBox.on(DragEvent.DRAG, ({ moveX, moveY }: DragEvent) => {
-	// 		UIBox.parent.move(moveX, moveY);
-	// 	});
-	// }
-
-	const { width, height } = UIBox.boxBounds;
-	const mindNode: MindNode = {
-		...rest,
-		id: generateUniqueId(),
-		title,
-		x: 0,
-		y: 0,
-		width,
-		height,
-		UIBox,
-		children: {
-			attached: []
-		},
-		theme: { colors: parent ? colors : void 0 }
-	};
-
-	UIBox.data.node = mindNode;
-	mindNode.parent = parent;
-	return mindNode;
-}
-
-// function adjustSize(node: MindNode) {}
+import { MindNode } from './MindNode';
+import { computeSize, layoutTree } from './layout';
+import { renderTree } from './renderer';
+import insertNode from './insertNode';
 
 export class MindMap {
 	frame: Frame;
@@ -305,20 +46,6 @@ export class MindMap {
 		this.group = new Group({});
 		this.frame.add(this.group);
 		this.selection = new MindMapSelection();
-		// const addButton = Box.one({
-		// 	cursor: 'pointer',
-
-		// 	children: [
-		// 		Path.one({
-		// 			width: 30,
-		// 			height: 30,
-		// 			path: 'M 15 0 A 15 15 0 1 1 14.99 0 M 15 5 V 25 M 5 15 H 25',
-		// 			stroke: '#999',
-		// 			fill: 'transparent',
-		// 			scale: 0.5
-		// 		})
-		// 	]
-		// });
 		const {
 			app: { editor }
 		} = this;
@@ -369,7 +96,8 @@ export class MindMap {
 				path: 'M 15 0 A 15 15 0 1 1 14.99 0 M 15 5 V 25 M 5 15 H 25',
 				stroke: '#999',
 				fill: 'transparent',
-				scale: 0.5
+				scale: 0.5,
+				zIndex: -1
 			});
 			this.addButton.on(PointerEvent.BEFORE_DOWN, (e) => {
 				e.stopNow();
@@ -406,10 +134,10 @@ export class MindMap {
 				children: { attached }
 			} = parent;
 			const index = attached.indexOf(anchorNode);
-			const node = insertNode({ title: '子主题' }, parent);
-			attached.splice(index, 0, node);
-
+			const node = insertNode({ title: '子主题' }, parent, this);
+			attached.splice(index + 1, 0, node);
 			this.render();
+			this.select(node);
 		}
 	}
 
@@ -417,7 +145,7 @@ export class MindMap {
 		const { anchorNode } = this.selection;
 		if (anchorNode) {
 			const { children } = anchorNode;
-			const node = insertNode({ title: '子主题' }, anchorNode);
+			const node = insertNode({ title: '子主题' }, anchorNode, this);
 			children.attached.push(node);
 			this.render();
 			this.select(node);
@@ -467,8 +195,21 @@ export class MindMap {
 		scrollIntoView(node.UIBox, this.app.tree);
 	}
 
+	buildMindNode(node: IMindNode, parent?: MindNode) {
+		const { children } = node;
+		const mindNode = insertNode(node, parent, this);
+		if (hasChildren(node)) {
+			mindNode.children.attached = children.attached.map((child, i) => {
+				const node = this.buildMindNode(child, mindNode);
+				node.parent = mindNode;
+				return node;
+			});
+		}
+		return mindNode;
+	}
+
 	parseJSON(root: IMindRoot) {
-		this.root = buildMindNode(root.rootTopic);
+		this.root = this.buildMindNode(root.rootTopic);
 		this.render();
 		this.selection = new MindMapSelection(this.root);
 		this.select(this.root);

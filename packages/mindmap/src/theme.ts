@@ -297,3 +297,4 @@ const data = [
 ];
 
 export const baseColors = data[0].colors;
+export type ColorItem = (typeof baseColors)[number];

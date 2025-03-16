@@ -103,6 +103,7 @@ export class EditSelect extends Group implements IEditSelect {
 
 	protected onPointerMove(e: PointerEvent): void {
 		const { app, editor } = this;
+
 		if (
 			this.running &&
 			!this.isMoveMode &&
