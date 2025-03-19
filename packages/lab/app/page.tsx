@@ -19,8 +19,9 @@ import MailIcon from '@docucraft/icons/svg/Mail';
 import ChevronLeftIcon from '@docucraft/icons/svg/ChevronLeft';
 import ChevronRightIcon from '@docucraft/icons/svg/ChevronRight';
 import MenuIcon from '@docucraft/icons/svg/Menu';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Editor from '@/components/Editor';
+import { restoreFileHandle } from '@/components/fileAccess';
 
 // export default () => {
 //   return <section>
@@ -101,83 +102,85 @@ export default function PersistentDrawerLeft() {
 		setOpen(false);
 	};
 
-	return (
-		<Box sx={{ display: 'flex' }}>
-			<CssBaseline />
-			<AppBar position="fixed" open={open}>
-				<Toolbar>
-					<IconButton
-						color="inherit"
-						aria-label="open drawer"
-						onClick={handleDrawerOpen}
-						edge="start"
-						sx={[
-							{
-								mr: 2
-							},
-							open && { display: 'none' }
-						]}
-					>
-						<MenuIcon />
-					</IconButton>
-					<Typography variant="h6" noWrap component="div">
-						Persistent drawer
-					</Typography>
-				</Toolbar>
-			</AppBar>
-			<Drawer
-				sx={{
-					width: drawerWidth,
-					flexShrink: 0,
-					'& .MuiDrawer-paper': {
-						width: drawerWidth,
-						boxSizing: 'border-box'
-					}
-				}}
-				variant="persistent"
-				anchor="left"
-				open={open}
-			>
-				<DrawerHeader>
-					<IconButton onClick={handleDrawerClose}>
-						{theme.direction === 'ltr' ? (
-							<ChevronLeftIcon />
-						) : (
-							<ChevronRightIcon />
-						)}
-					</IconButton>
-				</DrawerHeader>
-				<Divider />
-				<List>
-					{['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
-						<ListItem key={text} disablePadding>
-							<ListItemButton>
-								<ListItemIcon>
-									{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-								</ListItemIcon>
-								<ListItemText primary={text} />
-							</ListItemButton>
-						</ListItem>
-					))}
-				</List>
-				<Divider />
-				<List>
-					{['All mail', 'Trash', 'Spam'].map((text, index) => (
-						<ListItem key={text} disablePadding>
-							<ListItemButton>
-								<ListItemIcon>
-									{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
-								</ListItemIcon>
-								<ListItemText primary={text} />
-							</ListItemButton>
-						</ListItem>
-					))}
-				</List>
-			</Drawer>
-			<Main open={open}>
-				<DrawerHeader />
-				<Editor />
-			</Main>
-		</Box>
-	);
+	return <Editor />;
+
+	// return (
+	// 	<Box sx={{ display: 'flex' }}>
+	// 		<CssBaseline />
+	// 		<AppBar position="fixed" open={open}>
+	// 			<Toolbar>
+	// 				<IconButton
+	// 					color="inherit"
+	// 					aria-label="open drawer"
+	// 					onClick={handleDrawerOpen}
+	// 					edge="start"
+	// 					sx={[
+	// 						{
+	// 							mr: 2
+	// 						},
+	// 						open && { display: 'none' }
+	// 					]}
+	// 				>
+	// 					<MenuIcon />
+	// 				</IconButton>
+	// 				<Typography variant="h6" noWrap component="div">
+	// 					Persistent drawer
+	// 				</Typography>
+	// 			</Toolbar>
+	// 		</AppBar>
+	// 		<Drawer
+	// 			sx={{
+	// 				width: drawerWidth,
+	// 				flexShrink: 0,
+	// 				'& .MuiDrawer-paper': {
+	// 					width: drawerWidth,
+	// 					boxSizing: 'border-box'
+	// 				}
+	// 			}}
+	// 			variant="persistent"
+	// 			anchor="left"
+	// 			open={open}
+	// 		>
+	// 			<DrawerHeader>
+	// 				<IconButton onClick={handleDrawerClose}>
+	// 					{theme.direction === 'ltr' ? (
+	// 						<ChevronLeftIcon />
+	// 					) : (
+	// 						<ChevronRightIcon />
+	// 					)}
+	// 				</IconButton>
+	// 			</DrawerHeader>
+	// 			<Divider />
+	// 			<List>
+	// 				{['Inbox', 'Starred', 'Send email', 'Drafts'].map((text, index) => (
+	// 					<ListItem key={text} disablePadding>
+	// 						<ListItemButton>
+	// 							<ListItemIcon>
+	// 								{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+	// 							</ListItemIcon>
+	// 							<ListItemText primary={text} />
+	// 						</ListItemButton>
+	// 					</ListItem>
+	// 				))}
+	// 			</List>
+	// 			<Divider />
+	// 			<List>
+	// 				{['All mail', 'Trash', 'Spam'].map((text, index) => (
+	// 					<ListItem key={text} disablePadding>
+	// 						<ListItemButton>
+	// 							<ListItemIcon>
+	// 								{index % 2 === 0 ? <InboxIcon /> : <MailIcon />}
+	// 							</ListItemIcon>
+	// 							<ListItemText primary={text} />
+	// 						</ListItemButton>
+	// 					</ListItem>
+	// 				))}
+	// 			</List>
+	// 		</Drawer>
+	// 		<Main open={open}>
+	// 			<DrawerHeader />
+	// 			<Editor />
+	// 		</Main>
+	// 	</Box>
+	// );
 }

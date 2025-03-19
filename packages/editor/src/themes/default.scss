@@ -48,11 +48,8 @@ html {
 }
 
 body {
-	font-family:
-		Source Sans Pro,
-		Helvetica Neue,
-		Arial,
-		sans-serif !important;
+	font-family: 'Roboto', 'Helvetica', 'Arial', sans-serif;
+
 	color: #34495e;
 	-webkit-font-smoothing: antialiased;
 	line-height: 1.6rem;
@@ -369,10 +366,10 @@ footer {
 /* prismJS 代码高亮样式 */
 code[class*='language-'],
 pre[class*='language-'] {
-	font-family: Consolas, Menlo, Monaco, 'Andale Mono WT', 'Andale Mono',
-		'Lucida Console', 'Lucida Sans Typewriter', 'DejaVu Sans Mono',
-		'Bitstream Vera Sans Mono', 'Liberation Mono', 'Nimbus Mono L',
-		'Courier New', Courier, monospace;
+	font-family:
+		Consolas, Menlo, Monaco, 'Andale Mono WT', 'Andale Mono', 'Lucida Console',
+		'Lucida Sans Typewriter', 'DejaVu Sans Mono', 'Bitstream Vera Sans Mono',
+		'Liberation Mono', 'Nimbus Mono L', 'Courier New', Courier, monospace;
 	font-size: 14px;
 	line-height: 1.375;
 	direction: ltr;

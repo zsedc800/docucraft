@@ -52,10 +52,12 @@ export class MindMap {
 
 		editor.on(EditorEvent.SELECT, (e) => {
 			const ele: IUI | undefined = e.value;
+
 			let node = ele;
 			while (node && node.tag !== 'Box') node = node.parent;
 			this.selection = new MindMapSelection(node?.data.node);
 			this.insertAddButton();
+			if (!ele) this.render();
 		});
 
 		this.app.on(KeyEvent.DOWN, (e) => {
@@ -69,6 +71,7 @@ export class MindMap {
 				case 'ArrowLeft':
 					return this.selectLeft();
 				case 'Tab':
+					e.stopDefault();
 					return this.addChild();
 				case 'Enter':
 					return this.addNextSibling();
@@ -82,7 +85,7 @@ export class MindMap {
 	insertAddButton() {
 		const { anchorNode } = this.selection;
 		this.addButton?.remove();
-		if (anchorNode && !hasChildren(anchorNode)) {
+		if (anchorNode && !hasChildren(anchorNode, true)) {
 			const { x, y, width, height } = anchorNode.UIBox.getLayoutBounds(
 				'box',
 				this.group
@@ -110,9 +113,10 @@ export class MindMap {
 	deleteSel() {
 		const { anchorNode } = this.selection;
 		if (anchorNode && anchorNode.parent) {
+			const { parent } = anchorNode;
 			const {
 				children: { attached }
-			} = anchorNode.parent;
+			} = parent;
 			const index = attached.indexOf(anchorNode);
 			const next =
 				index < attached.length - 1
@@ -120,7 +124,16 @@ export class MindMap {
 					: index > 0
 						? attached[index - 1]
 						: anchorNode.parent;
-			attached.splice(index, 1);
+			parent.removeChild(anchorNode);
+			let p = parent;
+			if (attached.length === 0 && p.switch) {
+				p.switch.remove();
+				delete p.switch;
+			}
+			while (p) {
+				p.size -= anchorNode.size;
+				p = p.parent;
+			}
 			this.render();
 			this.select(next);
 		}
@@ -130,12 +143,8 @@ export class MindMap {
 		const { anchorNode } = this.selection;
 		if (anchorNode && anchorNode.parent) {
 			const { parent } = anchorNode;
-			const {
-				children: { attached }
-			} = parent;
-			const index = attached.indexOf(anchorNode);
-			const node = insertNode({ title: '子主题' }, parent, this);
-			attached.splice(index + 1, 0, node);
+			const node = insertNode({ title: '' }, parent, this);
+			parent.insertAfter(node, anchorNode);
 			this.render();
 			this.select(node);
 		}
@@ -144,9 +153,8 @@ export class MindMap {
 	addChild() {
 		const { anchorNode } = this.selection;
 		if (anchorNode) {
-			const { children } = anchorNode;
-			const node = insertNode({ title: '子主题' }, anchorNode, this);
-			children.attached.push(node);
+			const node = insertNode({ title: '' }, anchorNode, this);
+			anchorNode.appendChild(node);
 			this.render();
 			this.select(node);
 		}

@@ -1,5 +1,6 @@
 import { Bounds, ILeafer, IUI, LeafBoundsHelper } from 'leafer-ui';
 import { IMindNode } from '../interface';
+import { MindNode } from '../MindNode';
 
 let uniqueIdCounter = 1000;
 export function generateUniqueId(prefix = 'mind_') {
@@ -9,15 +10,15 @@ export function generateUniqueId(prefix = 'mind_') {
 	return prefix + randomPart + base36;
 }
 
-export function hasChildren(node: IMindNode) {
+export function hasChildren(node: IMindNode, ignoreVisible = false) {
 	return !!(
 		node.children &&
-		node.children.visible !== false &&
+		(ignoreVisible ? ignoreVisible : node.children.visible !== false) &&
 		node.children.attached?.length
 	);
 }
 
-export const HORIZONTAL_GAP = 40;
+export const HORIZONTAL_GAP = 20;
 export const VERTICAL_GAP = 20;
 export const SWRadius = 6;
 
@@ -46,4 +47,14 @@ export function scrollIntoView(node: IUI, leafer: ILeafer) {
 	data.y += moveY;
 
 	zoomLayer.set(data);
+}
+
+export function getDepth(node: MindNode) {
+	let depth = 0,
+		p = node.parent;
+	while (p) {
+		p = p.parent;
+		depth++;
+	}
+	return depth;
 }

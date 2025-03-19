@@ -6,8 +6,8 @@
 	"types": "dist/index.d.ts",
 	"module": "dist/index.mjs",
 	"scripts": {
-		"build": "tsc && cp ./src/style.css ./dist/",
-		"dev": "rollup -c rollup.dev.config.mjs -w"
+		"build": "rollup -c",
+		"dev": "NODE_ENV=development rollup -c -w"
 	},
 	"keywords": [],
 	"author": "zsedc800",

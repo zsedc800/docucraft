@@ -7,6 +7,8 @@ import replace from '@rollup/plugin-replace';
 import { visualizer } from 'rollup-plugin-visualizer';
 import path from 'path';
 
+const isDev = process.env.NODE_ENV === 'development';
+
 const common = {
 	input: 'src/index.ts',
 	watch: {
@@ -44,7 +46,9 @@ const common = {
 
 		typescript({
 			tsconfig: './tsconfig.json',
-			cacheRoot: null
+			declaration: true,
+			declarationDir: 'dist',
+			rootDir: 'src'
 		}),
 		resolve({
 			extensions: ['.js', '.jsx', '.ts', '.tsx']
@@ -64,7 +68,7 @@ const esmConfig = {
 		dir: 'dist',
 		entryFileNames: '[name].mjs',
 		format: 'esm',
-
+		chunkNames: '[name]',
 		sourcemap: true
 	},
 	plugins: [
@@ -95,4 +99,4 @@ const cjsConfig = {
 	]
 };
 
-export default [esmConfig, cjsConfig];
+export default isDev ? esmConfig : [esmConfig, cjsConfig];

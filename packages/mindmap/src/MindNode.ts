@@ -26,6 +26,33 @@ export class MindNode implements IBoundsData, IMindNode {
 	}
 
 	slice(from: number, to: number) {
+		console.log();
 		return new Slice([]);
 	}
+	removeChild(node: MindNode) {
+		const {
+			children: { attached }
+		} = this;
+		const index = attached.indexOf(node);
+		attached.splice(index, 1);
+	}
+	appendChild(node: MindNode) {
+		this.children.attached.push(node);
+	}
+	insertBefore(newNode: MindNode, referenceNode: MindNode) {
+		const {
+			children: { attached }
+		} = this;
+		const index = attached.indexOf(referenceNode);
+		attached.splice(index, 0, newNode);
+	}
+
+	insertAfter(newNode: MindNode, referenceNode: MindNode) {
+		const {
+			children: { attached }
+		} = this;
+		const index = attached.indexOf(referenceNode);
+		attached.splice(index + 1, 0, newNode);
+	}
+	near() {}
 }

@@ -1,6 +1,11 @@
 import { Box, Ellipse, Text, PointerEvent } from 'leafer-ui';
 import { MindNode } from './MindNode';
-import { generateUniqueId, SWRadius } from './utils';
+import {
+	generateUniqueId,
+	HORIZONTAL_GAP,
+	SWRadius,
+	VERTICAL_GAP
+} from './utils';
 import { baseColors, ColorItem } from './theme';
 import { MindMap } from './mindMap';
 
@@ -26,10 +31,14 @@ export default function insertNode(
 			: ({ bgColor: '#455A64', color: '#FFFFFF' } as ColorItem));
 	let depth = 0,
 		p = parent;
+
 	while (p) {
 		depth++;
+		p.size++;
 		p = p.parent;
 	}
+
+	title = title || (depth > 1 ? '子主题' : '分支主题');
 	const UIBox = new Box({
 		cornerRadius,
 		editable: true,
@@ -40,7 +49,6 @@ export default function insertNode(
 				tag: 'Text',
 				padding: depth < 2 ? [6, 12] : [4, 8],
 				text: title,
-
 				fontSize: depth > 0 ? (depth === 1 ? 16 : 12) : 20,
 				fill: colors ? colors.color : 'black',
 				textAlign: 'left',
@@ -49,12 +57,6 @@ export default function insertNode(
 			}
 		]
 	});
-
-	// if (!colors) {
-	// 	UIBox.on(DragEvent.DRAG, ({ moveX, moveY }: DragEvent) => {
-	// 		UIBox.parent.move(moveX, moveY);
-	// 	});
-	// }
 
 	const { width, height } = UIBox.boxBounds;
 	const mindNode = new MindNode(generateUniqueId(), title, UIBox, {
@@ -67,7 +69,11 @@ export default function insertNode(
 		children: {
 			attached: []
 		},
-		theme: { colors: parent ? colors : void 0 }
+		theme: { colors: parent ? colors : void 0 },
+		style: {
+			gap: depth > 0 ? HORIZONTAL_GAP : 60,
+			marginBottom: depth > 0 ? VERTICAL_GAP : 40
+		}
 	});
 
 	if (depth > 1 && !parent.switch) {
@@ -75,9 +81,13 @@ export default function insertNode(
 		const text = Text.one({
 			fill: colors.bgColor,
 			fontSize: 8,
-			x: 0,
-			y: 0
+			// letterSpacing: -1,
+			width: w,
+			height: w,
+			textAlign: 'center',
+			verticalAlign: 'middle'
 		});
+
 		const sw = Box.one({
 			children: [
 				Ellipse.one({ width: w, height: w, fill: 'white' }),
@@ -107,8 +117,15 @@ export default function insertNode(
 				text.set({ text: '' });
 			} else {
 				parent.children.visible = false;
-				text.set({ text: '10' });
+				const size = parent.size - 1;
+				size > 99
+					? text.set({
+							text: '...',
+							y: -2
+						})
+					: text.set({ text: size });
 			}
+
 			mindMap.render();
 		});
 		parent.switch = sw;

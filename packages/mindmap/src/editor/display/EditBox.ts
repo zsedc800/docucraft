@@ -223,6 +223,9 @@ export class EditBox extends Group implements IEditBox {
 				// visible
 				resizeP.visible = resizeL.visible =
 					showPoints && !!(resizeable || rotateable);
+
+				resizeP.visible = false;
+				if ([1, 5, 6].includes(i)) resizeL.visible = false;
 				rotateP.visible =
 					showPoints && rotateable && resizeable && !mergeConfig.rotatePoint;
 

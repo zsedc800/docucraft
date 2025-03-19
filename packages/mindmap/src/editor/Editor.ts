@@ -653,7 +653,6 @@ export class Editor extends Group implements IEditor {
 				app.on_(KeyEvent.DOWN, this.editBox.onArrow, this.editBox)
 			];
 		}
-		console.log(this.targetEventIds, 'id');
 	}
 
 	public removeTargetEvents(): void {

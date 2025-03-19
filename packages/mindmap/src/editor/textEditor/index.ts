@@ -31,6 +31,7 @@ export class TextEditor extends InnerEditor {
 	public onLoad(): void {
 		const { editor } = this;
 		const { config } = editor.app;
+		console.log(config, editor, 'dfed');
 
 		const text = this.editTarget;
 		text.visible = false;
@@ -99,9 +100,15 @@ export class TextEditor extends InnerEditor {
 
 	protected onInput(): void {
 		const { editDom } = this;
-		this.editTarget.text = this.isHTMLText
+		const text = this.isHTMLText
 			? editDom.innerHTML
 			: editDom.innerText.replace(/\n\n/, '\n');
+		this.editTarget.text = text;
+		let p = this.editTarget;
+		while (p && !p.data.node) p = p.parent;
+		const node = p.data.node;
+		node.title = text;
+		this.editTarget.data.edited = true;
 	}
 
 	protected onFocus(): void {
