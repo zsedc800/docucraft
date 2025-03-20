@@ -1,7 +1,7 @@
 import resolve from '@rollup/plugin-node-resolve';
 import commonjs from '@rollup/plugin-commonjs';
-import postcss from 'rollup-plugin-postcss';
-import typescript from 'rollup-plugin-typescript2';
+import scss from 'rollup-plugin-scss';
+import typescript from '@rollup/plugin-typescript';
 import alias from '@rollup/plugin-alias';
 import replace from '@rollup/plugin-replace';
 import { visualizer } from 'rollup-plugin-visualizer';
@@ -57,7 +57,7 @@ const common = {
 			defaultIsModuleExports: false, // 避免 CJS `module.exports` 直接变成 default
 			transformMixedEsModules: true
 		}),
-		postcss({ extract: 'style.css', extensions: ['.css', '.scss', 'sass'] })
+		scss({ fileName: 'style.css' })
 	]
 };
 
@@ -68,7 +68,6 @@ const esmConfig = {
 		dir: 'dist',
 		entryFileNames: '[name].mjs',
 		format: 'esm',
-		chunkNames: '[name]',
 		sourcemap: true
 	},
 	plugins: [

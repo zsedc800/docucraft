@@ -20,7 +20,9 @@
 		"@leafer-ui/core": "^1.4.2",
 		"@leafer-ui/draw": "^1.4.2",
 		"@leafer-ui/interface": "^1.4.2",
-		"leafer-ui": "^1.4.2"
+		"leafer-ui": "^1.4.2",
+		"y-websocket": "^2.1.0",
+		"yjs": "^13.6.24"
 	},
 	"devDependencies": {
 		"typescript": "^5.8.2"

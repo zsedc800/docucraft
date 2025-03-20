@@ -23,16 +23,14 @@ ol {
 			display: flex;
 			align-items: center;
 			min-height: 1em;
-			line-height: 1.5;
 			flex-shrink: 0;
 			padding: 3px 4px;
 			flex-shrink: 0;
 			user-select: none;
 			&::before {
-				// content: '\200B';
 				content: '•';
-				font-size: 1.5em;
-				line-height: 1;
+				font-size: 1.13em;
+				line-height: 1.3;
 			}
 
 			// &::after {

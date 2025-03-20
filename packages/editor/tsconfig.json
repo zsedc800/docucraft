@@ -3,14 +3,16 @@
 		"jsx": "react-jsx",
 		"jsxImportSource": "@docucraft/srender",
 		"declarationDir": "dist",
+		"outDir": "dist",
+		"rootDir": "src",
 		"target": "ESNext",
 		"module": "ESNext",
 		"moduleResolution": "node",
-		"rootDir": ".",
 		"declaration": true,
 		"esModuleInterop": true,
 		"skipLibCheck": true,
-		"sourceMap": true
+		"sourceMap": true,
+		"preserveSymlinks": false
 	},
 	"include": ["./src/**/*"]
 }

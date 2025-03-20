@@ -1,39 +1,58 @@
 'use client';
 import { useEffect, useRef, useState } from 'react';
-import { setupEditor } from '@docucraft/editor';
+import DocEditor from '@docucraft/editor';
 import 'katex/dist/katex.min.css';
 import '@docucraft/editor/dist/style.css';
 import { openFile, restoreFileHandle, saveFileHandle } from './fileAccess';
 import FileChoose from './FileChoose';
 
-let writeStream: FileSystemWritableFileStream | undefined;
+let fileHandle: FileSystemFileHandle | undefined;
 
+function debounce(fn: (...args: any[]) => any, wait: number) {
+	let timeout: NodeJS.Timeout, res: any;
+	return function (this: any, ...args: any[]) {
+		const context = this;
+
+		if (timeout) clearTimeout(timeout);
+		timeout = setTimeout(() => (res = fn.apply(context, args)), wait);
+		return res;
+	};
+}
+
+async function save(content: string) {
+	if (!fileHandle) return;
+	const writeStream = await fileHandle.createWritable();
+	await writeStream.write(content);
+	await writeStream.close();
+}
 const Editor = () => {
 	const editorContainer = useRef<HTMLDivElement>(null);
+	const editor = useRef<DocEditor>();
 	const [open, setOpen] = useState(false);
 	useEffect(() => {
 		console.log('counter');
-
-		const destroy = setupEditor(editorContainer.current, {
-			onChange: (content) => {
-				console.log(content);
-				console.log(writeStream, 'xxx');
-
-				writeStream?.write(content);
-				writeStream.flush;
-			}
-		});
-		return destroy;
-	}, []);
-	useEffect(() => {
-		restoreFileHandle('example-file').then(async (fileHandle) => {
-			console.log(fileHandle, 'file');
-			if (fileHandle) {
-				writeStream = await fileHandle.createWritable();
+		let isDestroyed = false;
+		const edit = (editor.current = new DocEditor(editorContainer.current!));
+		edit.onChange(
+			debounce((content) => {
+				save(content);
+			}, 3000)
+		);
+		restoreFileHandle('example-file').then(async (f) => {
+			if (isDestroyed) return;
+			if (f) {
+				fileHandle = f;
+				const file = await fileHandle.getFile();
+				const text = await file.text();
+				if (text) edit.parseJSON(text);
 			} else {
 				setOpen(true);
 			}
 		});
+		return () => {
+			isDestroyed = true;
+			editor.current?.destroy();
+		};
 	}, []);
 
 	return (
@@ -42,8 +61,9 @@ const Editor = () => {
 			<FileChoose
 				open={open}
 				onChoose={async () => {
-					const [text, fileHandle] = await openFile();
-					writeStream = await fileHandle.createWritable();
+					const [text, f] = await openFile();
+					// writeStream = await fileHandle.createWritable();
+					fileHandle = f;
 					saveFileHandle(fileHandle, 'example-file');
 					setOpen(false);
 				}}

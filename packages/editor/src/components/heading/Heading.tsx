@@ -9,8 +9,9 @@ import {
 import ArrowRight from '@docucraft/icons/svg/ArrowRightFill';
 import ArrowDown from '@docucraft/icons/svg/ArrowDropDownFill';
 import Icon from '@docucraft/icons';
-import { HeadingView } from './view';
 import Popover from '@mui/material/Popover';
+import Typography from '@mui/material/Typography';
+import { HeadingView } from './view';
 import { OutlineTree } from '../outline';
 import { BaseNodeViewProps, useNodeView } from '../../utils/view';
 import Tools from '../toolBar/Tools';
@@ -158,7 +159,8 @@ export default ({
 				<></>
 			)}
 
-			<Tag
+			<Typography
+				variant={`h${level}`}
 				ref={$contentDOM}
 				data-placeholder={level === 1 ? '未命名标题' : `标题${level}`}
 				className={classnames('heading-content relative', {

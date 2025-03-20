@@ -4,6 +4,7 @@ export async function openFile(options?: OpenFilePickerOptions) {
 		throw new Error('当前浏览器不支持 File System Access API');
 	}
 	const [fileHandle] = await window.showOpenFilePicker(options);
+
 	const file = await fileHandle.getFile();
 	const text = await file.text();
 	return [text, fileHandle] as const;
@@ -60,6 +61,8 @@ export async function restoreFileHandle(
 					const permission = await fileHandle.queryPermission({
 						mode: 'readwrite'
 					});
+					console.log(permission, 'mis');
+
 					if (permission === 'granted') {
 						resolve(fileHandle);
 					} else {

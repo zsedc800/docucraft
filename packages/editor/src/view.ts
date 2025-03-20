@@ -22,15 +22,10 @@ import { XMindViewConstructor } from './components/xmind';
 import EditorView from './EditorView';
 import plugins from './plugins';
 import './themes/default.scss';
-import { createAutoSavePlugin } from './plugins/autoSave';
 
-export const setupEditor = (
-	el: HTMLElement | null,
-	{ onChange }: { onChange?: (e: string) => void } = {}
-) => {
+export const setupEditor = (el: HTMLElement | null) => {
 	if (!el) return;
 	// const toolbar = buildToolbar();
-	plugins.push(createAutoSavePlugin(onChange));
 	// 根据 schema 定义，创建 editorState 数据实例
 	const editorState = EditorState.create({
 		schema,
@@ -86,7 +81,5 @@ export const setupEditor = (
 		}
 	});
 
-	return () => {
-		editorView.destroy();
-	};
+	return editorView;
 };

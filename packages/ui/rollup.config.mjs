@@ -3,7 +3,7 @@ import commonjs from '@rollup/plugin-commonjs';
 import postcss from 'rollup-plugin-postcss';
 import typescript from 'rollup-plugin-typescript2';
 // import typescript from './typescript.mjs';
-import babel from '@rollup/plugin-babel';
+// import babel from '@rollup/plugin-babel';
 import copy from 'rollup-plugin-copy';
 // import typescriptPlugin from './typescriptPlugin.mjs';
 

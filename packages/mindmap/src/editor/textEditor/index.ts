@@ -107,7 +107,7 @@ export class TextEditor extends InnerEditor {
 		let p = this.editTarget;
 		while (p && !p.data.node) p = p.parent;
 		const node = p.data.node;
-		node.title = text;
+		node?.setTitle(text);
 		this.editTarget.data.edited = true;
 	}
 

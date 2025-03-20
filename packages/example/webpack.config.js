@@ -1,4 +1,6 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const { setupWSConnection } = require('y-websocket/bin/utils');
+const Websocket = require('ws');
 const path = require('path');
 module.exports = (env) => ({
 	mode: env.production ? 'production' : 'development',
@@ -35,6 +37,23 @@ module.exports = (env) => ({
 		// 	path.resolve(__dirname, 'node_modules'),
 		// 	'node_modules'
 		// ] // 模块解析以当前项目为基准
+	},
+	devServer: {
+		setupMiddlewares: (middlewares, devServer) => {
+			const wss = new WebSocket.Server({ noServer: true });
+			devServer.server.on('upgrade', (request, socket, head) => {
+				const pathname = request.url;
+				if (pathname === '/ws') {
+					// 你的 WebSocket 路径
+					wss.handleUpgrade(request, socket, head, (ws) => {
+						setupWSConnection(ws, request, {
+							gc: request.url.slice(1) !== 'prosemirror'
+						});
+					});
+				}
+			});
+			return middlewares;
+		}
 	},
 	module: {
 		rules: [
