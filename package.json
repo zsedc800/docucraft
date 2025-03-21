@@ -63,6 +63,7 @@
 		"preact": "^10.22.0",
 		"rollup-plugin-typescript": "^1.0.1",
 		"source-map-loader": "^5.0.0",
-		"tslib": "^2.8.1"
+		"tslib": "^2.8.1",
+		"y-leveldb": "^0.1.2"
 	}
 }

@@ -21,6 +21,7 @@ export class MindNode implements IBoundsData, IMindNode {
 	yNode: Y.Map<any>;
 	theme: { colors?: ColorItem } = {};
 	style: { marginBottom?: number; gap?: number } = {};
+	UI: { text: IUI };
 	switch?: IUI;
 	parent?: MindNode;
 	size = 1;
@@ -32,28 +33,24 @@ export class MindNode implements IBoundsData, IMindNode {
 	) {
 		for (const key of Object.keys(data)) this[key] = data[key];
 		mindNodeInstances.set(id, this);
-		this.yNode = mindNodeToYMap(this);
-		yNodes.set(id, this.yNode);
-		this.yNode.observe((event) => {
-			event.changes.keys.forEach((change) => {
-				console.log(change, 'ccc');
-			});
-		});
+		if (id === 'rootTopic') this.initYNode();
+	}
+
+	initYNode() {
+		const yNode = mindNodeToYMap(this);
+		yNodes.set(this.id, yNode);
 	}
 
 	setTitle(title: string) {
-		console.log('setTitle');
-
 		this.title = title;
-		// doc.transact(() => {
-		// 	yNodes.get(this.id).set('title', title);
-		// });
-		// const node = yNodes.get(this.id);
-		this.yNode.set('title', title);
+		const yNode = yNodes.get(this.id);
+		// const yTitle = yNode.get('title') as Y.Text;
+		yNode.set('title', title);
+		// yTitle.delete(0, yTitle.length);
+		// yTitle.insert(0, title);
 	}
 
 	slice(from: number, to: number) {
-		console.log();
 		return new Slice([]);
 	}
 	removeChild(node: MindNode) {
@@ -65,6 +62,7 @@ export class MindNode implements IBoundsData, IMindNode {
 	}
 	appendChild(node: MindNode) {
 		this.children.attached.push(node);
+		node.initYNode();
 	}
 	insertBefore(newNode: MindNode, referenceNode: MindNode) {
 		const {
@@ -72,6 +70,7 @@ export class MindNode implements IBoundsData, IMindNode {
 		} = this;
 		const index = attached.indexOf(referenceNode);
 		attached.splice(index, 0, newNode);
+		newNode.initYNode();
 	}
 
 	insertAfter(newNode: MindNode, referenceNode: MindNode) {
@@ -80,6 +79,7 @@ export class MindNode implements IBoundsData, IMindNode {
 		} = this;
 		const index = attached.indexOf(referenceNode);
 		attached.splice(index + 1, 0, newNode);
+		newNode.initYNode();
 	}
 	near() {}
 }

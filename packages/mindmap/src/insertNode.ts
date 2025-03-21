@@ -8,6 +8,7 @@ import {
 } from './utils';
 import { baseColors, ColorItem } from './theme';
 import { MindMap } from './mindMap';
+import { IMindNode } from './interface';
 
 let i = 0;
 
@@ -19,8 +20,8 @@ function getBaseColor() {
 const cornerRadius = 5;
 
 export default function insertNode(
-	{ title, ...rest },
-	parent: MindNode,
+	{ title, id, ...rest }: Partial<IMindNode>,
+	parent: MindNode | undefined,
 	mindMap: MindMap
 ) {
 	const { theme: { colors: c } = {} } = parent || {};
@@ -39,33 +40,35 @@ export default function insertNode(
 	}
 
 	title = title || (depth > 1 ? '子主题' : '分支主题');
+	const text = Text.one({
+		cornerRadius,
+		padding: depth < 2 ? [6, 12] : [4, 8],
+		text: title,
+		fontSize: depth > 0 ? (depth === 1 ? 16 : 12) : 20,
+		fill: colors ? colors.color : 'black',
+		textAlign: 'left',
+		verticalAlign: 'top',
+		editable: true
+	});
 	const UIBox = new Box({
 		cornerRadius,
 		editable: true,
 		fill: colors.bgColor,
-		children: [
-			{
-				cornerRadius,
-				tag: 'Text',
-				padding: depth < 2 ? [6, 12] : [4, 8],
-				text: title,
-				fontSize: depth > 0 ? (depth === 1 ? 16 : 12) : 20,
-				fill: colors ? colors.color : 'black',
-				textAlign: 'left',
-				verticalAlign: 'top',
-				editable: true
-			}
-		]
+		children: [text]
 	});
 
 	const { width, height } = UIBox.boxBounds;
-	const mindNode = new MindNode(generateUniqueId(), title, UIBox, {
+	const mindNode = new MindNode(id || generateUniqueId(), title, UIBox, {
 		...rest,
 		x: 0,
 		y: 0,
 		width,
 		height,
+		parentId: parent?.id,
 		UIBox,
+		UI: {
+			text
+		},
 		children: {
 			attached: []
 		},
@@ -133,5 +136,6 @@ export default function insertNode(
 
 	UIBox.data.node = mindNode;
 	mindNode.parent = parent;
+	// mindNode.initYNode();
 	return mindNode;
 }

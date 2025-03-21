@@ -3,6 +3,7 @@ import { hasChildren, HORIZONTAL_GAP, SWRadius, VERTICAL_GAP } from './utils';
 
 export function computeSize(node: MindNode) {
 	const { children } = node;
+	node.UI.text.set({ text: node.title });
 	const { width, height } = node.UIBox.boxBounds;
 	if (!hasChildren(node)) {
 		node.width = width;

@@ -6,7 +6,7 @@
 	"types": "dist/index.d.ts",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1",
-		"dev": " NODE_ENV=development rollup -c -w",
+		"dev": "NODE_ENV=development rollup -c -w",
 		"build": "rollup -c"
 	},
 	"keywords": [],
@@ -21,6 +21,7 @@
 		"@leafer-ui/draw": "^1.4.2",
 		"@leafer-ui/interface": "^1.4.2",
 		"leafer-ui": "^1.4.2",
+		"y-indexeddb": "^9.0.12",
 		"y-websocket": "^2.1.0",
 		"yjs": "^13.6.24"
 	},

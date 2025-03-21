@@ -8,6 +8,7 @@ import {
 	PointerEvent
 } from 'leafer-ui';
 import '@leafer-in/viewport';
+import * as Y from 'yjs';
 import { EditorEvent } from './editor';
 import './editor/textEditor';
 import { IMindNode, IMindRoot } from './interface';
@@ -17,6 +18,7 @@ import { MindNode } from './MindNode';
 import { computeSize, layoutTree } from './layout';
 import { renderTree } from './renderer';
 import insertNode from './insertNode';
+import { mindNodeInstances, yNodes } from './collaboration';
 
 export class MindMap {
 	frame: Frame;
@@ -80,6 +82,51 @@ export class MindMap {
 					return this.deleteSel();
 			}
 		});
+		this.init();
+	}
+
+	init() {
+		this.root = insertNode(
+			{ title: '思维导图', id: 'rootTopic' },
+			void 0,
+			this
+		);
+		this.render();
+		this.selection = new MindMapSelection(this.root);
+		this.select(this.root);
+
+		yNodes.observeDeep(([event], tr) => {
+			if (tr.local) return;
+
+			const { target } = event;
+			event.changes.keys.forEach((change, id) => {
+				if (change.action === 'add') {
+					const yNode = yNodes.get(id);
+					this.yMapToMindNode(yNode);
+				} else if (change.action === 'update') {
+					const node = mindNodeInstances.get(target.get('id'));
+
+					if (node) node[id] = target.get(id);
+				}
+			});
+
+			this.render();
+		});
+	}
+
+	yMapToMindNode(yNode: Y.Map<any>) {
+		const id = yNode.get('id');
+		const title = yNode.get('title');
+		const parentId = yNode.get('parentId');
+
+		const parent = mindNodeInstances.get(parentId);
+
+		if (parent) {
+			const node = insertNode({ title, id }, parent, this);
+			const pos = yNode.get('pos');
+			console.log(id, parentId, parent, pos, 'xxx');
+			parent.children.attached.splice(pos, 0, node);
+		}
 	}
 
 	insertAddButton() {

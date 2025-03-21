@@ -3,7 +3,7 @@
 	"version": "1.0.0",
 	"main": "index.js",
 	"scripts": {
-		"dev": "webpack serve --stats-error-details",
+		"dev": "webpack serve",
 		"build": "webpack"
 	},
 	"author": "",
