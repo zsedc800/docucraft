@@ -1,16 +1,35 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
-const { setupWSConnection } = require('y-websocket/bin/utils');
+const { setupWSConnection, setPersistence } = require('y-websocket/bin/utils');
 
 const Websocket = require('ws');
+const Y = require('yjs');
 const { LeveldbPersistence } = require('y-leveldb');
 const leveldb = new LeveldbPersistence('./mydb');
+setPersistence({
+	provider: leveldb,
+	bindState: async (docName, ydoc) => {
+		console.log(docName, 'docName');
+
+		const persistedYdoc = await leveldb.getYDoc(docName);
+		const newUpdates = Y.encodeStateAsUpdate(ydoc);
+		leveldb.storeUpdate(docName, newUpdates);
+		Y.applyUpdate(ydoc, Y.encodeStateAsUpdate(persistedYdoc));
+		ydoc.on('update', (update) => {
+			console.log('update');
+
+			leveldb.storeUpdate(docName, update);
+		});
+	},
+	writeState: async (_docName, _ydoc) => {
+		console.log('writeState', _docName);
+	}
+});
+
+const path = require('path');
 function getRoomName(url) {
 	const parts = url.split('/');
 	return parts[parts.length - 1] || 'default-room';
 }
-
-const path = require('path');
-const { getEffectiveTypeRoots } = require('typescript');
 module.exports = (env) => {
 	console.log(env, 'env');
 
@@ -96,22 +115,14 @@ module.exports = (env) => {
 				process.nextTick(() => {
 					devServer.server.on('upgrade', (request, socket, head) => {
 						const pathname = request.url || '';
-
-						if (pathname.startsWith('/y-websocket')) {
-							// 你的 WebSocket 路径
-							wss.handleUpgrade(request, socket, head, (ws) => {
-								// const roomName = getRoomName(request.url);
-
-								// console.log(`[连接成功] 房间: ${roomName}`);
-								const docName = getRoomName(request.url);
-								setupWSConnection(ws, request, {
-									// gc: request.url.slice(1) !== 'prosemirror',
-									docName,
-									persistence: leveldb
-								});
+						if (!pathname.startsWith('/y-websocket')) return;
+						wss.handleUpgrade(request, socket, head, (ws) => {
+							wss.emit('connection', ws, request, {
+								docName: getRoomName(pathname)
 							});
-						}
+						});
 					});
+					wss.on('connection', setupWSConnection);
 				});
 				return middlewares;
 			}

@@ -2,13 +2,8 @@ import { IBoundsData, IUI } from 'leafer-ui';
 import { IMindNode, NodeChildren } from './interface';
 import { ColorItem } from './theme';
 import { Slice } from './slice';
-import * as Y from 'yjs';
-import {
-	doc,
-	mindNodeInstances,
-	mindNodeToYMap,
-	yNodes
-} from './collaboration';
+import { mindNodeInstances, mindNodeToYMap } from './collaboration';
+import { MindMap } from './mindMap';
 
 export class MindNode implements IBoundsData, IMindNode {
 	x: number;
@@ -18,7 +13,7 @@ export class MindNode implements IBoundsData, IMindNode {
 	parentId?: string;
 	structureClass?: string;
 	children?: NodeChildren<MindNode>;
-	yNode: Y.Map<any>;
+	mindMap: MindMap;
 	theme: { colors?: ColorItem } = {};
 	style: { marginBottom?: number; gap?: number } = {};
 	UI: { text: IUI };
@@ -36,18 +31,32 @@ export class MindNode implements IBoundsData, IMindNode {
 		if (id === 'rootTopic') this.initYNode();
 	}
 
+	private collabrate(fn: (e: MindMap['collaborate']) => void) {
+		if (!this.mindMap.collaborate) return;
+		fn(this.mindMap.collaborate);
+	}
+
 	initYNode() {
-		const yNode = mindNodeToYMap(this);
-		yNodes.set(this.id, yNode);
+		this.collabrate(({ yNodes }) => {
+			const yNode = mindNodeToYMap(this);
+			yNodes.set(this.id, yNode);
+		});
 	}
 
 	setTitle(title: string) {
 		this.title = title;
-		const yNode = yNodes.get(this.id);
-		// const yTitle = yNode.get('title') as Y.Text;
-		yNode.set('title', title);
-		// yTitle.delete(0, yTitle.length);
-		// yTitle.insert(0, title);
+		this.collabrate(({ yNodes }) => {
+			const yNode = yNodes.get(this.id);
+			yNode.set('title', title);
+			// const yTitle = yNode.get('title') as Y.Text;
+			// yTitle.delete(0, yTitle.length);
+			// yTitle.insert(0, title);
+		});
+	}
+
+	set(key: Exclude<keyof IMindNode, 'id'>, value) {
+		if (key === 'title') this.setTitle(value);
+		else this[key] = value;
 	}
 
 	slice(from: number, to: number) {
@@ -58,6 +67,15 @@ export class MindNode implements IBoundsData, IMindNode {
 			children: { attached }
 		} = this;
 		const index = attached.indexOf(node);
+		this.collabrate(({ yNodes }) => {
+			const { id } = attached[index];
+			yNodes.delete(id);
+			// for (let i = index + 1; i < attached.length; i++) {
+			// 	const child = attached[i];
+			// 	const yNode = yNodes.get(child.id);
+			// 	yNode.set('pos', i - 1);
+			// }
+		});
 		attached.splice(index, 1);
 	}
 	appendChild(node: MindNode) {
@@ -82,4 +100,8 @@ export class MindNode implements IBoundsData, IMindNode {
 		newNode.initYNode();
 	}
 	near() {}
+
+	index(depth: number = -1) {
+		return this.parent.children.attached.indexOf(this);
+	}
 }

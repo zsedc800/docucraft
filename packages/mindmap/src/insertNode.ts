@@ -76,7 +76,8 @@ export default function insertNode(
 		style: {
 			gap: depth > 0 ? HORIZONTAL_GAP : 60,
 			marginBottom: depth > 0 ? VERTICAL_GAP : 40
-		}
+		},
+		mindMap
 	});
 
 	if (depth > 1 && !parent.switch) {

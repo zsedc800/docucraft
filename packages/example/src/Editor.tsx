@@ -2,7 +2,10 @@ import { MindMap } from '@docucraft/mindmap';
 import { useEffect } from '@docucraft/srender';
 export default () => {
 	useEffect(() => {
-		const mind = new MindMap('mind');
+		const mind = new MindMap('mind', {
+			collabServer: 'ws://localhost:3200/y-websocket',
+			docId: 'mind-map'
+		});
 
 		// mind.parseJSON({
 		// 	rootTopic: {
