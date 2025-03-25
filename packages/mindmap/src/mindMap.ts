@@ -19,7 +19,9 @@ import { computeSize, layoutTree } from './layout';
 import { renderTree } from './renderer';
 import insertNode from './insertNode';
 import { mindNodeInstances, initCollaborate } from './collaboration';
-import { execOp, History } from './history';
+import { execOp, History, redo, undo } from './history';
+import { keymap } from './input';
+import { drag } from './drag';
 
 export class MindMap {
 	frame: Frame;
@@ -38,7 +40,7 @@ export class MindMap {
 		this.app = new App({
 			view: id,
 			editor: {
-				// moveable: false,
+				moveable: false,
 				buttonsDirection: 'right',
 				// selector: false
 				pointSize: 0,
@@ -50,7 +52,11 @@ export class MindMap {
 			},
 			tree: { type: 'design' }
 		});
-		this.frame = new Frame({ fill: 'transparent', draggable: true });
+		this.frame = new Frame({
+			fill: 'transparent',
+			draggable: true,
+			overflow: 'show'
+		});
 		this.app.tree.add(this.frame);
 		this.group = new Group({});
 		this.frame.add(this.group);
@@ -71,32 +77,26 @@ export class MindMap {
 			if (!ele) this.render();
 		});
 
-		this.app.on(KeyEvent.DOWN, (e) => {
-			if (e.key === 'z' && e.ctrlKey) {
-				const op = this.history.undo();
-				console.log(op, 'op');
+		drag(this);
 
-				if (op) execOp(op, this);
-			}
-			switch (e.key) {
-				case 'ArrowUp':
-					return this.selectUp();
-				case 'ArrowRight':
-					return this.selectRight();
-				case 'ArrowDown':
-					return this.selectDown();
-				case 'ArrowLeft':
-					return this.selectLeft();
-				case 'Tab':
+		this.app.on(
+			KeyEvent.DOWN,
+			keymap({
+				'Mod-z': () => undo(this.history),
+				'Mod-y': () => redo(this.history),
+				ArrowUp: () => this.selectUp(),
+				ArrowRight: () => this.selectRight(),
+				ArrowDown: () => this.selectDown(),
+				ArrowLeft: () => this.selectLeft(),
+				Tab: (e) => {
 					e.stopDefault();
-					return this.addChild();
-				case 'Enter':
-					return this.addNextSibling();
-				case 'Backspace':
-				case 'Delete':
-					return this.deleteSel();
-			}
-		});
+					this.addChild();
+				},
+				Enter: () => this.addNextSibling(),
+				Backspace: () => this.deleteSel(),
+				Delete: () => this.deleteSel()
+			})
+		);
 		if (collabServer)
 			this.collaborate = initCollaborate(collabServer, this.docId);
 		this.init();
@@ -112,27 +112,36 @@ export class MindMap {
 		this.selection = new MindMapSelection(this.root);
 		this.select(this.root);
 		if (this.collaborate) {
-			const { yNodes } = this.collaborate;
-			yNodes.observeDeep(([event], tr) => {
-				if (tr.local) return;
-
-				const { target } = event;
-				event.changes.keys.forEach((change, id) => {
-					if (change.action === 'add') {
-						const yNode = yNodes.get(id);
-						this.yMapToMindNode(yNode);
-					} else if (change.action === 'update') {
-						const node = mindNodeInstances.get(target.get('id'));
-
-						if (node) node[id] = target.get(id);
-					} else if (change.action === 'delete') {
-						const node = mindNodeInstances.get(id);
-						if (node && node.parent) node.parent.removeChild(node);
-					}
-				});
-
-				this.render();
+			const { mindmap, doc } = this.collaborate;
+			doc.on('beforeAllTransactions', (...args) => {
+				console.log(...args, 'args');
 			});
+			mindmap.observeDeep((events, tr) => {
+				console.log(events, tr, 'uuu');
+			});
+
+			// mindmap.observeDeep(([event], tr) => {
+			// 	if (tr.local) return;
+
+			// 	const { target } = event;
+			// 	event.changes.keys.forEach((change, id) => {
+			// 		console.log(change, 'change', id);
+
+			// 		if (change.action === 'add') {
+			// 			const yNode = yNodes.get(id);
+			// 			this.yMapToMindNode(yNode);
+			// 		} else if (change.action === 'update') {
+			// 			const node = mindNodeInstances.get(target.get('id'));
+
+			// 			if (node) node[id] = target.get(id);
+			// 		} else if (change.action === 'delete') {
+			// 			const node = mindNodeInstances.get(id);
+			// 			if (node && node.parent) node.parent.removeChild(node);
+			// 		}
+			// 	});
+
+			// 	this.render();
+			// });
 		}
 	}
 
@@ -143,11 +152,14 @@ export class MindMap {
 
 		const parent = mindNodeInstances.get(parentId);
 
-		if (parent) {
-			const node = insertNode({ title, id }, parent, this);
-			const pos = yNode.get('pos');
-			parent.children.attached.splice(pos, 0, node);
-		}
+		// if (parent) {
+		// 	const node = insertNode({ title, id }, parent, this);
+		// 	const pos = yNode.get('pos');
+		// 	parent.children.attached.splice(pos, 0, node);
+
+		// 	console.log(parent, node, pos);
+
+		// }
 	}
 
 	insertAddButton() {
@@ -316,7 +328,14 @@ export class MindMap {
 		const { width, height } = this.app.__;
 		const { width: w, height: h } = root.UIBox.boxBounds;
 		computeSize(root);
-		layoutTree(root, (width - w) / 2, (height - h) / 2);
+		const { width: w1, height: h1 } = root;
+		this.frame.set({
+			width: w1,
+			height: h1,
+			x: (width - w1) / 2,
+			y: (height - h1) / 2
+		});
+		layoutTree(root, 0, (h1 - h) / 2);
 
 		renderTree(root, this.group);
 		this.app.start();

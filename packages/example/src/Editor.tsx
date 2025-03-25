@@ -4,7 +4,7 @@ export default () => {
 	useEffect(() => {
 		const mind = new MindMap('mind', {
 			collabServer: 'ws://localhost:3200/y-websocket',
-			docId: 'mind-map'
+			docId: 'mind-map3'
 		});
 
 		// mind.parseJSON({

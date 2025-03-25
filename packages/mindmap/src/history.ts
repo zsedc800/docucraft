@@ -12,6 +12,7 @@ export interface Op {
 
 function reverse({ type, id, value, oldValue, key }: Op): Op {
 	const op: Op = { id, type, value, key };
+	console.log(op, 'uuu');
 	if (type === 'add') {
 		op.type = 'delete';
 	} else if (type === 'update') {
@@ -24,8 +25,6 @@ function reverse({ type, id, value, oldValue, key }: Op): Op {
 }
 
 export function execOp({ type, id, key, value }: Op, mindMap: MindMap) {
-	console.log(type, id, key, value, 'op');
-
 	if (type === 'add') {
 		const { parent } = value as MindNode;
 		const before = parent.children.attached[key];
@@ -40,23 +39,32 @@ export function execOp({ type, id, key, value }: Op, mindMap: MindMap) {
 	mindMap.render();
 }
 
+export function undo(history) {
+	const op = history.undo();
+	if (op) execOp(op, this);
+}
+
+export function redo(history) {
+	const op = history.redo();
+	if (op) execOp(op, this);
+}
+
 export class History {
 	private stack: Op[] = [];
 	private index = -1;
 	constructor(private capcity = 30) {}
+	get size() {
+		return this.stack.length;
+	}
 	push(op: Op) {
-		if (this.index + 1 === this.capcity) {
-			this.stack.shift();
-		}
+		if (this.index + 1 === this.capcity) this.stack.shift();
 		this.stack.push(op);
 		this.index = this.stack.length - 1;
 	}
 	redo() {
-		if (this.index + 1 < this.stack.length) {
-			return this.stack[this.index++];
-		}
+		if (this.index + 1 < this.stack.length) return this.stack[this.index++];
 	}
 	undo() {
-		if (this.index > 0) return reverse(this.stack[this.index--]);
+		if (this.index >= 0) return reverse(this.stack[this.index--]);
 	}
 }

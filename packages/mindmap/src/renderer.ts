@@ -4,7 +4,7 @@ import { ColorItem } from './theme';
 import { hasChildren } from './utils';
 
 export function drawBeizerline(
-	[startX, startY, endX, endY],
+	[startX, startY, endX, endY]: number[],
 	data: Partial<IPathInputData> = {}
 ) {
 	const dx = endX - startX;
@@ -25,7 +25,7 @@ export function drawBeizerline(
 }
 
 export function drawPolyline(
-	[startX, startY, endX, endY],
+	[startX, startY, endX, endY]: number[],
 	data: Partial<IPathInputData>
 ) {
 	const midX = (startX + endX) / 2;
@@ -59,16 +59,15 @@ export function renderTree(
 		const endX = child.x;
 		const endY = child.y + h / 2;
 		const colorItem = colors || child.theme.colors;
-
-		leafer.add(
-			depth
-				? drawPolyline([node.x + width, startY, endX, endY], {
-						stroke: colorItem.bgColor
-					})
-				: drawBeizerline([startX, startY, endX, endY], {
-						stroke: colorItem.bgColor
-					})
-		);
+		const line = depth
+			? drawPolyline([node.x + width, startY, endX, endY], {
+					stroke: colorItem.bgColor
+				})
+			: drawBeizerline([startX, startY, endX, endY], {
+					stroke: colorItem.bgColor
+				});
+		node.UILines[i] = line;
+		leafer.add(line);
 		renderTree(child, leafer, {
 			depth: depth + 1,
 			colors: colorItem

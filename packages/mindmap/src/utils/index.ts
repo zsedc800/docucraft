@@ -58,3 +58,9 @@ export function getDepth(node: MindNode) {
 	}
 	return depth;
 }
+
+export function swap<T>(list: T[], i: number, j: number) {
+	let temp = list[i];
+	list[i] = list[j];
+	list[j] = temp;
+}
