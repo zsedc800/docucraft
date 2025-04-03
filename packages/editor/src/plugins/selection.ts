@@ -5,6 +5,17 @@ import { BaseNodeView, getNodeView } from '../utils/view';
 import EditorView from '../EditorView';
 import { nextTick } from '../utils';
 
+function isNodeContains(node: Node, target: Node) {
+	let n = target;
+	while (n) {
+		console.log(n, node, 'n');
+
+		if (n === node) return true;
+		n = n.parentNode;
+	}
+	return false;
+}
+
 export default () => {
 	let updated = false;
 	return new Plugin({
@@ -30,7 +41,6 @@ export default () => {
 					const {
 						state: { selection }
 					} = view;
-					console.log(e, 'eee');
 
 					if (
 						selection.empty ||
@@ -48,11 +58,20 @@ export default () => {
 			const onSelectionChange = () => {
 				const sel = root.getSelection();
 
-				if (!sel || sel.type === 'None') return;
+				if (!sel || sel.type === 'None' || !sel.isCollapsed) return;
 				const { anchorNode } = sel;
 				for (const [id, nodeView] of lastNodes) {
-					if (!nodeView.dom.contains(anchorNode))
+					if (!anchorNode || !isNodeContains(nodeView.dom, anchorNode))
 						nextTick(() => {
+							console.log(
+								nodeView,
+								anchorNode,
+								nodeView.dom.contains(anchorNode),
+								nodeView.dom === anchorNode,
+
+								'last'
+							);
+
 							nodeView.onFocusOut({ reason: 'change' });
 							lastNodes.delete(id);
 						});
@@ -63,8 +82,12 @@ export default () => {
 					const nodeView = getNodeView(blockId);
 					if (nodeView)
 						nextTick(() => {
-							nodeView.onFocusIn();
+							if (lastNodes.get(blockId) === nodeView) return;
+							console.log(nodeView, lastNodes, 'ddd');
 							lastNodes.set(blockId, nodeView);
+							console.log(lastNodes, 'last');
+
+							nodeView.onFocusIn();
 						});
 				}
 			};

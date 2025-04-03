@@ -46,6 +46,15 @@ ol {
 		flex-grow: 1;
 	}
 }
+.ProseMirror {
+	.list-item-content {
+		& > ul.bullet-list,
+		& > ol.order-list {
+			margin-top: 0;
+			margin-bottom: 0;
+		}
+	}
+}
 
 ol.order-list {
 	counter-reset: item;

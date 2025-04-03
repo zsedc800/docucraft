@@ -48,12 +48,12 @@ export class MindNode implements IBoundsData, IMindNode {
 			this.yNode = yNode;
 			if (pos < 0) {
 				mindmap.set(this.id, yNode);
-				delete this.yNode;
+				// delete this.yNode;
 
 				return;
 			}
 			// const parent = this.parent;
-			const parent = this.parent.yNode || mindmap.get(this.parent.id);
+			const parent = this.parent.yNode;
 			// yNodes.get(this.parent.id);
 			console.log(parent == mindmap.get(this.parent.id), 'ppr');
 

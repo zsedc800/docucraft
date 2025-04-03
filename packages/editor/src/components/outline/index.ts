@@ -64,14 +64,13 @@ export class OutlineTree {
 		nodesBetween(parent, index + 1, parent.childCount - 1, ({ attrs }) => {
 			if (attrs.level <= level) return false;
 			const childNode = this.findNodeById(attrs.blockId);
+
 			if (childNode) addChild(outlineNode, childNode);
 			else console.warn('can not found node');
 		});
 
 		lastLevel = Infinity;
 		count = -1;
-
-		console.log(index, $pos, '$pos');
 
 		nodesBetween(
 			parent,

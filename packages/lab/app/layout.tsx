@@ -1,9 +1,9 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+// import { Inter } from 'next/font/google';
 import './globals.css';
 import '@docucraft/icons/styles';
 
-const inter = Inter({ subsets: ['latin'] });
+// const inter = Inter({ subsets: ['latin'] });
 
 export const metadata: Metadata = {
 	title: 'Create Next App',
@@ -18,6 +18,11 @@ export default function RootLayout({
 	return (
 		<html lang="en">
 			<head>
+				{/* <link
+					href="https://fonts.bunny.net/css?family=Noto+Sans:wght@400;700&family=Noto+Sans+SC:wght@400;700&display=swap"
+					rel="stylesheet"
+				/> */}
+
 				<link
 					rel="stylesheet"
 					href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/monokai-sublime.min.css"
@@ -29,7 +34,7 @@ export default function RootLayout({
 				{/* <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.5.0/styles/default.min.css"></link> */}
 				{/* <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/highlightjs-themes@1.0.0/atelier-cave.dark.css"></link> */}
 			</head>
-			<body className={inter.className}>{children}</body>
+			<body>{children}</body>
 		</html>
 	);
 }

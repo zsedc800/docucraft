@@ -36,7 +36,7 @@ const Editor = () => {
 		edit.onChange(
 			debounce((content) => {
 				save(content);
-			}, 3000)
+			}, 1000)
 		);
 		restoreFileHandle('example-file').then(async (f) => {
 			if (isDestroyed) return;
@@ -62,8 +62,8 @@ const Editor = () => {
 				open={open}
 				onChoose={async () => {
 					const [text, f] = await openFile();
-					// writeStream = await fileHandle.createWritable();
 					fileHandle = f;
+					text && editor.current?.parseJSON(text);
 					saveFileHandle(fileHandle, 'example-file');
 					setOpen(false);
 				}}

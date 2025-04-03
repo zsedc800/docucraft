@@ -5,7 +5,7 @@ export function createAutoSavePlugin(onChange: (doc: string) => void) {
 		view(editorView) {
 			return {
 				update(view, prevState) {
-					if (prevState.doc !== view.state.doc) {
+					if (!view.state.doc.eq(prevState.doc)) {
 						const content = JSON.stringify(view.state.doc.toJSON());
 						onChange(content);
 					}

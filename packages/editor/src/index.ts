@@ -3,6 +3,23 @@ import EditorView from './EditorView';
 import { createAutoSavePlugin } from './plugins/autoSave';
 import { EventEmitter } from './utils/Event';
 import { setupEditor } from './view';
+import { generateUniqueId } from './utils';
+
+function removeMark(json: Record<string, any>) {
+	const queue = [json];
+	while (queue.length) {
+		const node = queue.shift();
+		if (node.attrs) node.attrs.blockId = generateUniqueId();
+		if (node.marks) {
+			console.log(node.marks);
+
+			delete node.marks;
+		}
+		if (node.content) {
+			queue.push(...node.content);
+		}
+	}
+}
 
 export default class Editor extends EventEmitter {
 	view: EditorView;
@@ -33,6 +50,8 @@ export default class Editor extends EventEmitter {
 
 	parseJSON(json: string | Record<string, any>) {
 		if (typeof json === 'string') json = JSON.parse(json);
+		// removeMark(json as any);
+
 		const { view } = this;
 		const {
 			state: { tr, schema, doc },
